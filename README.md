@@ -1,5 +1,5 @@
-[OpenSGX] - An open platform for Intel SGX
-==========================================
+OpenSGX: An open platform for Intel SGX
+=======================================
 
 Contribution Guides
 -------------------
@@ -126,7 +126,6 @@ Authors
 - Ming-Wei Shih <mingwei.shih@gatech.edu>
 - JaeHyuk Lee <jhl9105@kaist.ac.kr>
 - Changho Choi <zpzigi@kaist.ac.kr>
-
 - Taesoo Kim <taesoo@gatech.edu>
 - Dongsu Han <dongsu.han@gmail.com>
 - Brent Kang <brentkang@gmail.com>
