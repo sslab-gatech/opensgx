@@ -1,0 +1,110 @@
+#! /bin/bash
+ROOT=$(dirname "$0")
+SGXTOOL=$ROOT/user/sgx-tool
+SGX=$ROOT/sgx
+DEVICEKEY=$ROOT/user/conf/device.key
+
+
+key_gen() {
+  FILENAME=sign.key
+  $SGXTOOL -k 3072 > $FILENAME
+}
+
+compile_code() {
+  BASEDIR=$(dirname $1)
+  SUBDIR=${BASEDIR#*/}
+  BASENAME=$(basename $1)
+  NAME="${BASENAME%.*}"
+
+  cd user
+  make $SUBDIR/$NAME.sgx
+}
+
+run_enclave() {
+  BASEDIR=$(dirname $1)
+  BASENAME=$(basename $1)
+  NAME="${BASENAME%.*}"
+  EXE=$BASEDIR/$NAME.sgx
+
+  $SGX $EXE $1
+}
+
+measure() {
+  size=$(stat -c%s $1)
+
+  offset=$(readelf -S $1 | grep .enc_text)
+  array=($offset)
+  offset=${array[4]}
+
+  code_start=$(nm $1 | grep ENCT_START)
+  array=($code_start)
+  code_start=${array[0]}
+
+  code_end=$(nm $1 | grep ENCT_END)
+  array=($code_end)
+  code_end=${array[0]}
+
+  data_start=$(nm $1 | grep ENCD_START)
+  array=($data_start)
+  data_start=${array[0]}
+
+  data_end=$(nm $1 | grep ENCD_END)
+  array=($data_end)
+  data_end=${array[0]}
+
+  entry=$(nm $1 | grep enclave_start)
+  array=($entry)
+  entry=${array[0]}
+
+  SZ="--size="
+  CO="--offset="
+  CS="--code_start="
+  CE="--code_end="
+  DS="--data_start="
+  DE="--data_end="
+  EN="--entry="
+
+  $SGXTOOL -m $1 $SZ$size $CO$offset $CS$code_start $CE$code_end $DS$data_start $DE$data_end $EN$entry
+}
+
+sign() {
+  BASEDIR=$(dirname $1)
+  BASENAME=$(basename $1)
+  NAME="${BASENAME%.*}"
+  MEASURE=$BASEDIR/$NAME-measurement.conf
+  SIG=$BASEDIR/$NAME-sig.conf
+  TOKEN=$BASEDIR/$NAME-token.conf
+  CONF=$BASEDIR/$NAME.conf
+
+  touch $CONF
+  measure $1 > $MEASURE
+
+  $SGXTOOL -S $MEASURE > $SIG
+  $SGXTOOL -s $SIG --key=$2 > $CONF
+  $SGXTOOL -E $CONF > $TOKEN
+  $SGXTOOL -M $TOKEN --key=$DEVICEKEY >> $CONF
+
+  rm $MEASURE $SIG $TOKEN
+}
+
+case "$1" in
+  -k|--key)
+  key_gen
+  ;;
+  -c|--compile)
+  compile_code $2
+  ;;
+  -m|--measure)
+  measure $2
+  ;;
+  -s|--sign)
+  case "$3" in
+    -k|--key)
+    sign $2 $4
+    ;;
+  esac
+  ;;
+  *)
+  run_enclave $1
+  ;;
+esac

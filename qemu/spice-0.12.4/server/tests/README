@@ -1,0 +1,29 @@
+What is here
+============
+
+This directory will contain a testsuite for the server including tetris drawing.
+
+Unfortunately tetris and most of the tests are not here right now. You can however run all the tests and use libtool to debug any of them thus:
+
+libtool --mode=execute gdb test_just_sockets_no_ssl
+
+Overview of tests
+=================
+
+test_just_sockets_no_ssl
+ A complete server, only provides the main and inputs channels. Doesn't actually produce anything on the channels. Essentially a test of the regular link code (reds.c), good for multiple connect/disconnect tests.
+
+test_empty_success
+ tests calling
+
+test_fail_on_null_core_interface
+ should abort when run (when spice tries to watch_add)
+
+basic_event_loop.c
+ used by test_just_sockets_no_ssl, can be used by other tests. very crude event loop. Should probably use libevent for better tests, but this is self contained.
+
+Automated tests
+===============
+
+test_display_streaming.c
+ this test can be used to check regressions. For this, Spice needs to be compiled with --enable-automated-tests and test_display_streaming needs to be called passing --automated-tests as parameter

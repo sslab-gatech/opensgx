@@ -1,0 +1,9 @@
+prefix=@prefix@
+includedir=@includedir@
+
+Name: spice-protocol
+Description: SPICE protocol headers
+Version: @VERSION@
+
+Libs:
+Cflags: -I${includedir}/spice-1

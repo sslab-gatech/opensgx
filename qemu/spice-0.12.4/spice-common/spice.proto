@@ -1,0 +1,1361 @@
+/* built in types:
+   int8, uint8, 16, 32, 64
+*/
+
+typedef fixed28_4 int32 @ctype(SPICE_FIXED28_4);
+
+struct Point {
+    int32 x;
+    int32 y;
+};
+
+struct Point16 {
+    int16 x;
+    int16 y;
+};
+
+struct PointFix {
+    fixed28_4 x;
+    fixed28_4 y;
+};
+
+struct Rect {
+    int32 top;
+    int32 left;
+    int32 bottom;
+    int32 right;
+};
+
+struct Transform {
+    uint32 t00;
+    uint32 t01;
+    uint32 t02;
+    uint32 t10;
+    uint32 t11;
+    uint32 t12;
+};
+
+enum32 link_err {
+    OK,
+    ERROR,
+    INVALID_MAGIC,
+    INVALID_DATA,
+    VERSION_MISMATCH,
+    NEED_SECURED,
+    NEED_UNSECURED,
+    PERMISSION_DENIED,
+    BAD_CONNECTION_ID,
+    CHANNEL_NOT_AVAILABLE
+};
+
+enum32 warn_code {
+    WARN_GENERAL
+} @prefix(SPICE_);
+
+enum32 info_code {
+    INFO_GENERAL
+} @prefix(SPICE_);
+
+flags32 migrate_flags {
+    NEED_FLUSH,
+    NEED_DATA_TRANSFER
+} @prefix(SPICE_MIGRATE_);
+
+flags32 composite_flags {
+    OP0, OP1, OP2, OP3, OP4, OP5, OP6, OP7,
+    SRC_FILTER0, SRC_FILTER1, SRC_FILTER2,
+    MASK_FILTER0, MASK_FITLER1, MASK_FILTER2,
+
+    SRC_REPEAT0, SRC_REPEAT1,
+    MASK_REPEAT0, MASK_REPEAT1,
+    COMPONENT_ALPHA,
+
+    HAS_MASK,
+    HAS_SRC_TRANSFORM,
+    HAS_MASK_TRANSFORM,
+
+    /* These are used to override the formats given in the images. For
+     * example, if the mask image has format a8r8g8b8, but MASK_OPAQUE
+     * is set, the image should be treated as if it were x8r8g8b8
+     */
+    SOURCE_OPAQUE,
+    MASK_OPAQUE,
+    DEST_OPAQUE,
+} @prefix(SPICE_COMPOSITE_);
+
+enum32 notify_severity {
+    INFO,
+    WARN,
+    ERROR,
+};
+
+enum32 notify_visibility {
+    LOW,
+    MEDIUM,
+    HIGH,
+};
+
+flags16 mouse_mode {
+    SERVER,
+    CLIENT,
+};
+
+enum16 pubkey_type {
+    INVALID,
+    RSA,
+    RSA2,
+    DSA,
+    DSA1,
+    DSA2,
+    DSA3,
+    DSA4,
+    DH,
+    EC,
+};
+
+message Empty {
+};
+
+message Data {
+    uint8 data[] @end @ctype(uint8_t);
+} @nocopy;
+
+struct ChannelWait {
+    uint8 channel_type;
+    uint8 channel_id;
+    uint64 message_serial;
+} @ctype(SpiceWaitForChannel);
+
+channel BaseChannel {
+ server:
+    message {
+	migrate_flags flags;
+    } migrate;
+
+    Data migrate_data;
+
+    message {
+	uint32 generation;
+	uint32 window;
+    } set_ack;
+
+    message {
+	uint32 id;
+	uint64 timestamp;
+	uint8 data[] @ctype(uint8_t) @as_ptr(data_len);
+    } ping;
+
+    message {
+	uint8 wait_count;
+	ChannelWait wait_list[wait_count] @end;
+    } wait_for_channels;
+
+    message {
+	uint64 time_stamp;
+	link_err reason;
+    } @ctype(SpiceMsgDisconnect) disconnecting;
+
+    message {
+	uint64 time_stamp;
+	notify_severity severity;
+	notify_visibility visibilty;
+	uint32 what; /* error_code/warn_code/info_code */
+	uint32 message_len;
+	uint8 message[message_len] @end @nomarshal;
+    } notify;
+
+    Data list; /* the msg body is SpiceSubMessageList */
+
+ client:
+    message {
+	uint32 generation;
+    } ack_sync;
+
+    Empty ack;
+
+    message {
+	uint32 id;
+	uint64 timestamp;
+    } @ctype(SpiceMsgPing) pong;
+
+    Empty migrate_flush_mark;
+
+    Data migrate_data;
+
+    message {
+    	uint64 time_stamp;
+	link_err reason;
+    } @ctype(SpiceMsgDisconnect) disconnecting;
+};
+
+struct ChannelId {
+    uint8 type;
+    uint8 id;
+};
+
+struct DstInfo {
+	uint16 port;
+	uint16 sport;
+	uint32 host_size;
+	uint8 *host_data[host_size] @zero_terminated @marshall @nonnull;
+	uint32 cert_subject_size;
+	uint8 *cert_subject_data[cert_subject_size] @zero_terminated @marshall;
+} @ctype(SpiceMigrationDstInfo);
+
+channel MainChannel : BaseChannel {
+ server:
+     message {
+        DstInfo dst_info;
+    } @ctype(SpiceMsgMainMigrationBegin) migrate_begin = 101;
+
+    Empty migrate_cancel;
+
+    message {
+	uint32 session_id;
+	uint32 display_channels_hint;
+	uint32 supported_mouse_modes;
+	uint32 current_mouse_mode;
+	uint32 agent_connected;
+	uint32 agent_tokens;
+	uint32 multi_media_time;
+	uint32 ram_hint;
+    } init;
+
+    message {
+	uint32 num_of_channels;
+	ChannelId channels[num_of_channels] @end;
+    } @ctype(SpiceMsgChannels) channels_list;
+
+    message {
+	mouse_mode supported_modes;
+	mouse_mode current_mode @unique_flag;
+    } mouse_mode;
+
+    message {
+	uint32 time;
+    } @ctype(SpiceMsgMainMultiMediaTime) multi_media_time;
+
+    Empty agent_connected;
+
+    message {
+	link_err error_code;
+    } @ctype(SpiceMsgMainAgentDisconnect) agent_disconnected;
+
+    Data agent_data;
+
+    message {
+	uint32 num_tokens;
+    } @ctype(SpiceMsgMainAgentTokens) agent_token;
+
+    message {
+      uint16 port;
+      uint16 sport;
+      uint32 host_size;
+      uint8 *host_data[host_size] @zero_terminated @marshall;
+      uint32 cert_subject_size;
+      uint8 *cert_subject_data[cert_subject_size] @zero_terminated  @marshall;
+    } @ctype(SpiceMsgMainMigrationSwitchHost) migrate_switch_host;
+
+    Empty migrate_end;
+
+    message {
+       uint32 name_len;
+       uint8 name[name_len] @end;
+    } name;
+
+    message {
+       uint8 uuid[16];
+    } uuid;
+
+    message {
+        uint32 num_tokens;
+    } agent_connected_tokens;
+
+    message {
+        DstInfo dst_info;
+        uint32 src_mig_version;
+    } migrate_begin_seamless;
+
+    Empty migrate_dst_seamless_ack;
+    Empty migrate_dst_seamless_nack;
+
+ client:
+    message {
+	uint64 cache_size;
+    } @ctype(SpiceMsgcClientInfo) client_info = 101;
+
+    Empty migrate_connected;
+
+    Empty migrate_connect_error;
+
+    Empty attach_channels;
+
+    message {
+	mouse_mode mode;
+    } mouse_mode_request;
+
+    message {
+	uint32 num_tokens;
+    } agent_start;
+
+    Data agent_data;
+
+    message {
+        uint32 num_tokens;
+    } @ctype(SpiceMsgcMainAgentTokens) agent_token;
+
+    Empty migrate_end;
+
+    message {
+        uint32 src_version;
+    } migrate_dst_do_seamless;
+
+    Empty migrate_connected_seamless;
+};
+
+enum8 clip_type {
+    NONE,
+    RECTS
+};
+
+flags8 path_flags { /* TODO: C enum names changes */
+    BEGIN = 0,
+    END = 1,
+    CLOSE = 3,
+    BEZIER = 4,
+} @prefix(SPICE_PATH_);
+
+enum8 video_codec_type {
+    MJPEG = 1,
+};
+
+flags8 stream_flags {
+    TOP_DOWN = 0,
+};
+
+enum8 brush_type {
+    NONE,
+    SOLID,
+    PATTERN,
+};
+
+flags8 mask_flags {
+    INVERS,
+};
+
+enum8 image_type {
+    BITMAP,
+    QUIC,
+    RESERVED,
+    LZ_PLT = 100,
+    LZ_RGB,
+    GLZ_RGB,
+    FROM_CACHE,
+    SURFACE,
+    JPEG,
+    FROM_CACHE_LOSSLESS,
+    ZLIB_GLZ_RGB,
+    JPEG_ALPHA,
+};
+
+flags8 image_flags {
+    CACHE_ME,
+    HIGH_BITS_SET,
+    CACHE_REPLACE_ME,
+};
+
+enum8 bitmap_fmt {
+    INVALID,
+    1BIT_LE,
+    1BIT_BE,
+    4BIT_LE,
+    4BIT_BE,
+    8BIT /* 8bit indexed mode */,
+    16BIT, /* 0555 mode */
+    24BIT /* 3 byte, brg */,
+    32BIT /* 4 byte, xrgb in little endian format */,
+    RGBA /* 4 byte, argb in little endian format */,
+    8BIT_A /* 1 byte, alpha */
+};
+
+flags8 bitmap_flags {
+    PAL_CACHE_ME,
+    PAL_FROM_CACHE,
+    TOP_DOWN,
+};
+
+flags8 jpeg_alpha_flags {
+    TOP_DOWN,
+};
+
+enum8 image_scale_mode {
+    INTERPOLATE,
+    NEAREST,
+};
+
+flags16 ropd {
+    INVERS_SRC,
+    INVERS_BRUSH,
+    INVERS_DEST,
+    OP_PUT,
+    OP_OR,
+    OP_AND,
+    OP_XOR,
+    OP_BLACKNESS,
+    OP_WHITENESS,
+    OP_INVERS,
+    INVERS_RES,
+};
+
+/* This *must* remain with values identical to api/winddi.h
+   LA_STYLED == 0x8 (log_2)=> 3
+   LA_STARTGAP == 0x4 (log_2)=> 2
+   This is used by the windows driver.
+ */
+flags8 line_flags {
+    STYLED = 3,
+    START_WITH_GAP = 2,
+};
+
+flags8 string_flags {
+    RASTER_A1,
+    RASTER_A4,
+    RASTER_A8,
+    RASTER_TOP_DOWN,
+};
+
+flags32 surface_flags {
+    PRIMARY
+};
+
+enum32 surface_fmt {
+    INVALID,
+    1_A     = 1,
+    8_A     = 8,
+    16_555  = 16 ,
+    16_565  = 80,
+    32_xRGB = 32,
+    32_ARGB = 96
+};
+
+flags8 alpha_flags {
+    DEST_HAS_ALPHA,
+    SRC_SURFACE_HAS_ALPHA
+};
+
+enum8 resource_type {
+      INVALID,
+      PIXMAP
+} @prefix(SPICE_RES_TYPE_);
+
+struct ClipRects {
+    uint32 num_rects;
+    Rect rects[num_rects] @end;
+};
+
+struct PathSegment {
+    path_flags flags;
+    uint32 count;
+    PointFix points[count] @end;
+}  @ctype(SpicePathSeg);
+
+struct Path {
+    uint32 num_segments;
+    PathSegment segments[num_segments] @ptr_array;
+};
+
+struct Clip {
+    clip_type type;
+    switch (type) {
+    case RECTS:
+        ClipRects rects @outvar(cliprects) @to_ptr;
+    } u @anon;
+};
+
+struct DisplayBase {
+    uint32 surface_id;
+    Rect box;
+    Clip clip;
+} @ctype(SpiceMsgDisplayBase);
+
+struct ResourceID {
+    uint8 type;
+    uint64 id;
+};
+
+struct WaitForChannel {
+    uint8 channel_type;
+    uint8 channel_id;
+    uint64 message_serial;
+};
+
+struct Palette {
+    uint64 unique;
+    uint16 num_ents;
+    uint32 ents[num_ents] @end;
+};
+
+struct BitmapData {
+    bitmap_fmt format;
+    bitmap_flags flags;
+    uint32 x;
+    uint32 y;
+    uint32 stride;
+    switch (flags) {
+    case PAL_FROM_CACHE:
+	uint64 palette_id;
+    default:
+	Palette *palette @outvar(bitmap);
+    } pal @anon;
+    uint8 data[image_size(8, stride, y)] @chunk @nomarshal;
+} @ctype(SpiceBitmap);
+
+struct BinaryData {
+    uint32 data_size;
+    uint8 data[data_size] @nomarshal @chunk;
+} @ctype(SpiceQUICData);
+
+struct LZPLTData {
+    bitmap_flags flags;
+    uint32 data_size;
+    switch (flags) {
+    case PAL_FROM_CACHE:
+	uint64 palette_id;
+    default:
+	Palette *palette @nonnull @outvar(lzplt);
+    } pal @anon;
+    uint8 data[data_size] @nomarshal @chunk;
+};
+
+struct ZlibGlzRGBData {
+    uint32 glz_data_size;
+    uint32 data_size;
+    uint8 data[data_size] @nomarshal @chunk;
+} @ctype(SpiceZlibGlzRGBData);
+
+struct JPEGAlphaData {
+    jpeg_alpha_flags flags;
+    uint32 jpeg_size;
+    uint32 data_size;
+    uint8 data[data_size] @nomarshal @chunk;
+} @ctype(SpiceJPEGAlphaData);
+
+struct Surface {
+    uint32 surface_id;
+};
+
+
+struct Image {
+    struct ImageDescriptor {
+        uint64 id;
+        image_type type;
+        image_flags flags;
+        uint32 width;
+        uint32 height;
+    } descriptor;
+
+    switch (descriptor.type) {
+    case BITMAP:
+        BitmapData bitmap;
+    case QUIC:
+        BinaryData quic;
+    case LZ_RGB:
+    case GLZ_RGB:
+        BinaryData lz_rgb;
+    case JPEG:
+        BinaryData jpeg;
+    case LZ_PLT:
+        LZPLTData lz_plt;
+    case ZLIB_GLZ_RGB:
+        ZlibGlzRGBData zlib_glz;
+    case JPEG_ALPHA:
+        JPEGAlphaData jpeg_alpha;
+    case SURFACE:
+        Surface surface;
+    } u;
+};
+
+struct Pattern {
+    Image *pat @nonnull;
+    Point pos;
+};
+
+struct Brush {
+    brush_type type;
+    switch (type) {
+    case SOLID:
+        uint32 color;
+    case PATTERN:
+        Pattern pattern;
+    } u;
+};
+
+struct QMask {
+    mask_flags flags;
+    Point pos;
+    Image *bitmap;
+};
+
+struct LineAttr {
+    line_flags flags;
+    switch (flags) {
+    case STYLED:
+        uint8 style_nseg;
+   } u1 @anon;
+   switch (flags) {
+   case STYLED:
+        fixed28_4 *style[style_nseg];
+   } u2 @anon;
+};
+
+struct RasterGlyphA1 {
+    Point render_pos;
+    Point glyph_origin;
+    uint16 width;
+    uint16 height;
+    uint8 data[image_size(1, width, height)] @end;
+} @ctype(SpiceRasterGlyph);
+
+struct RasterGlyphA4 {
+    Point render_pos;
+    Point glyph_origin;
+    uint16 width;
+    uint16 height;
+    uint8 data[image_size(4, width, height)] @end;
+} @ctype(SpiceRasterGlyph);
+
+struct RasterGlyphA8 {
+    Point render_pos;
+    Point glyph_origin;
+    uint16 width;
+    uint16 height;
+    uint8 data[image_size(8, width, height)] @end;
+} @ctype(SpiceRasterGlyph);
+
+struct String {
+    uint16 length;
+    string_flags flags; /* Special: Only one of a1/a4/a8 set */
+    switch (flags) {
+    case RASTER_A1:
+	RasterGlyphA1 glyphs[length] @ctype(SpiceRasterGlyph) @ptr_array;
+    case RASTER_A4:
+	RasterGlyphA4 glyphs[length] @ctype(SpiceRasterGlyph) @ptr_array;
+    case RASTER_A8:
+	RasterGlyphA8 glyphs[length] @ctype(SpiceRasterGlyph) @ptr_array;
+    } u @anon;
+};
+
+struct StreamDataHeader {
+	uint32 id;
+	uint32 multi_media_time;
+};
+
+struct Head {
+    uint32 id;
+    uint32 surface_id;
+    uint32 width;
+    uint32 height;
+    uint32 x;
+    uint32 y;
+    uint32 flags;
+};
+
+channel DisplayChannel : BaseChannel {
+ server:
+    message {
+	uint32 x_res;
+	uint32 y_res;
+	uint32 bits;
+    } mode = 101;
+
+    Empty mark;
+    Empty reset;
+    message {
+	DisplayBase base;
+	Point src_pos;
+    } copy_bits;
+
+    message {
+	uint16 count;
+	ResourceID resources[count] @end;
+    } @ctype(SpiceResourceList) inval_list;
+
+    message {
+	uint8 wait_count;
+	WaitForChannel wait_list[wait_count] @end;
+    } @ctype(SpiceMsgWaitForChannels) inval_all_pixmaps;
+
+    message {
+	uint64 id;
+    } @ctype(SpiceMsgDisplayInvalOne) inval_palette;
+
+    Empty inval_all_palettes;
+
+    message {
+	uint32 surface_id;
+	uint32 id;
+	stream_flags flags;
+	video_codec_type codec_type;
+	uint64 stamp;
+	uint32 stream_width;
+	uint32 stream_height;
+	uint32 src_width;
+	uint32 src_height;
+	Rect dest;
+	Clip clip;
+    } stream_create = 122;
+
+    message {
+	StreamDataHeader base;
+	uint32 data_size;
+	uint8 data[data_size] @end @nomarshal;
+    } stream_data;
+
+    message {
+	uint32 id;
+	Clip clip;
+    } stream_clip;
+
+    message {
+	uint32 id;
+    } stream_destroy;
+
+    Empty stream_destroy_all;
+
+    message {
+	DisplayBase base;
+	struct Fill {
+	    Brush brush @outvar(brush);
+	    ropd rop_descriptor;
+	    QMask mask @outvar(mask);
+	} data;
+    } draw_fill = 302;
+
+    message {
+	DisplayBase base;
+	struct Opaque {
+	    Image *src_bitmap;
+	    Rect src_area;
+	    Brush brush;
+	    ropd rop_descriptor;
+	    image_scale_mode scale_mode;
+	    QMask mask @outvar(mask);
+	} data;
+    } draw_opaque;
+
+    message {
+	DisplayBase base;
+	struct Copy {
+	    Image *src_bitmap;
+	    Rect src_area;
+	    ropd rop_descriptor;
+	    image_scale_mode scale_mode;
+	    QMask mask @outvar(mask);
+	} data;
+    } draw_copy;
+
+    message {
+	DisplayBase base;
+	struct Blend {
+	    Image *src_bitmap;
+	    Rect src_area;
+	    ropd rop_descriptor;
+	    image_scale_mode scale_mode;
+	    QMask mask @outvar(mask);
+	} @ctype(SpiceCopy) data;
+    } draw_blend;
+
+    message {
+	DisplayBase base;
+	struct Blackness {
+	    QMask mask @outvar(mask);
+	} data;
+    } draw_blackness;
+
+    message {
+	DisplayBase base;
+	struct Whiteness {
+	    QMask mask @outvar(mask);
+	} data;
+    } draw_whiteness;
+
+    message {
+	DisplayBase base;
+	struct Invers {
+	    QMask mask @outvar(mask);
+	} data;
+    } draw_invers;
+
+    message {
+	DisplayBase base;
+	struct Rop3 {
+	    Image *src_bitmap;
+	    Rect src_area;
+	    Brush brush;
+	    uint8 rop3;
+	    image_scale_mode scale_mode;
+	    QMask mask @outvar(mask);
+	} data;
+    } draw_rop3;
+
+    message {
+	DisplayBase base;
+	struct Stroke {
+	    Path *path @marshall @nonnull;
+	    LineAttr attr;
+	    Brush brush;
+	    uint16 fore_mode;
+	    uint16 back_mode;
+	} data;
+    } draw_stroke;
+
+    message {
+	DisplayBase base;
+	struct Text {
+	    String *str @marshall @nonnull;
+	    Rect back_area;
+	    Brush fore_brush @outvar(fore_brush);
+	    Brush back_brush @outvar(back_brush);
+	    uint16 fore_mode;
+	    uint16 back_mode;
+	} data;
+    } draw_text;
+
+    message {
+	DisplayBase base;
+	struct Transparent {
+	    Image *src_bitmap;
+	    Rect src_area;
+	    uint32 src_color;
+	    uint32 true_color;
+	} data;
+    } draw_transparent;
+
+    message {
+	DisplayBase base;
+	struct AlphaBlend {
+	    alpha_flags alpha_flags;
+	    uint8 alpha;
+	    Image *src_bitmap;
+	    Rect src_area;
+	} data;
+    } draw_alpha_blend;
+
+    message {
+	uint32 surface_id;
+	uint32 width;
+	uint32 height;
+	surface_fmt format;
+	surface_flags flags;
+    } @ctype(SpiceMsgSurfaceCreate) surface_create;
+
+    message {
+	uint32 surface_id;
+    } @ctype(SpiceMsgSurfaceDestroy) surface_destroy;
+
+    message {
+	StreamDataHeader base;
+	uint32 width;
+	uint32 height;
+	Rect dest;
+	uint32 data_size;
+	uint8 data[data_size] @end @nomarshal;
+    } stream_data_sized;
+
+    message {
+	uint16 count;
+    uint16 max_allowed;
+	Head heads[count] @end;
+    } monitors_config;
+
+    message {
+    	DisplayBase base;
+	struct Composite {
+	    composite_flags flags;
+	    Image *src_bitmap;
+	    switch (flags) {
+	    case HAS_MASK:
+	        Image *mask_bitmap;
+            } a @anon;
+	    switch (flags) {
+	    case HAS_SRC_TRANSFORM:
+	        Transform src_transform;
+            } b @anon;
+	    switch (flags) {
+	    case HAS_MASK_TRANSFORM:
+	        Transform mask_transform;
+            } c @anon;
+	    Point16 src_origin;
+	    Point16 mask_origin;
+	} data;
+    } draw_composite;
+
+    message {
+        uint32 stream_id;
+        uint32 unique_id;
+        uint32 max_window_size;
+        uint32 timeout_ms;
+    } stream_activate_report;
+
+ client:
+    message {
+	uint8 pixmap_cache_id;
+	int64 pixmap_cache_size; //in pixels
+	uint8 glz_dictionary_id;
+	int32 glz_dictionary_window_size;  // in pixels
+    } init = 101;
+
+    message {
+        uint32 stream_id;
+        uint32 unique_id;
+        uint32 start_frame_mm_time;
+        uint32 end_frame_mm_time;
+        uint32 num_frames;
+        uint32 num_drops;
+        int32 last_frame_delay;
+        uint32 audio_delay;
+    } stream_report;
+};
+
+flags16 keyboard_modifier_flags {
+    SCROLL_LOCK,
+    NUM_LOCK,
+    CAPS_LOCK
+};
+
+enum8 mouse_button {
+    INVALID,
+    LEFT,
+    MIDDLE,
+    RIGHT,
+    UP,
+    DOWN,
+};
+
+flags16 mouse_button_mask {
+    LEFT,
+    MIDDLE,
+    RIGHT
+};
+
+channel InputsChannel : BaseChannel {
+ client:
+    message {
+	uint32 code;
+    } @ctype(SpiceMsgcKeyDown) key_down = 101;
+
+    message {
+	uint32 code;
+    } @ctype(SpiceMsgcKeyUp) key_up;
+
+    message {
+	keyboard_modifier_flags modifiers;
+    } @ctype(SpiceMsgcKeyModifiers) key_modifiers;
+
+    Data key_scancode;
+
+    message {
+	int32 dx;
+	int32 dy;
+	mouse_button_mask buttons_state;
+    } @ctype(SpiceMsgcMouseMotion) mouse_motion = 111;
+
+    message {
+	uint32 x;
+	uint32 y;
+	mouse_button_mask buttons_state;
+	uint8 display_id;
+    } @ctype(SpiceMsgcMousePosition) mouse_position;
+
+    message {
+	mouse_button button;
+	mouse_button_mask buttons_state;
+    } @ctype(SpiceMsgcMousePress) mouse_press;
+
+    message {
+	mouse_button button;
+	mouse_button_mask buttons_state;
+    } @ctype(SpiceMsgcMouseRelease) mouse_release;
+
+ server:
+    message {
+	keyboard_modifier_flags keyboard_modifiers;
+    } init = 101;
+
+    message {
+	keyboard_modifier_flags modifiers;
+    } key_modifiers;
+
+    Empty mouse_motion_ack = 111;
+};
+
+enum8 cursor_type {
+    ALPHA,
+    MONO,
+    COLOR4,
+    COLOR8,
+    COLOR16,
+    COLOR24,
+    COLOR32,
+};
+
+flags16 cursor_flags {
+    NONE, /* Means no cursor */
+    CACHE_ME,
+    FROM_CACHE,
+};
+
+struct CursorHeader {
+    uint64 unique;
+    cursor_type type;
+    uint16 width;
+    uint16 height;
+    uint16 hot_spot_x;
+    uint16 hot_spot_y;
+};
+
+struct Cursor {
+    cursor_flags flags;
+    switch (flags) {
+    case !NONE:
+        CursorHeader header;
+    } u @anon;
+    uint8 data[] @as_ptr(data_size);
+};
+
+channel CursorChannel : BaseChannel {
+ server:
+    message {
+	Point16 position;
+	uint16 trail_length;
+	uint16 trail_frequency;
+	uint8 visible;
+	Cursor cursor;
+    } init = 101;
+
+    Empty reset;
+
+    message {
+	Point16 position;
+	uint8 visible;
+	Cursor cursor;
+    } set;
+
+    message {
+	Point16 position;
+    } move;
+
+    Empty hide;
+
+    message {
+	uint16 length;
+	uint16 frequency;
+    } trail;
+
+    message {
+	uint64 id;
+    } @ctype(SpiceMsgDisplayInvalOne) inval_one;
+
+    Empty inval_all;
+};
+
+enum16 audio_data_mode {
+    INVALID,
+    RAW,
+    CELT_0_5_1,
+};
+
+enum16 audio_fmt {
+    INVALID,
+    S16,
+};
+
+message AudioVolume {
+    uint8 nchannels;
+    uint16 volume[nchannels] @end;
+};
+
+message AudioMute {
+    uint8 mute;
+};
+
+channel PlaybackChannel : BaseChannel {
+ server:
+    message {
+	uint32 time;
+	uint8 data[] @as_ptr(data_size);
+    } @ctype(SpiceMsgPlaybackPacket) data = 101;
+
+    message {
+	uint32 time;
+	audio_data_mode mode;
+	uint8 data[] @as_ptr(data_size);
+    } mode;
+
+    message {
+       uint32 channels;
+       audio_fmt format;
+       uint32 frequency;
+       uint32 time;
+    } start;
+
+    Empty stop;
+    AudioVolume volume;
+    AudioMute mute;
+
+    message {
+        uint32 latency_ms;
+    } latency;
+};
+
+channel RecordChannel : BaseChannel {
+ server:
+    message {
+	uint32 channels;
+	audio_fmt format;
+	uint32 frequency;
+    } start = 101;
+
+    Empty stop;
+    AudioVolume volume;
+    AudioMute mute;
+ client:
+    message {
+	uint32 time;
+	uint8 data[] @nomarshal @as_ptr(data_size);
+    } @ctype(SpiceMsgcRecordPacket) data = 101;
+
+    message {
+	uint32 time;
+	audio_data_mode mode;
+	uint8 data[] @as_ptr(data_size);
+    } mode;
+
+    message {
+	uint32 time;
+    } start_mark;
+};
+
+enum16 tunnel_service_type {
+    INVALID,
+    GENERIC,
+    IPP,
+};
+
+enum16 tunnel_ip_type {
+    INVALID,
+    IPv4,
+};
+
+struct TunnelIpInfo {
+    tunnel_ip_type type;
+    switch (type) {
+    case IPv4:
+	uint8 ipv4[4];
+    } u;
+} @ctype(SpiceMsgTunnelIpInfo);
+
+channel TunnelChannel : BaseChannel {
+ server:
+    message {
+	uint16 max_num_of_sockets;
+	uint32 max_socket_data_size;
+    } init = 101;
+
+    message {
+	uint32 service_id;
+	TunnelIpInfo virtual_ip;
+    } service_ip_map;
+
+    message {
+	uint16 connection_id;
+	uint32 service_id;
+	uint32 tokens;
+    } socket_open;
+
+    message {
+	uint16 connection_id;
+    } socket_fin;
+
+    message {
+	uint16 connection_id;
+    } socket_close;
+
+    message {
+	uint16 connection_id;
+	uint8 data[] @end;
+    } socket_data;
+
+    message {
+	uint16 connection_id;
+    } socket_closed_ack;
+
+    message {
+	uint16 connection_id;
+	uint32 num_tokens;
+    } @ctype(SpiceMsgTunnelSocketTokens) socket_token;
+
+ client:
+    message {
+	tunnel_service_type type;
+	uint32 id;
+	uint32 group;
+	uint32 port;
+	uint8 *name[cstring()] @nocopy;
+	uint8 *description[cstring()] @nocopy;
+	switch (type) {
+	case IPP:
+	    TunnelIpInfo ip @ctype(SpiceMsgTunnelIpInfo);
+	} u;
+    } @ctype(SpiceMsgcTunnelAddGenericService) service_add = 101;
+
+    message {
+	uint32 id;
+    } @ctype(SpiceMsgcTunnelRemoveService) service_remove;
+
+    message {
+	uint16 connection_id;
+	uint32 tokens;
+    } socket_open_ack;
+
+    message {
+	uint16 connection_id;
+    } socket_open_nack;
+
+    message {
+	uint16 connection_id;
+    } socket_fin;
+
+    message {
+	uint16 connection_id;
+    } socket_closed;
+
+    message {
+	uint16 connection_id;
+    } socket_closed_ack;
+
+    message {
+	uint16 connection_id;
+	uint8 data[] @end;
+    } socket_data;
+
+    message {
+	uint16 connection_id;
+	uint32 num_tokens;
+    } @ctype(SpiceMsgcTunnelSocketTokens) socket_token;
+};
+
+enum32 vsc_message_type {
+    Init = 1,
+    Error,
+    ReaderAdd,
+    ReaderRemove,
+    ATR,
+    CardRemove,
+    APDU,
+    Flush,
+    FlushComplete
+};
+
+struct VscMessageHeader {
+    vsc_message_type type;
+    uint32 reader_id;
+    uint32 length;
+} @ctype(VSCMsgHeader);
+
+struct VscMessageError {
+    uint32 code;
+} @ctype(VSCMsgError);
+
+struct VscMessageAPDU {
+    uint8 data[];
+} @ctype(VSCMsgAPDU);
+
+struct VscMessageATR {
+    uint8 data[];
+} @ctype(VSCMsgATR);
+
+struct VscMessageReaderAdd {
+    int8 *reader_name[] @zero_terminated @nonnull @end @nomarshal;
+} @ctype(VSCMsgReaderAdd);
+
+channel SmartcardChannel : BaseChannel {
+ server:
+    message {
+	vsc_message_type type;
+	uint32 reader_id;
+	uint32 length;
+	uint8 data[] @end;
+    } @ctype(SpiceMsgSmartcard) data = 101;
+
+ client:
+    message {
+	VscMessageHeader header;
+	switch (header.type) {
+	case ReaderAdd:
+	    VscMessageReaderAdd add;
+	case ATR:
+	case APDU:
+	    VscMessageATR atr_data;
+	case Error:
+	    VscMessageError error;
+	} u @anon;
+    } @ctype(SpiceMsgcSmartcard) data = 101;
+
+    message {
+	vsc_message_type type;
+	uint32 reader_id;
+	uint32 length;
+    } @ctype(VSCMsgHeader) header = 101;
+
+    message {
+	uint32 code;
+    } @ctype(VSCMsgError) error = 101;
+
+    message {
+	uint8 data[];
+    } @ctype(VSCMsgATR) atr = 101;
+
+    message {
+	int8 reader_name[] @zero_terminated @nonnull;
+    } @ctype(VSCMsgReaderAdd) reader_add = 101;
+} @ifdef(USE_SMARTCARD);
+
+channel SpicevmcChannel : BaseChannel {
+server:
+    Data data = 101;
+client:
+    Data data = 101;
+};
+
+channel UsbredirChannel : SpicevmcChannel {
+};
+
+channel PortChannel : SpicevmcChannel {
+ client:
+    message {
+	uint8 event;
+    } event = 201;
+ server:
+    message {
+	uint32 name_size;
+	uint8 *name[name_size] @zero_terminated @marshall @nonnull;
+	uint8 opened;
+    } init = 201;
+    message {
+	uint8 event;
+    } event;
+};
+
+protocol Spice {
+    MainChannel main = 1;
+    DisplayChannel display;
+    InputsChannel inputs;
+    CursorChannel cursor;
+    PlaybackChannel playback;
+    RecordChannel record;
+    TunnelChannel tunnel;
+    SmartcardChannel smartcard;
+    UsbredirChannel usbredir;
+    PortChannel port;
+};

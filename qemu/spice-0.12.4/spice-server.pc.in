@@ -1,0 +1,13 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: spice
+Description: SPICE server library
+Version: @VERSION@
+
+Requires.private: @SPICE_REQUIRES@
+Libs: -L${libdir} -lspice-server
+Libs.private: @SPICE_NONPKGCONFIG_LIBS@
+Cflags: -I${includedir}/spice-server

@@ -1,0 +1,11 @@
+#!/bin/bash
+
+ROOT=$(dirname "$0")
+QEMU=$ROOT/qemu/x86_64-linux-user/qemu-x86_64
+
+if [[ ! -e "$QEMU" ]]; then
+  echo "can't find qemu image (see $QEMU)"
+  exit 1
+fi
+
+$QEMU "$@"

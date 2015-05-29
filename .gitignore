@@ -1,0 +1,163 @@
+/tmp/
+*~
+*.o
+*.Po
+*.Tpo
+*.swp
+*.swn
+*.swo
+a.out
+test/passMan/app
+test/passMan/libenclave.so
+test/passMan/pmTest
+
+# Tor files
+Tor/tor-0.2.5.10/doc/*
+Tor/tor-0.2.5.10/micro-revision.i
+Tor/chutney/lib/chutney/*.pyc
+Tor/chutney/net/*
+Tor/tor-0.2.5.10/*.log
+Tor/tor-0.2.5.10/src/common/*.a
+Tor/tor-0.2.5.10/src/or/*.a
+Tor/tor-0.2.5.10/src/or/or_sha1.i
+Tor/tor-0.2.5.10/src/common/common_sha1.i
+Tor/tor-0.2.5.10/src/or/tor
+Tor/tor-0.2.5.10/src/test/bench
+Tor/tor-0.2.5.10/src/test/test
+Tor/tor-0.2.5.10/src/test/test-child
+Tor/tor-0.2.5.10/src/test/test-ntor-cl
+Tor/tor-0.2.5.10/src/test/test-bt-cl
+Tor/tor-0.2.5.10/src/tools/tor-checkkey
+Tor/tor-0.2.5.10/src/tools/tor-gencert
+Tor/tor-0.2.5.10/src/tools/tor-resolve
+Tor/tor-0.2.5.10/autom4te.cache/
+Tor/tor-0.2.5.10/Makefile
+Tor/tor-0.2.5.10/config.log
+Tor/enclave_Tor/enclave_process
+Tor/enclave_Tor/libor-crypto.a
+Tor/enclave_Tor/libor.a
+
+# clone from openssl
+# Object files
+user/openssl/*.o
+user/openssl/*.obj
+
+# editor artefacts
+user/openssl/*.swp
+user/openssl/.#*
+user/openssl/#*#
+user/openssl/*~
+
+# Top level excludes
+user/openssl/Makefile.bak
+user/openssl/Makefile
+user/openssl/MINFO
+user/openssl/*.a
+user/openssl/include
+user/openssl/*.pc
+user/openssl/rehash.time
+user/openssl/inc.*
+user/openssl/makefile.*
+user/openssl/out.*
+user/openssl/tmp.*
+
+# Most *.c files under test/ are symlinks
+user/openssl/test/*.c
+# Apart from these
+!user/openssl/test/asn1test.c
+!user/openssl/test/methtest.c
+!user/openssl/test/dummytest.c
+!user/openssl/test/igetest.c
+!user/openssl/test/r160test.c
+!user/openssl/test/fips_algvs.c
+!user/openssl/test/testutil.c
+
+user/openssl/test/*.ss
+user/openssl/test/*.srl
+user/openssl/test/.rnd
+user/openssl/test/test*.pem
+user/openssl/test/newkey.pem
+
+# Certificate symbolic links
+user/openssl/*.0
+
+# Links under apps
+user/openssl/apps/CA.pl
+user/openssl/apps/md4.c
+
+
+# Auto generated headers
+user/openssl/crypto/buildinf.h
+user/openssl/crypto/opensslconf.h
+
+# Auto generated assembly language source files
+user/openssl/*.s
+!user/openssl/crypto/bn/asm/pa-risc2.s
+!user/openssl/crypto/bn/asm/pa-risc2W.s
+user/openssl/crypto/aes/asm/a_win32.asm
+user/openssl/crypto/bf/asm/b_win32.asm
+user/openssl/crypto/bn/asm/bn_win32.asm
+user/openssl/crypto/bn/asm/co_win32.asm
+user/openssl/crypto/bn/asm/mt_win32.asm
+user/openssl/crypto/cast/asm/c_win32.asm
+user/openssl/crypto/cpu_win32.asm
+user/openssl/crypto/des/asm/d_win32.asm
+user/openssl/crypto/des/asm/y_win32.asm
+user/openssl/crypto/md5/asm/m5_win32.asm
+user/openssl/crypto/rc4/asm/r4_win32.asm
+user/openssl/crypto/rc5/asm/r5_win32.asm
+user/openssl/crypto/ripemd/asm/rm_win32.asm
+user/openssl/crypto/sha/asm/s1_win32.asm
+user/openssl/crypto/sha/asm/sha512-sse2.asm
+
+# Executables
+user/openssl/apps/openssl
+user/openssl/test/sha256t
+user/openssl/test/sha512t
+user/openssl/test/gost2814789t
+user/openssl/test/*test
+user/openssl/test/fips_aesavs
+user/openssl/test/fips_desmovs
+user/openssl/test/fips_dhvs
+user/openssl/test/fips_drbgvs
+user/openssl/test/fips_dssvs
+user/openssl/test/fips_ecdhvs
+user/openssl/test/fips_ecdsavs
+user/openssl/test/fips_rngvs
+user/openssl/test/fips_test_suite
+user/openssl/*.so*
+user/openssl/*.dylib*
+user/openssl/*.dll*
+# Exceptions
+!user/openssl/test/bctest
+!user/openssl/crypto/des/times/486-50.sol
+
+# Misc auto generated files
+user/openssl/tools/c_rehash
+user/openssl/test/evptests.txt
+user/openssl/lib
+user/openssl/Makefile.save
+user/openssl/*.bak
+user/openssl/tags
+user/openssl/TAGS
+user/openssl/cscope.out
+user/openssl/*.d
+
+# Windows
+user/openssl/tmp32dll
+user/openssl/tmp32dll.dbg
+user/openssl/out32dll
+user/openssl/out32dll.dbg
+user/openssl/inc32
+user/openssl/MINFO
+user/openssl/ms/bcb.mak
+user/openssl/ms/libeay32.def
+user/openssl/ms/nt.mak
+user/openssl/ms/ntdll.mak
+user/openssl/ms/ssleay32.def
+user/openssl/ms/version32.rc
+
+#Ctags and Cscope files
+tags
+cscope*
+/github

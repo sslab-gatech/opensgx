@@ -1,0 +1,3 @@
+common-obj += entropy.o ctr_drbg.o bignum.o md.o oid.o asn1parse.o sha1.o \
+              sha512.o aes.o entropy_poll.o aesni.o timing.o md_wrap.o sha256.o \
+              md5.o ripemd160.o net.o rsa.o aes_cmac128.o

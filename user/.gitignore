@@ -1,0 +1,10 @@
+/enclu
+/example1
+/log
+/enclu
+/enclu_test*
+!/enclu_test*.c
+/sgx-tool
+/non_enclave/*
+!/non_enclave/*.c
+!/non_enclave/README

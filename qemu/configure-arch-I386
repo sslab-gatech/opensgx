@@ -1,0 +1,12 @@
+#!/bin/bash
+
+export ARFLAGS="rv"
+
+./configure \
+  --prefix=/usr \
+  --sysconfdir=/etc \
+  --python=/usr/bin/python2 \
+  --libexecdir=/usr/lib/qemu \
+  --enable-linux-aio \
+  --localstatedir=/var \
+  --target-list=i386-linux-user,i386-softmmu

@@ -1,0 +1,14 @@
+Hey~ Mingwei :)
+use this test case for your remote attestation implementation..
+
+1. run test/simple-attest first -> it busy waits ping message from the non_enclave
+2. run non_enclave/attest_nonEnc -> it sends ping message to simple-attest
+3. simple-attest will send result of sgx_report
+4. attest_nonEnc receives it and print result.
+
+
+FYI... we don't have thread supports in Enclave, so have some problem when we have
+recv and send back to back. Make sure that process has some waits before calling send
+to make other process be ready to recv.
+check non_enclave/network_nonEnc & test/simple_network :)
+

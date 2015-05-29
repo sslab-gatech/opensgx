@@ -1,0 +1,87 @@
+   SPICE: Simple Protocol for Independent Computing Environments
+   =============================================================
+
+SPICE is a remote display system built for virtual environments which
+allows you to view a computing 'desktop' environment not only on the
+machine where it is running, but from anywhere on the Internet and
+from a wide variety of machine architectures.
+
+Installation
+------------
+
+The SPICE package uses GNU autotools, so the build install process
+follows the standard process documented in the INSTALL file. As a
+quick start you can do
+
+  ./configure --prefix=/usr --sysconfdir=/etc \
+        --localstatedir=/var --libdir=/usr/lib
+  make
+  sudo make install
+
+Or to install into a private user specific location
+
+  ./configure --prefix=$HOME/spice
+  make
+  make install
+
+The following mandatory dependancies are required in order to
+build SPICE
+
+    Spice protocol >= 0.9.0
+    Celt           >= 0.5.1.1, < 0.6.0
+    Pixman         >= 0.17.7
+    OpenSSL
+    libjpeg
+    zlib
+    Cyrus-SASL
+
+The following optional dependancies increase the available
+functionality
+
+    GE Gui         >= 0.6.0,  < 0.7.0   (GUI app support)
+    OpenGL                              (GUI app support)
+    Alsa                                (Linux support)
+    XRandR         >= 1.2               (X11 support)
+    Xinerama       >= 1.0               (X11 support)
+    libcacard      >= 0.1.2             (Smartcard support)
+    Slirp                               (Tunnelling support)
+
+Communication
+-------------
+
+To communicate with the development team, or to post patches
+there is a technical mailing list:
+
+   http://lists.freedesktop.org/mailman/listinfo/spice-devel
+
+There is also a mailing list for new release announcements:
+
+   http://lists.freedesktop.org/archives/spice-announce/
+
+To view known bugs, or report new bugs, in SPICE visit
+
+   https://bugs.freedesktop.org/describecomponents.cgi?product=Spice
+
+Bugs found when using an OS distribution's binary packages should
+be reported to the OS vendors' own bug tracker first.
+
+The latest SPICE code can be found in GIT at:
+
+   http://cgit.freedesktop.org/spice/
+
+Licensing
+---------
+
+SPICE is provided under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.
+
+Please see the COPYING file for the complete LGPLv2+ license
+terms, or visit <http://www.gnu.org/licenses/>.
+
+Experimental Features
+---------------------
+To enable multiple client connections, set:
+SPICE_DEBUG_ALLOW_MC=1
+
+-- End of readme

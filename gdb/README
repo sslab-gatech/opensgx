@@ -1,0 +1,22 @@
+GDB python script for debugging SGX internal data structures
+============================================================
+1. Install
+Currently, automatic install isn't supported yet.
+So please manaully configure your gdb for new debgging commands.
+
+1-1. Install Example(info epcm)
+-Open the gdb using sgx-dbg
+-Type "source sgx/gdb_python/info_epcm.py" on your gdb promt
+-Try  "info epcm" and it will print values of whole EPCM 
+
+** chcek your gdb supports python **
+if you see "Python scripting is not supported in this copy of GDB" msg,
+re-config the gdb with "--with-python" flag, and re-compile it.
+=======================
+2. New Commands for SGX
+info epcm
+info epc
+
+*info secs [eid]
+*list enclave 
+will be updated

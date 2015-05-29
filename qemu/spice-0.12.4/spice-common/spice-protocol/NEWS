@@ -1,0 +1,130 @@
+Major changes in 0.12.6
+=======================
+* add adaptive video streaming support:
+  control playback latency and receive playback
+  reports from the client.
+* add agent capabilities for signaling guest line ending.
+
+Major changes in 0.12.5
+=======================
+* Add agent file xfer success status
+* Add a client-disconnected agent message
+
+Major changes in 0.12.4
+=======================
+* Add agent file copy support.
+* Add agent sparse monitors capability.
+* Add controller proxy message.
+
+Major changes in 0.12.3
+=======================
+* Add a generic "port" channel
+
+Major changes in 0.12.2
+=======================
+* Add A8 surface capability in display channel.
+* Add to qxl device support for:
+ * client present
+ * client capabilities
+ * client monitors configuration
+
+Major changes in 0.12.1
+=======================
+* Support seamless migration.
+* New QXLComposite message for better X support.
+* Support arbitrary scancode message INPUTS_KEY_SCANCODE.
+
+Major changes in 0.12.0
+=======================
+* Add support for arbitrary resolution on Windows QXL with
+  QXL_ESCAPE_SET_CUSTOM_DISPLAY
+* Add support for arbitrary resolution and multiple monitor per
+  display channel with QXLMonitorsConfig and co
+* build cleanup
+
+Major changes in 0.10.3 (0.10.2 was never released)
+===================================================
+* Add support for video streams with differently sized (wxh) data
+* Add controller messages for USB redirection, COLOR_DEPTH, DISABLE_EFFECTS,
+  and ENABLE_SMARTCARD
+* Add name & uuid messages on main channel
+* some cleanups
+* Fixes RHBZ#815422, RHBZ#807295, RHBZ#787447
+
+Major changes in 0.10.1
+=======================
+* Add support for a header without sublist and serial (mini header)
+
+Major changes in 0.10.0
+=======================
+* no changes, released to match version with spice
+
+Major changes in 0.9.1 (same as 0.8.2 in 0.8 branch)
+======================
+* Add support for semi-seamless migration
+
+Major changes in 0.9.0
+======================
+* Add support for generic spicevmc chardev passthrough messages
+* Add USB redirection channel
+
+Major changes in 0.8.1
+======================
+* Add support for volume change
+* Add support for async guest io writes and interrupt
+* Add support for suspend related guest io writes
+* Add support for interrupt indicating guest bug
+
+Major changes in 0.8.0
+======================
+* Add support for different clipboards (selections) to vd_agent copy paste
+* Add support for using different authentication mechanisms (just SASL for now)
+
+Major changes in 0.7.1
+======================
+* Add some enums for the xorg qxl driver
+* Some other small fixes
+
+Major changes in 0.7.0
+======================
+* Add smartcard channel
+
+Major changes in 0.6.4
+======================
+* Make controller client protocol menu text UTF8 rather then 16 bit unicode
+
+Major changes in 0.6.3:
+=======================
+* Add support for copy and paste to the agent protocol
+* Add foreign-menu and external controller client protocol headers
+
+Major changes in 0.6.2:
+=======================
+* Skipped to stay in sync with spice
+
+Major changes in 0.6.1:
+=======================
+* Added compat flag for 16bpp commands
+
+Major changes in 0.6.0:
+=======================
+* Initial messages for clipboard sharing
+* Move agent protocol structs from spice to spice-protocol
+* Add capabilities to agent protocol
+
+Major changes in 0.5.3:
+=======================
+
+Network major number changed to 2 to reflect that the network
+protocol is now stable and backwards compatible from this point.
+
+Some vdagent messages for display settings and clipboard sharing
+were added.
+
+Major changes in 0.5.2:
+=======================
+
+This is the first release of the unstable 0.5.x series leading up to 0.6.
+This module was split out of spice so that e.g. drivers and qemu can
+get the types and constants they need without using the full spice
+codebase.

@@ -1,0 +1,147 @@
+SPICE_SERVER_0.6.0 {
+global:
+    spice_server_add_interface;
+    spice_server_add_renderer;
+    spice_server_char_device_recognized_subtypes;
+    spice_server_char_device_wakeup;
+    spice_server_destroy;
+    spice_server_get_image_compression;
+    spice_server_get_peer_info;
+    spice_server_get_sock_info;
+    spice_server_init;
+    spice_server_kbd_leds;
+    spice_server_migrate_client_state;
+    spice_server_migrate_end;
+    spice_server_migrate_info;
+    spice_server_migrate_start;
+    spice_server_new;
+    spice_server_playback_get_buffer;
+    spice_server_playback_put_samples;
+    spice_server_playback_start;
+    spice_server_playback_stop;
+    spice_server_record_get_samples;
+    spice_server_record_start;
+    spice_server_record_stop;
+    spice_server_remove_interface;
+    spice_server_set_addr;
+    spice_server_set_agent_mouse;
+    spice_server_set_channel_security;
+    spice_server_set_image_compression;
+    spice_server_set_jpeg_compression;
+    spice_server_set_noauth;
+    spice_server_set_playback_compression;
+    spice_server_set_port;
+    spice_server_set_streaming_video;
+    spice_server_set_ticket;
+    spice_server_set_tls;
+    spice_server_set_zlib_glz_compression;
+local: *;
+};
+
+SPICE_SERVER_0.6.1 {
+global:
+    spice_get_current_compat_version;
+    spice_server_set_compat_version;
+} SPICE_SERVER_0.6.0;
+
+SPICE_SERVER_0.8.0 {
+global:
+    spice_server_migrate_switch;
+} SPICE_SERVER_0.6.1;
+
+SPICE_SERVER_0.8.1 {
+global:
+    spice_server_set_agent_copypaste;
+} SPICE_SERVER_0.8.0;
+
+SPICE_SERVER_0.8.2 {
+global:
+    spice_server_set_sasl;
+    spice_server_set_sasl_appname;
+    spice_qxl_wakeup;
+    spice_qxl_oom;
+    spice_qxl_start;
+    spice_qxl_stop;
+    spice_qxl_update_area;
+    spice_qxl_add_memslot;
+    spice_qxl_del_memslot;
+    spice_qxl_reset_memslots;
+    spice_qxl_destroy_surfaces;
+    spice_qxl_destroy_primary_surface;
+    spice_qxl_create_primary_surface;
+    spice_qxl_reset_image_cache;
+    spice_qxl_reset_cursor;
+    spice_qxl_destroy_surface_wait;
+    spice_qxl_loadvm_commands;
+    spice_qxl_update_area_async;
+    spice_qxl_add_memslot_async;
+    spice_qxl_destroy_surfaces_async;
+    spice_qxl_destroy_primary_surface_async;
+    spice_qxl_create_primary_surface_async;
+    spice_qxl_destroy_surface_async;
+    spice_qxl_flush_surfaces_async;
+} SPICE_SERVER_0.8.1;
+
+SPICE_SERVER_0.8.3 {
+global:
+    spice_server_migrate_connect;
+} SPICE_SERVER_0.8.2;
+
+SPICE_SERVER_0.10.0 {
+global:
+    spice_server_playback_set_mute;
+    spice_server_playback_set_volume;
+    spice_server_record_set_mute;
+    spice_server_record_set_volume;
+    spice_server_get_num_clients;
+} SPICE_SERVER_0.8.3;
+
+SPICE_SERVER_0.10.1 {
+global:
+    spice_server_add_client;
+    spice_server_add_ssl_client;
+} SPICE_SERVER_0.10.0;
+
+SPICE_SERVER_0.10.2 {
+global:
+    spice_server_set_name;
+    spice_server_set_uuid;
+    spice_server_set_listen_socket_fd;
+} SPICE_SERVER_0.10.1;
+
+SPICE_SERVER_0.10.3 {
+global:
+    spice_server_is_server_mouse;
+} SPICE_SERVER_0.10.2;
+
+SPICE_SERVER_0.10.4 {
+global:
+    spice_qxl_monitors_config_async;
+} SPICE_SERVER_0.10.3;
+
+SPICE_SERVER_0.11.2 {
+global:
+    spice_server_vm_start;
+    spice_server_vm_stop;
+    spice_server_set_seamless_migration;
+} SPICE_SERVER_0.10.4;
+
+SPICE_SERVER_0.11.4 {
+global:
+    spice_server_set_exit_on_disconnect;
+} SPICE_SERVER_0.11.2;
+
+SPICE_SERVER_0.12.2 {
+global:
+    spice_server_port_event;
+} SPICE_SERVER_0.11.4;
+
+SPICE_SERVER_0.12.3 {
+global:
+    spice_qxl_driver_unload;
+} SPICE_SERVER_0.12.2;
+
+SPICE_SERVER_0.12.4 {
+global:
+    spice_server_set_agent_file_xfer;
+} SPICE_SERVER_0.12.3;
