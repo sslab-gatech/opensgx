@@ -22,33 +22,6 @@ $ cd ..
 $ make
 ~~~~~
 
-Modules
--------
-
-- QEMU side
-qemu/target-i386/helper.h    : Register sgx helper functions (sgx_encls, sgx_enclu, ...).
-qemu/target-i386/cpu.h       : Add sgx-specific cpu registers (see refs-rev2 5.1.4).
-qemu/target-i386/translate.c : Emulates enclave mode memory access semantics.
-qemu/target-i386/sgx.h       : Define sgx and related data structures.
-qemu/target-i386/sgx-dbg.h   : Define debugging function.
-qemu/target-i386/sgx-utils.h : Define utils functions.
-qemu/target-i386/sgx-perf.h  : Perforamce evaluation.
-qemu/target-i386/sgx_helper.c: Implement sgx instructions.
-
-- User side
-user/sgx-kern.c         : Emulates kernel-level functions.
-user/sgx-user.c         : Emulates user-level functions.
-user/sgxLib.c           : Implements user-level API.
-user/sgx-utils.c        : Implements utils functions.
-user/sgx-signature.c    : Implements crypto related functions.
-user/sgx-runtime.c      : sgx runtime.
-user/sgx-test-runtime.c : sgx runtime for test cases.
-
-user/include/ : Headers.
-user/conf/    : Configuration files.
-user/test/    : Test cases.
-user/demo/    : Demo case.
-
 Run your first OpenSGX program
 ------------------------------
 
@@ -111,6 +84,32 @@ $ ./test.sh --help
  test/stub-malloc.c            :  An enclave test case for using heap
  test/stub-realloc.c           :  An enclave test case for sgx_realloc
 ~~~~~
+
+Pointers
+--------
+
+- QEMU side
+    - qemu/target-i386/helper.h    : Register sgx helper functions (sgx_encls, sgx_enclu, ...).
+    - qemu/target-i386/cpu.h       : Add sgx-specific cpu registers (see refs-rev2 5.1.4).
+    - qemu/target-i386/translate.c : Emulates enclave mode memory access semantics.
+    - qemu/target-i386/sgx.h       : Define sgx and related data structures.
+    - qemu/target-i386/sgx-dbg.h   : Define debugging function.
+    - qemu/target-i386/sgx-utils.h : Define utils functions.
+    - qemu/target-i386/sgx-perf.h  : Perforamce evaluation.
+    - qemu/target-i386/sgx_helper.c: Implement sgx instructions.
+
+- User side
+    - user/sgx-kern.c         : Emulates kernel-level functions.
+    - user/sgx-user.c         : Emulates user-level functions.
+    - user/sgxLib.c           : Implements user-level API.
+    - user/sgx-utils.c        : Implements utils functions.
+    - user/sgx-signature.c    : Implements crypto related functions.
+    - user/sgx-runtime.c      : sgx runtime.
+    - user/sgx-test-runtime.c : sgx runtime for test cases.
+    - user/include/ : Headers.
+    - user/conf/    : Configuration files.
+    - user/test/    : Test cases.
+    - user/demo/    : Demo case.
 
 Contact
 -------
