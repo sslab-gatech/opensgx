@@ -10,10 +10,11 @@ Contribution Guides
 Environments & Prerequisites
 ----------------------------
 - Tested: Ubuntu 14.04-15.04, Arch
+- Requisite: 
+  - Ubuntu: apt-get build-dep qemu
+  - Fedora: yum-builddep qemu
 
 ~~~~~{.sh}
-$ apt-get build-dep qemu
-
 $ cd qemu
 $ ./configure-arch
 $ make -j $(nproc)
@@ -120,7 +121,7 @@ Authors
 -------
 
 - Prerit Jain <pjain43@gatech.edu>
-- Soham Desai <sjdesai16@gmail.com>
+- Soham Desai <sdesai1@gatech.edu>
 - Seongmin Kim <dallas1004@gmail.com>
 - Ming-Wei Shih <mingwei.shih@gatech.edu>
 - JaeHyuk Lee <jhl9105@kaist.ac.kr>

@@ -17,7 +17,8 @@ BINS := $(patsubst %.c,%,$(wildcard test/*.c)) \
 ALL  := $(BINS) sgx-tool
 
 all: $(ALL)
-include tor/tor.mak
+
+
 
 polarssl/%.o: polarssl/%.c
 	$(CC) -c  $(CFLAGS) -o $@ $<

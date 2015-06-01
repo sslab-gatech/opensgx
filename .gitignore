@@ -161,3 +161,10 @@ user/openssl/ms/version32.rc
 tags
 cscope*
 /github
+
+# Doxygen Excludes
+
+# Exceptions
+
+
+

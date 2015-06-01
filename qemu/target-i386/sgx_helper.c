@@ -15,7 +15,10 @@
 #include "polarssl/aes_cmac128.h"
 
 static qeid_t qenclaves[MAX_ENCLAVES];
-/* SGX Global Data Structures */
+
+/**
+ *  SGX Global Data Structures
+ */
 static epcm_entry_t epcm[NUM_EPC];
 static epc_map * enclaveTrackEntry = NULL;      // Tracking pointers For enclaves
 static eid_einit_t * entry_eid = NULL;
