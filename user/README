@@ -83,3 +83,15 @@ f. Security features
      - Before execute EINIT, EEXTEND is used to measure enclave and update the
        sec.mrenclave vaule.
 
+g. Customized ssl library
+   - Based on openssl
+   - Changing standard library calls into sgx ABI calls to put and run them inside the enclave
+   - Library repackaging
+     $ cd user/openssl
+     $ ./config no-dso no-asm no-engines
+     $ make
+     $ cp libcrypto.a path/to/any/other/place && cd path/to/any/other/place
+     $ ar -x libcrypto.a && rename 's/^/ssl_/' *.o
+     $ ar cr sslLib.a *.o && mv sslLib.a sgx/user
+   - After get sslLib.a (customized openssl for sgx), compile and use ssl library functions
+     (See test/simple-openssl.c)

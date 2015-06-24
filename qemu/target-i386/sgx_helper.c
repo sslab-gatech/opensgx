@@ -1872,7 +1872,7 @@ void sgx_egetkey(CPUX86State *env)
     // Main egetkey operation
     attributes_t sealing_mask, tmp_attributes;
 
-    sealing_mask = attr_create(0, 0x03L);
+    sealing_mask = attr_create(0x03L, 0x0L);
     op_or((uint8_t *)&tmp_attributes,
           (uint8_t *)&keyrequest->attributeMask,
           (uint8_t *)&sealing_mask,

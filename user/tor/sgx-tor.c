@@ -15,7 +15,7 @@
 //#include <openssl/sha.h>
 
 #include "protocol.h"
-#include "tor-trampoline.h"
+#include "sgx-tor-trampoline.h"
 #include "tor-lib.h"
 
 #include <sgx-lib.h>
@@ -725,7 +725,7 @@ static RSA * generate_key(int bits)
 {
 	RSA *rsa = NULL;
 	crypto_pk_t *env = crypto_pk_new();
-	
+
 	if (crypto_pk_generate_key_with_bits(env,bits) < 0)
 	    goto done;
 /*
@@ -2290,5 +2290,6 @@ void enclave_main()
 	sgx_close(fd_et);
 	sgx_close(fd_te);
 */
+
     sgx_exit(NULL);
 }

@@ -61,10 +61,7 @@
 #include <openssl/crypto.h>
 #include "cryptlib.h"
 
-extern void *sgx_malloc(int size);
-extern void sgx_free(void *ptr);
-extern void *sgx_realloc(void *ptr, size_t size);
-
+#include "sgx.h"
 
 static int allow_customize = 1; /* we provide flexible functions for */
 static int allow_customize_debug = 1; /* exchanging memory-related functions
@@ -78,7 +75,7 @@ static int allow_customize_debug = 1; /* exchanging memory-related functions
  * the following pointers may be changed as long as 'allow_customize' is set
  */
 
-static void *(*malloc_func) (size_t) = sgx_malloc;
+static void *(*malloc_func) (size_t) = sgx_malloc + ENCLAVE_OFFSET;
 
 static void *default_malloc_ex(size_t num, const char *file, int line)
 {
@@ -86,7 +83,7 @@ static void *default_malloc_ex(size_t num, const char *file, int line)
 }
 
 static void *(*malloc_ex_func) (size_t, const char *file, int line)
-    = default_malloc_ex;
+    = default_malloc_ex + ENCLAVE_OFFSET;
 
 static void *(*realloc_func) (void *, size_t) = sgx_realloc;
 static void *default_realloc_ex(void *str, size_t num,
@@ -345,9 +342,8 @@ void *CRYPTO_malloc(int num, const char *file, int line)
             allow_customize_debug = 0;
         malloc_debug_func(NULL, num, file, line, 0);
     }
-// XXX
-//    ret = malloc_ex_func(num, file, line);
-    ret = sgx_malloc(num);
+    ret = malloc_ex_func(num, file, line);
+
 #ifdef LEVITTE_DEBUG_MEM
     fprintf(stderr, "LEVITTE_DEBUG_MEM:         > 0x%p (%d)\n", ret, num);
 #endif

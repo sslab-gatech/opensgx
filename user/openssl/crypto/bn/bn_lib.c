@@ -67,6 +67,8 @@
 #include "cryptlib.h"
 #include "bn_lcl.h"
 
+#include "../sgx.h"
+
 const char BN_version[] = "Big Number" OPENSSL_VERSION_PTEXT;
 
 /* This stuff appears to be completely unused, so is deprecated */
@@ -273,12 +275,16 @@ BIGNUM *BN_new(void)
         BNerr(BN_F_BN_NEW, ERR_R_MALLOC_FAILURE);
         return (NULL);
     }
+
+    sgx_memset(ret, 0x0, sizeof(BIGNUM));
+
     ret->flags = BN_FLG_MALLOCED;
     ret->top = 0;
     ret->neg = 0;
     ret->dmax = 0;
     ret->d = NULL;
     bn_check_top(ret);
+
     return (ret);
 }
 

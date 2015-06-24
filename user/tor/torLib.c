@@ -1,5 +1,5 @@
 #include <sgx-lib.h>
-#include "tor-trampoline.h"
+#include "sgx-tor-trampoline.h"
 
 // one 4k page : enclave page & offset
 
@@ -108,7 +108,7 @@ int sgx_snprintf(char dst[], int dst_size, char buf1[], size_t size1,
     return stub->in_arg1;
 }
 
-int sgx_time(char arg1[])
+int sgx_time(time_t *arg1)
 {
     sgx_stub_info_tor *stub = (sgx_stub_info_tor *)STUB_ADDR_TOR;
 

@@ -101,6 +101,8 @@
 #include <openssl/crypto.h>
 #include <openssl/lhash.h>
 
+#include "../sgx.h"
+
 const char lh_version[] = "lhash" OPENSSL_VERSION_PTEXT;
 
 #undef MIN_NODES
@@ -393,7 +395,7 @@ static LHASH_NODE **getrn(_LHASH *lh, const void *data, unsigned long *rhash)
     unsigned long hash, nn;
     LHASH_COMP_FN_TYPE cf;
 
-    hash = (*(lh->hash)) (data);
+    hash = (*(lh->hash + ENCLAVE_OFFSET)) (data);
     lh->num_hash_calls++;
     *rhash = hash;
 
@@ -401,7 +403,7 @@ static LHASH_NODE **getrn(_LHASH *lh, const void *data, unsigned long *rhash)
     if (nn < lh->p)
         nn = hash % lh->num_alloc_nodes;
 
-    cf = lh->comp;
+    cf = lh->comp + ENCLAVE_OFFSET;
     ret = &(lh->b[(int)nn]);
     for (n1 = *ret; n1 != NULL; n1 = n1->next) {
 #ifndef OPENSSL_NO_HASH_COMP

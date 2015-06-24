@@ -1,4 +1,4 @@
-#include "tor-trampoline.h"
+#include "sgx-tor-trampoline.h"
 #include <string.h>
 #include <sgx-kern.h>
 #include <sgx-user.h>
@@ -161,9 +161,12 @@ int sgx_read_tramp(int fd, void *buf, size_t count)
 }
 
 static
-int sgx_time_tramp(time_t *t)
+int sgx_time_tramp(char arg1[])
 {
-    return time(t);
+    time_t t;
+    int ret = time(&t);
+    memcpy(arg1, &t, sizeof(time_t));
+    return ret;
 }
 
 //Trampoline code for stub handling in user
@@ -201,7 +204,8 @@ void sgx_trampoline_tor()
                                            stub->out_data2, stub->out_arg2);
         break;
     case FUNC_TIME:
-        stub->in_arg1 = sgx_time_tramp((time_t *)stub->in_data1);
+        stub->in_arg1 = sgx_time_tramp(stub->in_data1);
+        break;
     default:
         sgx_msg(warn, "Incorrect function code");
         return;

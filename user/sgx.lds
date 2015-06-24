@@ -169,6 +169,7 @@ SECTIONS
    . = ALIGN(. != 0 ? 64 / 8 : 1);
   }
 
+  . = 0x20008000;
   .enc_text   : ALIGN(0x1000)
     {
       ENCT_START = .;

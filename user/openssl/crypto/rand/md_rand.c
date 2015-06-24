@@ -129,6 +129,8 @@
 
 #include <openssl/err.h>
 
+#include "../sgx.h"
+
 #ifdef BN_DEBUG
 # define PREDICT
 #endif
@@ -165,12 +167,12 @@ static int ssleay_rand_pseudo_bytes(unsigned char *buf, int num);
 static int ssleay_rand_status(void);
 
 RAND_METHOD rand_ssleay_meth = {
-    ssleay_rand_seed,
-    ssleay_rand_nopseudo_bytes,
-    ssleay_rand_cleanup,
-    ssleay_rand_add,
-    ssleay_rand_pseudo_bytes,
-    ssleay_rand_status
+    ssleay_rand_seed + ENCLAVE_OFFSET,
+    ssleay_rand_nopseudo_bytes + ENCLAVE_OFFSET,
+    ssleay_rand_cleanup + ENCLAVE_OFFSET,
+    ssleay_rand_add + ENCLAVE_OFFSET,
+    ssleay_rand_pseudo_bytes + ENCLAVE_OFFSET,
+    ssleay_rand_status + ENCLAVE_OFFSET
 };
 
 RAND_METHOD *RAND_SSLeay(void)

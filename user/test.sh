@@ -94,10 +94,6 @@ case "$1" in
       printf "%-30s: please test it with simple_send together\n" "$OUT" 
       continue  
       fi 
-      if [[ "$OUT" == "test/simple-openssl" ]]; then
-      printf "%-30s: Will be updated soon\n" "$OUT" 
-      continue  
-      fi 
       printf "%-30s: %s\n" "$OUT" "$(run_test $OUT)"
     done
     ;;

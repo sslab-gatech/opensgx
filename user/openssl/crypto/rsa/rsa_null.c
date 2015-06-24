@@ -63,6 +63,8 @@
 #include <openssl/rsa.h>
 #include <openssl/rand.h>
 
+#include "../sgx.h"
+
 /*
  * This is a dummy RSA implementation that just returns errors when called.
  * It is designed to allow some RSA functions to work while stopping those
@@ -86,14 +88,14 @@ static int RSA_null_init(RSA *rsa);
 static int RSA_null_finish(RSA *rsa);
 static RSA_METHOD rsa_null_meth = {
     "Null RSA",
-    RSA_null_public_encrypt,
-    RSA_null_public_decrypt,
-    RSA_null_private_encrypt,
-    RSA_null_private_decrypt,
+    RSA_null_public_encrypt + ENCLAVE_OFFSET,
+    RSA_null_public_decrypt + ENCLAVE_OFFSET,
+    RSA_null_private_encrypt + ENCLAVE_OFFSET,
+    RSA_null_private_decrypt + ENCLAVE_OFFSET,
     NULL,
     NULL,
-    RSA_null_init,
-    RSA_null_finish,
+    RSA_null_init + ENCLAVE_OFFSET,
+    RSA_null_finish + ENCLAVE_OFFSET,
     0,
     NULL,
     NULL,
