@@ -7,6 +7,8 @@
 
 #include "arm_arch.h"
 
+#include "../sgx.h"
+
 unsigned int OPENSSL_armcap_P = 0;
 
 #if __ARM_MAX_ARCH__<7
@@ -109,7 +111,7 @@ void OPENSSL_cpuid_setup(void)
 
     OPENSSL_armcap_P = 0;
 
-    memset(&ill_act, 0, sizeof(ill_act));
+    sgx_memset(&ill_act, 0, sizeof(ill_act));
     ill_act.sa_handler = ill_handler;
     ill_act.sa_mask = all_masked;
 

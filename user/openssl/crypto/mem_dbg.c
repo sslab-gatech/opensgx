@@ -118,6 +118,8 @@
 #include <openssl/bio.h>
 #include <openssl/lhash.h>
 
+#include "sgx.h"
+
 static int mh_mode = CRYPTO_MEM_CHECK_OFF;
 /*
  * The state changes to CRYPTO_MEM_CHECK_ON | CRYPTO_MEM_CHECK_ENABLE when
@@ -500,7 +502,7 @@ void CRYPTO_dbg_malloc(void *addr, int num, const char *file, int line,
             if (options & V_CRYPTO_MDEBUG_THREAD)
                 CRYPTO_THREADID_current(&m->threadid);
             else
-                memset(&m->threadid, 0, sizeof(m->threadid));
+                sgx_memset(&m->threadid, 0, sizeof(m->threadid));
 
             if (order == break_order_num) {
                 /* BREAK HERE */
@@ -678,7 +680,7 @@ static void print_leak_doall_arg(const MEM *m, MEM_LEAK *l)
         int info_len;
 
         ami_cnt++;
-        memset(buf, '>', ami_cnt);
+        sgx_memset(buf, '>', ami_cnt);
         BIO_snprintf(buf + ami_cnt, sizeof buf - ami_cnt,
                      " thread=%lu, file=%s, line=%d, info=\"",
                      CRYPTO_THREADID_hash(&amip->threadid), amip->file,

@@ -51,6 +51,7 @@
 #include <string.h>
 
 #include "../e_os.h"
+#include "../sgx.h"
 
 #include <openssl/opensslconf.h>
 #include <openssl/evp.h>
@@ -98,7 +99,7 @@ static char *sstrsep(char **string, const char *delim)
     if (**string == 0)
         return NULL;
 
-    memset(isdelim, 0, 256);
+    sgx_memset(isdelim, 0, 256);
     isdelim[0] = 1;
 
     while (*delim) {

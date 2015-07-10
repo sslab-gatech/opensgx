@@ -69,6 +69,8 @@
 # include <openssl/dsa.h>
 # include <openssl/rsa.h>
 
+#include "../sgx.h"
+
 /*
  * Utility function: read a DWORD (4 byte unsigned integer) in little endian
  * format
@@ -440,7 +442,7 @@ static void write_lebn(unsigned char **out, const BIGNUM *bn, int len)
     if (len > 0) {
         len -= nb;
         if (len > 0) {
-            memset(*out, 0, len);
+            sgx_memset(*out, 0, len);
             *out += len;
         }
     }
@@ -596,7 +598,7 @@ static void write_dsa(unsigned char **out, DSA *dsa, int ispub)
     else
         write_lebn(out, dsa->priv_key, 20);
     /* Set "invalid" for seed structure values */
-    memset(*out, 0xff, 24);
+    sgx_memset(*out, 0xff, 24);
     *out += 24;
     return;
 }
@@ -721,7 +723,7 @@ static EVP_PKEY *do_PVK_body(const unsigned char **in,
         magic = read_ledword((const unsigned char **)&q);
         if (magic != MS_RSA2MAGIC && magic != MS_DSS2MAGIC) {
             q = enctmp + 8;
-            memset(keybuf + 5, 0, 11);
+            sgx_memset(keybuf + 5, 0, 11);
             if (!EVP_DecryptInit_ex(&cctx, EVP_rc4(), NULL, keybuf, NULL))
                 goto err;
             OPENSSL_cleanse(keybuf, 20);
@@ -843,7 +845,7 @@ static int i2b_PVK(unsigned char **out, EVP_PKEY *pk, int enclevel,
                             (unsigned char *)psbuf, inlen))
             goto error;
         if (enclevel == 1)
-            memset(keybuf + 5, 0, 11);
+            sgx_memset(keybuf + 5, 0, 11);
         p = salt + PVK_SALTLEN + 8;
         if (!EVP_EncryptInit_ex(&cctx, EVP_rc4(), NULL, keybuf, NULL))
             goto error;

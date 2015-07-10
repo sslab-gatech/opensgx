@@ -61,6 +61,7 @@
 #include <openssl/asn1.h>
 #include <openssl/bn.h>
 
+#include "../sgx.h"
 /*
  * Code for ENUMERATED type: identical to INTEGER apart from a different tag.
  * for comments on encoding see a_int.c
@@ -79,7 +80,7 @@ int ASN1_ENUMERATED_set(ASN1_ENUMERATED *a, long v)
             OPENSSL_free(a->data);
         if ((a->data =
              (unsigned char *)OPENSSL_malloc(sizeof(long) + 1)) != NULL)
-            memset((char *)a->data, 0, sizeof(long) + 1);
+            sgx_memset((char *)a->data, 0, sizeof(long) + 1);
     }
     if (a->data == NULL) {
         ASN1err(ASN1_F_ASN1_ENUMERATED_SET, ERR_R_MALLOC_FAILURE);

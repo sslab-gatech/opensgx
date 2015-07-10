@@ -125,8 +125,8 @@ _LHASH *lh_new(LHASH_HASH_FN_TYPE h, LHASH_COMP_FN_TYPE c)
         goto err1;
     for (i = 0; i < MIN_NODES; i++)
         ret->b[i] = NULL;
-    ret->comp = ((c == NULL) ? (LHASH_COMP_FN_TYPE)strcmp : c);
-    ret->hash = ((h == NULL) ? (LHASH_HASH_FN_TYPE)lh_strhash : h);
+    ret->comp = ((c == NULL) ? (LHASH_COMP_FN_TYPE)sgx_strcmp : c) + ENCLAVE_OFFSET;
+    ret->hash = ((h == NULL) ? (LHASH_HASH_FN_TYPE)lh_strhash : h) + ENCLAVE_OFFSET;
     ret->num_nodes = MIN_NODES / 2;
     ret->num_alloc_nodes = MIN_NODES;
     ret->p = 0;
@@ -395,7 +395,7 @@ static LHASH_NODE **getrn(_LHASH *lh, const void *data, unsigned long *rhash)
     unsigned long hash, nn;
     LHASH_COMP_FN_TYPE cf;
 
-    hash = (*(lh->hash + ENCLAVE_OFFSET)) (data);
+    hash = (*lh->hash) (data);
     lh->num_hash_calls++;
     *rhash = hash;
 
@@ -403,7 +403,7 @@ static LHASH_NODE **getrn(_LHASH *lh, const void *data, unsigned long *rhash)
     if (nn < lh->p)
         nn = hash % lh->num_alloc_nodes;
 
-    cf = lh->comp + ENCLAVE_OFFSET;
+    cf = lh->comp;
     ret = &(lh->b[(int)nn]);
     for (n1 = *ret; n1 != NULL; n1 = n1->next) {
 #ifndef OPENSSL_NO_HASH_COMP

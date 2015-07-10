@@ -60,6 +60,8 @@
 #endif
 #include <assert.h>
 
+#include "../sgx.h"
+
 #if defined(BSWAP4) && defined(STRICT_ALIGNMENT)
 /* redefine, because alignment is ensured */
 # undef  GETU32
@@ -778,7 +780,7 @@ void CRYPTO_gcm128_init(GCM128_CONTEXT *ctx, void *key, block128_f block)
         1
     };
 
-    memset(ctx, 0, sizeof(*ctx));
+    sgx_memset(ctx, 0, sizeof(*ctx));
     ctx->block = block;
     ctx->key = key;
 
@@ -2269,14 +2271,14 @@ static const u8 T20[] = {
         AES_set_encrypt_key(K##n,sizeof(K##n)*8,&key);          \
         CRYPTO_gcm128_init(&ctx,&key,(block128_f)AES_encrypt);  \
         CRYPTO_gcm128_setiv(&ctx,IV##n,sizeof(IV##n));          \
-        memset(out,0,sizeof(out));                              \
+        sgx_memset(out,0,sizeof(out));                              \
         if (A##n) CRYPTO_gcm128_aad(&ctx,A##n,sizeof(A##n));    \
         if (P##n) CRYPTO_gcm128_encrypt(&ctx,P##n,out,sizeof(out));     \
         if (CRYPTO_gcm128_finish(&ctx,T##n,16) ||               \
             (C##n && memcmp(out,C##n,sizeof(out))))             \
                 ret++, printf ("encrypt test#%d failed.\n",n);  \
         CRYPTO_gcm128_setiv(&ctx,IV##n,sizeof(IV##n));          \
-        memset(out,0,sizeof(out));                              \
+        sgx_memset(out,0,sizeof(out));                              \
         if (A##n) CRYPTO_gcm128_aad(&ctx,A##n,sizeof(A##n));    \
         if (C##n) CRYPTO_gcm128_decrypt(&ctx,C##n,out,sizeof(out));     \
         if (CRYPTO_gcm128_finish(&ctx,T##n,16) ||               \

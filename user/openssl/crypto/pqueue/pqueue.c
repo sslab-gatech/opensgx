@@ -61,6 +61,8 @@
 #include <openssl/bn.h>
 #include "pqueue.h"
 
+#include "../sgx.h"
+
 typedef struct _pqueue {
     pitem *items;
     int count;
@@ -94,7 +96,7 @@ pqueue_s *pqueue_new()
     if (pq == NULL)
         return NULL;
 
-    memset(pq, 0x00, sizeof(pqueue_s));
+    sgx_memset(pq, 0x00, sizeof(pqueue_s));
     return pq;
 }
 

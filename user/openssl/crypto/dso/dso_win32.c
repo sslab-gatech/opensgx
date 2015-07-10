@@ -62,6 +62,8 @@
 #include "cryptlib.h"
 #include <openssl/dso.h>
 
+#include "../sgx.h"
+
 #if !defined(DSO_WIN32)
 DSO_METHOD *DSO_METHOD_win32(void)
 {
@@ -324,7 +326,7 @@ static struct file_st *win32_splitter(DSO *dso, const char *filename,
         return (NULL);
     }
 
-    memset(result, 0, sizeof(struct file_st));
+    sgx_memset(result, 0, sizeof(struct file_st));
     position = IN_DEVICE;
 
     if ((filename[0] == '\\' && filename[1] == '\\')

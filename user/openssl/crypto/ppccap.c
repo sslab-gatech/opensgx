@@ -12,6 +12,7 @@
 
 #include "ppc_arch.h"
 
+#include "../sgx.h"
 unsigned int OPENSSL_ppccap_P = 0;
 
 static sigset_t all_masked;
@@ -123,7 +124,7 @@ void OPENSSL_cpuid_setup(void)
     }
 #endif
 
-    memset(&ill_act, 0, sizeof(ill_act));
+    sgx_memset(&ill_act, 0, sizeof(ill_act));
     ill_act.sa_handler = ill_handler;
     ill_act.sa_mask = all_masked;
 

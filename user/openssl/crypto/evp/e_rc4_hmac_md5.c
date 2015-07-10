@@ -59,6 +59,8 @@
 # include <openssl/rc4.h>
 # include <openssl/md5.h>
 
+#include "../sgx.h"
+
 # ifndef EVP_CIPH_FLAG_AEAD_CIPHER
 #  define EVP_CIPH_FLAG_AEAD_CIPHER       0x200000
 #  define EVP_CTRL_AEAD_TLS1_AAD          0x16
@@ -233,7 +235,7 @@ static int rc4_hmac_md5_ctrl(EVP_CIPHER_CTX *ctx, int type, int arg,
             unsigned int i;
             unsigned char hmac_key[64];
 
-            memset(hmac_key, 0, sizeof(hmac_key));
+            sgx_memset(hmac_key, 0, sizeof(hmac_key));
 
             if (arg > (int)sizeof(hmac_key)) {
                 MD5_Init(&key->head);

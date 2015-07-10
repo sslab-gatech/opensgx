@@ -62,6 +62,8 @@
 #include "cryptlib.h"
 #include <openssl/bio.h>
 
+#include "../sgx.h"
+
 #ifndef OPENSSL_NO_SOCK
 
 # ifdef OPENSSL_SYS_WIN16
@@ -146,7 +148,7 @@ static BIO_ACCEPT *BIO_ACCEPT_new(void)
     if ((ret = (BIO_ACCEPT *)OPENSSL_malloc(sizeof(BIO_ACCEPT))) == NULL)
         return (NULL);
 
-    memset(ret, 0, sizeof(BIO_ACCEPT));
+    sgx_memset(ret, 0, sizeof(BIO_ACCEPT));
     ret->accept_sock = INVALID_SOCKET;
     ret->bind_mode = BIO_BIND_NORMAL;
     return (ret);

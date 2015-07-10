@@ -63,6 +63,8 @@
 #include <openssl/asn1_mac.h>
 #include <openssl/x509.h>
 
+#include "../sgx.h"
+
 /* need to implement */
 int i2d_X509_PKEY(X509_PKEY *a, unsigned char **pp)
 {
@@ -97,7 +99,7 @@ X509_PKEY *d2i_X509_PKEY(X509_PKEY **a, const unsigned char **pp, long length)
         memcpy(ret->cipher.iv,
                ret->enc_algor->parameter->value.octet_string->data, i);
     } else
-        memset(ret->cipher.iv, 0, EVP_MAX_IV_LENGTH);
+        sgx_memset(ret->cipher.iv, 0, EVP_MAX_IV_LENGTH);
     M_ASN1_D2I_Finish(a, X509_PKEY_free, ASN1_F_D2I_X509_PKEY);
 }
 
@@ -115,7 +117,7 @@ X509_PKEY *X509_PKEY_new(void)
     ret->key_data = NULL;
     ret->key_free = 0;
     ret->cipher.cipher = NULL;
-    memset(ret->cipher.iv, 0, EVP_MAX_IV_LENGTH);
+    sgx_memset(ret->cipher.iv, 0, EVP_MAX_IV_LENGTH);
     ret->references = 1;
     return (ret);
     M_ASN1_New_Error(ASN1_F_X509_PKEY_NEW);

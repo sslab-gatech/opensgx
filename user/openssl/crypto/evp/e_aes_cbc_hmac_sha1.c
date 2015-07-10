@@ -61,6 +61,8 @@
 # include <openssl/rand.h>
 # include "modes_lcl.h"
 
+#include "../sgx.h"
+
 # ifndef EVP_CIPH_FLAG_AEAD_CIPHER
 #  define EVP_CIPH_FLAG_AEAD_CIPHER       0x200000
 #  define EVP_CTRL_AEAD_TLS1_AAD          0x16
@@ -337,7 +339,7 @@ static size_t tls1_1_multi_block_encrypt(EVP_AES_HMAC_SHA1 *key,
 #   undef  MAXCHUNKSIZE
     sha1_multi_block(ctx, hash_d, n4x);
 
-    memset(blocks, 0, sizeof(blocks));
+    sgx_memset(blocks, 0, sizeof(blocks));
     for (i = 0; i < x4; i++) {
         unsigned int len = (i == (x4 - 1) ? last : frag),
             off = hash_d[i].blocks * 64;
@@ -369,7 +371,7 @@ static size_t tls1_1_multi_block_encrypt(EVP_AES_HMAC_SHA1 *key,
     /* hash input tails and finalize */
     sha1_multi_block(ctx, edges, n4x);
 
-    memset(blocks, 0, sizeof(blocks));
+    sgx_memset(blocks, 0, sizeof(blocks));
     for (i = 0; i < x4; i++) {
 #   ifdef BSWAP4
         blocks[i].d[0] = BSWAP4(ctx->A[i]);
@@ -679,7 +681,7 @@ static int aesni_cbc_hmac_sha1_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out,
                 pmac->u[3] |= key->md.h3 & mask;
                 pmac->u[4] |= key->md.h4 & mask;
 
-                memset(data, 0, SHA_CBLOCK);
+                sgx_memset(data, 0, SHA_CBLOCK);
                 j += 64;
             }
             data->u[SHA_LBLOCK - 1] = bitlen;
@@ -818,7 +820,7 @@ static int aesni_cbc_hmac_sha1_ctrl(EVP_CIPHER_CTX *ctx, int type, int arg,
             unsigned int i;
             unsigned char hmac_key[64];
 
-            memset(hmac_key, 0, sizeof(hmac_key));
+            sgx_memset(hmac_key, 0, sizeof(hmac_key));
 
             if (arg > (int)sizeof(hmac_key)) {
                 SHA1_Init(&key->head);

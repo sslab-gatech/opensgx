@@ -62,6 +62,8 @@
 #include <openssl/rsa.h>
 #include <openssl/rand.h>
 
+#include "../sgx.h"
+
 int RSA_padding_add_SSLv23(unsigned char *to, int tlen,
                            const unsigned char *from, int flen)
 {
@@ -93,7 +95,7 @@ int RSA_padding_add_SSLv23(unsigned char *to, int tlen,
         p++;
     }
 
-    memset(p, 3, 8);
+    sgx_memset(p, 3, 8);
     p += 8;
     *(p++) = '\0';
 

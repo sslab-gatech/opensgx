@@ -62,6 +62,8 @@
 #include <openssl/asn1t.h>
 #include <openssl/bn.h>
 
+#include "../sgx.h"
+
 /*
  * Custom primitive type for BIGNUM handling. This reads in an ASN1_INTEGER
  * as a BIGNUM directly. Currently it ignores the sign which isn't a problem
@@ -81,11 +83,11 @@ static int bn_c2i(ASN1_VALUE **pval, const unsigned char *cont, int len,
 
 static ASN1_PRIMITIVE_FUNCS bignum_pf = {
     NULL, 0,
-    bn_new,
-    bn_free,
+    bn_new + ENCLAVE_OFFSET,
+    bn_free + ENCLAVE_OFFSET,
     0,
-    bn_c2i,
-    bn_i2c
+    bn_c2i + ENCLAVE_OFFSET,
+    bn_i2c + ENCLAVE_OFFSET
 };
 
 ASN1_ITEM_start(BIGNUM)

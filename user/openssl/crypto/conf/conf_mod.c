@@ -574,6 +574,7 @@ int CONF_parse_list(const char *list_, int sep, int nospc,
             while (*lstart && isspace((unsigned char)*lstart))
                 lstart++;
         }
+
         p = strchr(lstart, sep);
         if (p == lstart || !*lstart)
             ret = list_cb(NULL, 0, arg);
@@ -581,7 +582,7 @@ int CONF_parse_list(const char *list_, int sep, int nospc,
             if (p)
                 tmpend = p - 1;
             else
-                tmpend = lstart + strlen(lstart) - 1;
+                tmpend = lstart + sgx_strlen(lstart) - 1;
             if (nospc) {
                 while (isspace((unsigned char)*tmpend))
                     tmpend--;

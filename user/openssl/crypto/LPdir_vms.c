@@ -40,6 +40,7 @@
 # include "LPdir.h"
 #endif
 #include "vms_rms.h"
+#include "sgx.h"
 
 /* Some compiler options hide EVMSERR. */
 #ifndef EVMSERR
@@ -104,12 +105,12 @@ const char *LP_find_file(LP_DIR_CTX **ctx, const char *directory)
             return 0;
         }
 
-        *ctx = (LP_DIR_CTX *)malloc(sizeof(LP_DIR_CTX));
+        *ctx = (LP_DIR_CTX *)sgx_malloc(sizeof(LP_DIR_CTX));
         if (*ctx == NULL) {
             errno = ENOMEM;
             return 0;
         }
-        memset(*ctx, '\0', sizeof(LP_DIR_CTX));
+        sgx_memset(*ctx, '\0', sizeof(LP_DIR_CTX));
 
         strcpy((*ctx)->filespec, directory);
         strcat((*ctx)->filespec, "*.*;");
@@ -181,7 +182,7 @@ int LP_find_file_end(LP_DIR_CTX **ctx)
     if (ctx != NULL && *ctx != NULL) {
         int status = lib$find_file_end(&(*ctx)->VMS_context);
 
-        free(*ctx);
+        sgx_free(*ctx);
 
         if (!$VMS_STATUS_SUCCESS(status)) {
             errno = EVMSERR;

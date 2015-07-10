@@ -68,6 +68,8 @@
 
 #include "vpm_int.h"
 
+#include "../sgx.h"
+
 /* X509_VERIFY_PARAM functions */
 
 #define SET_HOST 0
@@ -180,8 +182,8 @@ X509_VERIFY_PARAM *X509_VERIFY_PARAM_new(void)
         OPENSSL_free(param);
         return NULL;
     }
-    memset(param, 0, sizeof(X509_VERIFY_PARAM));
-    memset(paramid, 0, sizeof(X509_VERIFY_PARAM_ID));
+    sgx_memset(param, 0, sizeof(X509_VERIFY_PARAM));
+    sgx_memset(paramid, 0, sizeof(X509_VERIFY_PARAM_ID));
     param->id = paramid;
     x509_verify_param_zero(param);
     return param;

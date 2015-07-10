@@ -67,6 +67,8 @@
 #include <openssl/ec.h>
 #include <openssl/bn.h>
 
+#include "../sgx.h"
+
 #ifndef OPENSSL_NO_FP_API
 int ECPKParameters_print_fp(FILE *fp, const EC_GROUP *x, int off)
 {
@@ -349,7 +351,7 @@ static int print_bin(BIO *fp, const char *name, const unsigned char *buf,
     if (off) {
         if (off > 128)
             off = 128;
-        memset(str, ' ', off);
+        sgx_memset(str, ' ', off);
         if (BIO_write(fp, str, off) <= 0)
             return 0;
     }
@@ -360,7 +362,7 @@ static int print_bin(BIO *fp, const char *name, const unsigned char *buf,
     for (i = 0; i < len; i++) {
         if ((i % 15) == 0) {
             str[0] = '\n';
-            memset(&(str[1]), ' ', off + 4);
+            sgx_memset(&(str[1]), ' ', off + 4);
             if (BIO_write(fp, str, off + 1 + 4) <= 0)
                 return 0;
         }

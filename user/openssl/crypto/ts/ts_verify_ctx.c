@@ -61,12 +61,14 @@
 #include <openssl/objects.h>
 #include <openssl/ts.h>
 
+#include "../sgx.h"
+
 TS_VERIFY_CTX *TS_VERIFY_CTX_new(void)
 {
     TS_VERIFY_CTX *ctx =
         (TS_VERIFY_CTX *)OPENSSL_malloc(sizeof(TS_VERIFY_CTX));
     if (ctx)
-        memset(ctx, 0, sizeof(TS_VERIFY_CTX));
+        sgx_memset(ctx, 0, sizeof(TS_VERIFY_CTX));
     else
         TSerr(TS_F_TS_VERIFY_CTX_NEW, ERR_R_MALLOC_FAILURE);
     return ctx;
@@ -75,7 +77,7 @@ TS_VERIFY_CTX *TS_VERIFY_CTX_new(void)
 void TS_VERIFY_CTX_init(TS_VERIFY_CTX *ctx)
 {
     OPENSSL_assert(ctx != NULL);
-    memset(ctx, 0, sizeof(TS_VERIFY_CTX));
+    sgx_memset(ctx, 0, sizeof(TS_VERIFY_CTX));
 }
 
 void TS_VERIFY_CTX_free(TS_VERIFY_CTX *ctx)

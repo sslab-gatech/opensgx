@@ -69,6 +69,8 @@
 #endif
 #include "evp_locl.h"
 
+#include "../sgx.h"
+
 #ifdef OPENSSL_FIPS
 # define M_do_cipher(ctx, out, in, inl) FIPS_cipher(ctx, out, in, inl)
 #else
@@ -79,7 +81,7 @@ const char EVP_version[] = "EVP" OPENSSL_VERSION_PTEXT;
 
 void EVP_CIPHER_CTX_init(EVP_CIPHER_CTX *ctx)
 {
-    memset(ctx, 0, sizeof(EVP_CIPHER_CTX));
+    sgx_memset(ctx, 0, sizeof(EVP_CIPHER_CTX));
     /* ctx->cipher=NULL; */
 }
 
@@ -576,7 +578,7 @@ int EVP_CIPHER_CTX_cleanup(EVP_CIPHER_CTX *c)
 #ifdef OPENSSL_FIPS
     FIPS_cipher_ctx_cleanup(c);
 #endif
-    memset(c, 0, sizeof(EVP_CIPHER_CTX));
+    sgx_memset(c, 0, sizeof(EVP_CIPHER_CTX));
     return 1;
 }
 

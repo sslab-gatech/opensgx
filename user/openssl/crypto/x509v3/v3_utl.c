@@ -65,6 +65,8 @@
 #include <openssl/x509v3.h>
 #include <openssl/bn.h>
 
+#include "../sgx.h"
+
 static char *strip_spaces(char *name);
 static int sk_strcmp(const char *const *a, const char *const *b);
 static STACK_OF(OPENSSL_STRING) *get_email(X509_NAME *name,
@@ -1215,7 +1217,7 @@ static int ipv6_from_asc(unsigned char *v6, const char *in)
         /* Copy initial part */
         memcpy(v6, v6stat.tmp, v6stat.zero_pos);
         /* Zero middle */
-        memset(v6 + v6stat.zero_pos, 0, 16 - v6stat.total);
+        sgx_memset(v6 + v6stat.zero_pos, 0, 16 - v6stat.total);
         /* Copy final part */
         if (v6stat.total != v6stat.zero_pos)
             memcpy(v6 + v6stat.zero_pos + 16 - v6stat.total,

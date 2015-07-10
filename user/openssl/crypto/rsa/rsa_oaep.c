@@ -28,6 +28,8 @@
 # include <openssl/rand.h>
 # include <openssl/sha.h>
 
+#include "../sgx.h"
+
 int RSA_padding_add_PKCS1_OAEP(unsigned char *to, int tlen,
                                const unsigned char *from, int flen,
                                const unsigned char *param, int plen)
@@ -71,7 +73,7 @@ int RSA_padding_add_PKCS1_OAEP_mgf1(unsigned char *to, int tlen,
 
     if (!EVP_Digest((void *)param, plen, db, NULL, md, NULL))
         return 0;
-    memset(db + mdlen, 0, emlen - flen - 2 * mdlen - 1);
+    sgx_memset(db + mdlen, 0, emlen - flen - 2 * mdlen - 1);
     db[emlen - flen - mdlen - 1] = 0x01;
     memcpy(db + emlen - flen - mdlen, from, (unsigned int)flen);
     if (RAND_bytes(seed, mdlen) <= 0)
@@ -163,7 +165,7 @@ int RSA_padding_check_PKCS1_OAEP_mgf1(unsigned char *to, int tlen,
      *
      * TODO(emilia): Consider porting BN_bn2bin_padded from BoringSSL.
      */
-    memset(em, 0, num);
+    sgx_memset(em, 0, num);
     memcpy(em + num - flen, from, flen);
 
     /*

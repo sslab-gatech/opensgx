@@ -71,6 +71,8 @@
 #include <openssl/stack.h>
 #include <openssl/objects.h>
 
+#include "../sgx.h"
+
 #undef MIN_NODES
 #define MIN_NODES       4
 
@@ -104,7 +106,7 @@ _STACK *sk_dup(_STACK *sk)
     ret->data = s;
 
     ret->num = sk->num;
-    memcpy(ret->data, sk->data, sizeof(char *) * sk->num);
+    sgx_memcpy(ret->data, sk->data, sizeof(char *) * sk->num);
     ret->sorted = sk->sorted;
     ret->num_alloc = sk->num_alloc;
     ret->comp = sk->comp;
@@ -312,7 +314,7 @@ void sk_zero(_STACK *st)
         return;
     if (st->num <= 0)
         return;
-    memset((char *)st->data, 0, sizeof(st->data) * st->num);
+    sgx_memset((char *)st->data, 0, sizeof(st->data) * st->num);
     st->num = 0;
 }
 

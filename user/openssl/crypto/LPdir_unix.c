@@ -39,6 +39,8 @@
 # include "LPdir.h"
 #endif
 
+#include "sgx.h"
+
 /*
  * The POSIXly macro for the maximum number of characters in a file path is
  * NAME_MAX.  However, some operating systems use PATH_MAX instead.
@@ -78,17 +80,17 @@ const char *LP_find_file(LP_DIR_CTX **ctx, const char *directory)
 
     errno = 0;
     if (*ctx == NULL) {
-        *ctx = (LP_DIR_CTX *)malloc(sizeof(LP_DIR_CTX));
+        *ctx = (LP_DIR_CTX *)sgx_malloc(sizeof(LP_DIR_CTX));
         if (*ctx == NULL) {
             errno = ENOMEM;
             return 0;
         }
-        memset(*ctx, '\0', sizeof(LP_DIR_CTX));
+        sgx_memset(*ctx, '\0', sizeof(LP_DIR_CTX));
 
         (*ctx)->dir = opendir(directory);
         if ((*ctx)->dir == NULL) {
             int save_errno = errno; /* Probably not needed, but I'm paranoid */
-            free(*ctx);
+            sgx_free(*ctx);
             *ctx = NULL;
             errno = save_errno;
             return 0;
@@ -111,7 +113,7 @@ int LP_find_file_end(LP_DIR_CTX **ctx)
     if (ctx != NULL && *ctx != NULL) {
         int ret = closedir((*ctx)->dir);
 
-        free(*ctx);
+        sgx_free(*ctx);
         switch (ret) {
         case 0:
             return 1;

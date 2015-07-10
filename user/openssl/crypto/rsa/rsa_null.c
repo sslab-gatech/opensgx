@@ -88,14 +88,17 @@ static int RSA_null_init(RSA *rsa);
 static int RSA_null_finish(RSA *rsa);
 static RSA_METHOD rsa_null_meth = {
     "Null RSA",
-    RSA_null_public_encrypt + ENCLAVE_OFFSET,
-    RSA_null_public_decrypt + ENCLAVE_OFFSET,
-    RSA_null_private_encrypt + ENCLAVE_OFFSET,
-    RSA_null_private_decrypt + ENCLAVE_OFFSET,
+    RSA_null_public_encrypt,
+    RSA_null_public_decrypt,
+    RSA_null_private_encrypt,
+    RSA_null_private_decrypt,
+
     NULL,
     NULL,
-    RSA_null_init + ENCLAVE_OFFSET,
-    RSA_null_finish + ENCLAVE_OFFSET,
+
+    RSA_null_init,
+    RSA_null_finish,
+
     0,
     NULL,
     NULL,

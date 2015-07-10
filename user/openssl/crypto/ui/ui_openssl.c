@@ -118,6 +118,8 @@
 
 #include <openssl/e_os2.h>
 
+#include "../sgx.h"
+
 /*
  * need for #define _POSIX_C_SOURCE arises whenever you pass -ansi to gcc
  * [maybe others?], because it masks interfaces not discussed in standard,
@@ -603,7 +605,7 @@ static void pushsig(void)
 # ifdef SIGACTION
     struct sigaction sa;
 
-    memset(&sa, 0, sizeof sa);
+    sgx_memset(&sa, 0, sizeof sa);
     sa.sa_handler = recsig;
 # endif
 

@@ -5,6 +5,8 @@
 #include <openssl/comp.h>
 #include <openssl/err.h>
 
+#include "../sgx.h"
+
 COMP_METHOD *COMP_zlib(void);
 
 static COMP_METHOD zlib_method_nozlib = {
@@ -40,7 +42,7 @@ static void *zlib_zalloc(void *opaque, unsigned int no, unsigned int size)
 
     p = OPENSSL_malloc(no * size);
     if (p)
-        memset(p, 0, no * size);
+        sgx_memset(p, 0, no * size);
     return p;
 }
 

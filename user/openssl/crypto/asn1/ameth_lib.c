@@ -65,6 +65,8 @@
 #endif
 #include "asn1_locl.h"
 
+#include "../sgx.h"
+
 extern const EVP_PKEY_ASN1_METHOD rsa_asn1_meths[];
 extern const EVP_PKEY_ASN1_METHOD dsa_asn1_meths[];
 extern const EVP_PKEY_ASN1_METHOD dh_asn1_meth;
@@ -201,7 +203,7 @@ const EVP_PKEY_ASN1_METHOD *EVP_PKEY_asn1_find_str(ENGINE **pe,
     int i;
     const EVP_PKEY_ASN1_METHOD *ameth;
     if (len == -1)
-        len = strlen(str);
+        len = sgx_strlen(str);
     if (pe) {
 #ifndef OPENSSL_NO_ENGINE
         ENGINE *e;
@@ -223,7 +225,7 @@ const EVP_PKEY_ASN1_METHOD *EVP_PKEY_asn1_find_str(ENGINE **pe,
         ameth = EVP_PKEY_asn1_get0(i);
         if (ameth->pkey_flags & ASN1_PKEY_ALIAS)
             continue;
-        if (((int)strlen(ameth->pem_str) == len) &&
+        if (((int)sgx_strlen(ameth->pem_str) == len) &&
             !strncasecmp(ameth->pem_str, str, len))
             return ameth;
     }
@@ -290,7 +292,7 @@ EVP_PKEY_ASN1_METHOD *EVP_PKEY_asn1_new(int id, int flags,
     if (!ameth)
         return NULL;
 
-    memset(ameth, 0, sizeof(EVP_PKEY_ASN1_METHOD));
+    sgx_memset(ameth, 0, sizeof(EVP_PKEY_ASN1_METHOD));
 
     ameth->pkey_id = id;
     ameth->pkey_base_id = id;
@@ -455,6 +457,7 @@ void EVP_PKEY_asn1_set_param(EVP_PKEY_ASN1_METHOD *ameth,
 void EVP_PKEY_asn1_set_free(EVP_PKEY_ASN1_METHOD *ameth,
                             void (*pkey_free) (EVP_PKEY *pkey))
 {
+//    ameth->pkey_free = pkey_free + ENCLAVE_OFFSET;
     ameth->pkey_free = pkey_free;
 }
 

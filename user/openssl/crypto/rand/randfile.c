@@ -71,6 +71,8 @@
 #include <openssl/rand.h>
 #include <openssl/buffer.h>
 
+#include "../sgx.h"
+
 #ifdef OPENSSL_SYS_VMS
 # include <unixio.h>
 #endif
@@ -135,7 +137,7 @@ int RAND_load_file(const char *file, long bytes)
      * structure before calling RAND_add() to avoid complaints from
      * applications such as Valgrind.
      */
-    memset(&sb, 0, sizeof(sb));
+    sgx_memset(&sb, 0, sizeof(sb));
 # endif
     if (stat(file, &sb) < 0)
         return (0);

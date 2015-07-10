@@ -64,6 +64,8 @@
 #include <openssl/objects.h>
 #include <openssl/err.h>
 
+#include "../sgx.h"
+
 /* Utility functions for manipulating fields and offsets */
 
 /* Add 'offset' to 'addr' */
@@ -174,7 +176,7 @@ int asn1_enc_save(ASN1_VALUE **pval, const unsigned char *in, int inlen,
     enc->enc = OPENSSL_malloc(inlen);
     if (!enc->enc)
         return 0;
-    memcpy(enc->enc, in, inlen);
+    sgx_memcpy(enc->enc, in, inlen);
     enc->len = inlen;
     enc->modified = 0;
 
@@ -189,7 +191,7 @@ int asn1_enc_restore(int *len, unsigned char **out, ASN1_VALUE **pval,
     if (!enc || enc->modified)
         return 0;
     if (out) {
-        memcpy(*out, enc->enc, enc->len);
+        sgx_memcpy(*out, enc->enc, enc->len);
         *out += enc->len;
     }
     if (len)

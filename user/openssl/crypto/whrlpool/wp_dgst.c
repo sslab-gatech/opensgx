@@ -55,9 +55,11 @@
 #include <openssl/crypto.h>
 #include <string.h>
 
+#include "../sgx.h"
+
 fips_md_init(WHIRLPOOL)
 {
-    memset(c, 0, sizeof(*c));
+    sgx_memset(c, 0, sizeof(*c));
     return (1);
 }
 
@@ -220,12 +222,12 @@ int WHIRLPOOL_Final(unsigned char *md, WHIRLPOOL_CTX *c)
     /* pad with zeros */
     if (byteoff > (WHIRLPOOL_BBLOCK / 8 - WHIRLPOOL_COUNTER)) {
         if (byteoff < WHIRLPOOL_BBLOCK / 8)
-            memset(&c->data[byteoff], 0, WHIRLPOOL_BBLOCK / 8 - byteoff);
+            sgx_memset(&c->data[byteoff], 0, WHIRLPOOL_BBLOCK / 8 - byteoff);
         whirlpool_block(c, c->data, 1);
         byteoff = 0;
     }
     if (byteoff < (WHIRLPOOL_BBLOCK / 8 - WHIRLPOOL_COUNTER))
-        memset(&c->data[byteoff], 0,
+        sgx_memset(&c->data[byteoff], 0,
                (WHIRLPOOL_BBLOCK / 8 - WHIRLPOOL_COUNTER) - byteoff);
     /* smash 256-bit c->bitlen in big-endian order */
     p = &c->data[WHIRLPOOL_BBLOCK / 8 - 1]; /* last byte in c->data */
@@ -237,7 +239,7 @@ int WHIRLPOOL_Final(unsigned char *md, WHIRLPOOL_CTX *c)
 
     if (md) {
         memcpy(md, c->H.c, WHIRLPOOL_DIGEST_LENGTH);
-        memset(c, 0, sizeof(*c));
+        sgx_memset(c, 0, sizeof(*c));
         return (1);
     }
     return (0);

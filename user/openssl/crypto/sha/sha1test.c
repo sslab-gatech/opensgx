@@ -60,6 +60,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "../crypto/sgx.h"
+
 #include "../e_os.h"
 
 #ifdef OPENSSL_NO_SHA
@@ -135,7 +137,7 @@ int main(int argc, char *argv[])
         P++;
     }
 
-    memset(buf, 'a', 1000);
+    sgx_memset(buf, 'a', 1000);
 # ifdef CHARSET_EBCDIC
     ebcdic2ascii(buf, buf, 1000);
 # endif                         /* CHARSET_EBCDIC */

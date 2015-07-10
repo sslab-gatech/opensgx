@@ -90,6 +90,8 @@
 #include <openssl/rand.h>
 #include <openssl/ui_compat.h>
 
+#include "../sgx.h"
+
 void usage(void);
 void doencryption(void);
 int uufwrite(unsigned char *data, int size, unsigned int num, FILE *fp);
@@ -137,7 +139,7 @@ int main(int argc, char **argv)
     vflag = cflag = eflag = dflag = kflag = hflag = bflag = fflag = sflag =
         uflag = flag3 = 0;
     error = 0;
-    memset(key, 0, sizeof(key));
+    sgx_memset(key, 0, sizeof(key));
 
     for (i = 1; i < argc; i++) {
         p = argv[i];
@@ -435,8 +437,8 @@ void doencryption(void)
     OPENSSL_cleanse(key, sizeof(key));
     OPENSSL_cleanse(kk, sizeof(kk));
     /* woops - A bug that does not showup under unix :-( */
-    memset(iv, 0, sizeof(iv));
-    memset(iv2, 0, sizeof(iv2));
+    sgx_memset(iv, 0, sizeof(iv));
+    sgx_memset(iv2, 0, sizeof(iv2));
 
     l = 1;
     rem = 0;

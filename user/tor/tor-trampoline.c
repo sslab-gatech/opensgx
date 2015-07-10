@@ -12,6 +12,7 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <time.h>
 
 //TODO : fcode_to_str, tor_trampoline should be implemented
 static
@@ -20,14 +21,14 @@ const char *fcode_to_str(fcode_t_tor fcode)
     switch (fcode) {
         case FUNC_UNSET_TOR   : return "UNSET";
         case FUNC_OPEN    : return "OPEN";
-	case FUNC_CLOSE   : return "CLOSE";
+        case FUNC_CLOSE   : return "CLOSE";
         case FUNC_MKDIR   : return "MKDIR";
-	case FUNC_MKNOD   : return "MKNOD";
+        case FUNC_MKNOD   : return "MKNOD";
         case FUNC_READ    : return "READ";
         case FUNC_WRITE   : return "WRITE";
         case FUNC_SNPRINTF: return "SNPRINTF";
-
-        case FUNC_TIME: return "TIME";
+        case FUNC_TIME    : return "TIME";
+        case FUNC_MEMCHR  : return "MEMCHR";
         default:
         {
             sgx_dbg(err, "unknown function code (%d)", fcode);
@@ -169,6 +170,12 @@ int sgx_time_tramp(char arg1[])
     return ret;
 }
 
+static
+void *sgx_memchr_tramp(void *s, int c, size_t n)
+{
+    return memchr(s, c, n);
+}
+
 //Trampoline code for stub handling in user
 void sgx_trampoline_tor()
 {
@@ -178,6 +185,8 @@ void sgx_trampoline_tor()
     clear_abi_in_fields(stub);
 
     dbg_dump_stub_out(stub);
+
+    char *ptr = NULL;
 
     switch (stub->fcode) {
     case FUNC_OPEN:
@@ -205,6 +214,12 @@ void sgx_trampoline_tor()
         break;
     case FUNC_TIME:
         stub->in_arg1 = sgx_time_tramp(stub->in_data1);
+        break;
+    case FUNC_MEMCHR:
+        ptr = sgx_memchr_tramp(stub->out_data1, stub->out_arg1, stub->out_arg2);
+
+        if(ptr != NULL)
+            memcpy(stub->in_data1, ptr, strlen(ptr));
         break;
     default:
         sgx_msg(warn, "Incorrect function code");

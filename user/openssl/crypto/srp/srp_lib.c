@@ -79,6 +79,8 @@
 
 # include "srp_grps.h"
 
+#include "../sgx.h"
+
 static BIGNUM *srp_Calc_k(BIGNUM *N, BIGNUM *g)
 {
     /* k = SHA1(N | PAD(g)) -- tls-srp draft 8 */
@@ -100,7 +102,7 @@ static BIGNUM *srp_Calc_k(BIGNUM *N, BIGNUM *g)
     EVP_DigestInit_ex(&ctxt, EVP_sha1(), NULL);
     EVP_DigestUpdate(&ctxt, tmp, longN);
 
-    memset(tmp, 0, longN);
+    sgx_memset(tmp, 0, longN);
     longg = BN_bn2bin(g, tmp);
     /* use the zeros behind to pad on left */
     EVP_DigestUpdate(&ctxt, tmp + longg, longN - longg);
@@ -132,7 +134,7 @@ BIGNUM *SRP_Calc_u(BIGNUM *A, BIGNUM *B, BIGNUM *N)
     if ((cAB = OPENSSL_malloc(2 * longN)) == NULL)
         return NULL;
 
-    memset(cAB, 0, longN);
+    sgx_memset(cAB, 0, longN);
 
     EVP_MD_CTX_init(&ctxt);
     EVP_DigestInit_ex(&ctxt, EVP_sha1(), NULL);

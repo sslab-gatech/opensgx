@@ -60,6 +60,8 @@
 #include "cryptlib.h"
 #include <openssl/buffer.h>
 
+#include "../sgx.h"
+
 /*
  * LIMIT_BEFORE_EXPANSION is the maximum n such that (n+3)/3*4 < 2**31. That
  * function is applied in several functions in this file and this limit
@@ -88,7 +90,7 @@ void BUF_MEM_free(BUF_MEM *a)
         return;
 
     if (a->data != NULL) {
-        memset(a->data, 0, (unsigned int)a->max);
+        sgx_memset(a->data, 0, (unsigned int)a->max);
         OPENSSL_free(a->data);
     }
     OPENSSL_free(a);
@@ -104,7 +106,7 @@ int BUF_MEM_grow(BUF_MEM *str, size_t len)
         return (len);
     }
     if (str->max >= len) {
-        memset(&str->data[str->length], 0, len - str->length);
+        sgx_memset(&str->data[str->length], 0, len - str->length);
         str->length = len;
         return (len);
     }
@@ -124,7 +126,7 @@ int BUF_MEM_grow(BUF_MEM *str, size_t len)
     } else {
         str->data = ret;
         str->max = n;
-        memset(&str->data[str->length], 0, len - str->length);
+        sgx_memset(&str->data[str->length], 0, len - str->length);
         str->length = len;
     }
     return (len);
@@ -136,12 +138,12 @@ int BUF_MEM_grow_clean(BUF_MEM *str, size_t len)
     size_t n;
 
     if (str->length >= len) {
-        memset(&str->data[len], 0, str->length - len);
+        sgx_memset(&str->data[len], 0, str->length - len);
         str->length = len;
         return (len);
     }
     if (str->max >= len) {
-        memset(&str->data[str->length], 0, len - str->length);
+        sgx_memset(&str->data[str->length], 0, len - str->length);
         str->length = len;
         return (len);
     }
@@ -161,7 +163,7 @@ int BUF_MEM_grow_clean(BUF_MEM *str, size_t len)
     } else {
         str->data = ret;
         str->max = n;
-        memset(&str->data[str->length], 0, len - str->length);
+        sgx_memset(&str->data[str->length], 0, len - str->length);
         str->length = len;
     }
     return (len);

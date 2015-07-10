@@ -62,6 +62,8 @@
 #include <openssl/asn1.h>
 #include <openssl/asn1_mac.h>
 
+#include "../sgx.h"
+
 static int asn1_get_length(const unsigned char **pp, int *inf, long *rl,
                            int max);
 static void asn1_put_length(unsigned char **pp, int length);
@@ -368,7 +370,7 @@ int ASN1_STRING_set(ASN1_STRING *str, const void *_data, int len)
         if (data == NULL)
             return (0);
         else
-            len = strlen(data);
+            len = sgx_strlen(data);
     }
     if ((str->length < len) || (str->data == NULL)) {
         c = str->data;
@@ -385,7 +387,7 @@ int ASN1_STRING_set(ASN1_STRING *str, const void *_data, int len)
     }
     str->length = len;
     if (data != NULL) {
-        memcpy(str->data, data, len);
+        sgx_memcpy(str->data, data, len);
         /* an allowance for strings :-) */
         str->data[len] = '\0';
     }
@@ -436,7 +438,7 @@ int ASN1_STRING_cmp(const ASN1_STRING *a, const ASN1_STRING *b)
 
     i = (a->length - b->length);
     if (i == 0) {
-        i = memcmp(a->data, b->data, a->length);
+        i = sgx_memcmp(a->data, b->data, a->length);
         if (i == 0)
             return (a->type - b->type);
         else

@@ -112,6 +112,8 @@
 #include "cryptlib.h"
 #include "bn_lcl.h"
 
+#include "../sgx.h"
+
 #include <stdlib.h>
 #ifdef _WIN32
 # include <malloc.h>
@@ -764,7 +766,7 @@ int BN_mod_exp_mont_consttime(BIGNUM *rr, const BIGNUM *a, const BIGNUM *p,
         goto err;
 
     powerbuf = MOD_EXP_CTIME_ALIGN(powerbufFree);
-    memset(powerbuf, 0, powerbufLen);
+    sgx_memset(powerbuf, 0, powerbufLen);
 
 #ifdef alloca
     if (powerbufLen < 3072)

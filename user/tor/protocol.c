@@ -1,3 +1,5 @@
+#include <sgx-lib.h>
+
 #include "protocol.h"
 #include "tor-lib.h"
 

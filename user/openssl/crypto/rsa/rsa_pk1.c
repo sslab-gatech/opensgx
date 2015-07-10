@@ -64,6 +64,8 @@
 #include <openssl/rsa.h>
 #include <openssl/rand.h>
 
+#include "../sgx.h"
+
 int RSA_padding_add_PKCS1_type_1(unsigned char *to, int tlen,
                                  const unsigned char *from, int flen)
 {
@@ -83,7 +85,7 @@ int RSA_padding_add_PKCS1_type_1(unsigned char *to, int tlen,
 
     /* pad out with 0xff data */
     j = tlen - 3 - flen;
-    memset(p, 0xff, j);
+    sgx_memset(p, 0xff, j);
     p += j;
     *(p++) = '\0';
     memcpy(p, from, (unsigned int)flen);
@@ -208,7 +210,7 @@ int RSA_padding_check_PKCS1_type_2(unsigned char *to, int tlen,
         RSAerr(RSA_F_RSA_PADDING_CHECK_PKCS1_TYPE_2, ERR_R_MALLOC_FAILURE);
         return -1;
     }
-    memset(em, 0, num);
+    sgx_memset(em, 0, num);
     /*
      * Always do this zero-padding copy (even when num == flen) to avoid
      * leaking that information. The copy still leaks some side-channel

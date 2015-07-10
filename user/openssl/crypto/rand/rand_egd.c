@@ -58,6 +58,8 @@
 #include <openssl/rand.h>
 #include <openssl/buffer.h>
 
+#include "../sgx.h"
+
 /*-
  * Query the EGD <URL: http://www.lothar.com/tech/crypto/>.
  *
@@ -143,7 +145,7 @@ int RAND_query_egd_bytes(const char *path, unsigned char *buf, int bytes)
     int success;
     unsigned char egdbuf[2], tempbuf[255], *retrievebuf;
 
-    memset(&addr, 0, sizeof(addr));
+    sgx_memset(&addr, 0, sizeof(addr));
     addr.sun_family = AF_UNIX;
     if (strlen(path) >= sizeof(addr.sun_path))
         return (-1);

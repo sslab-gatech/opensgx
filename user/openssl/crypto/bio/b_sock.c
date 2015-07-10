@@ -83,6 +83,8 @@ NETDB_DEFINE_CONTEXT
 static int wsa_init_done = 0;
 # endif
 
+#include "../sgx.h"
+
 /*
  * WSAAPI specifier is required to make indirect calls to run-time
  * linked WinSock 2 functions used in this module, to be specific
@@ -297,21 +299,21 @@ static struct hostent *ghbn_dup(struct hostent *a)
     ret = (struct hostent *)OPENSSL_malloc(sizeof(struct hostent));
     if (ret == NULL)
         return (NULL);
-    memset(ret, 0, sizeof(struct hostent));
+    sgx_memset(ret, 0, sizeof(struct hostent));
 
     for (i = 0; a->h_aliases[i] != NULL; i++) ;
     i++;
     ret->h_aliases = (char **)OPENSSL_malloc(i * sizeof(char *));
     if (ret->h_aliases == NULL)
         goto err;
-    memset(ret->h_aliases, 0, i * sizeof(char *));
+    sgx_memset(ret->h_aliases, 0, i * sizeof(char *));
 
     for (i = 0; a->h_addr_list[i] != NULL; i++) ;
     i++;
     ret->h_addr_list = (char **)OPENSSL_malloc(i * sizeof(char *));
     if (ret->h_addr_list == NULL)
         goto err;
-    memset(ret->h_addr_list, 0, i * sizeof(char *));
+    sgx_memset(ret->h_addr_list, 0, i * sizeof(char *));
 
     j = strlen(a->h_name) + 1;
     if ((ret->h_name = OPENSSL_malloc(j)) == NULL)
@@ -463,7 +465,7 @@ int BIO_sock_init(void)
         int err;
 
         wsa_init_done = 1;
-        memset(&wsa_state, 0, sizeof(wsa_state));
+        sgx_memset(&wsa_state, 0, sizeof(wsa_state));
         /*
          * Not making wsa_state available to the rest of the code is formally
          * wrong. But the structures we use are [beleived to be] invariable
@@ -673,7 +675,7 @@ int BIO_get_accept_socket(char *host, int bind_mode)
          * default to IPv6 without any hint. Also note that commonly IPv6
          * wildchard socket can service IPv4 connections just as well...
          */
-        memset(&hint, 0, sizeof(hint));
+        sgx_memset(&hint, 0, sizeof(hint));
         hint.ai_flags = AI_PASSIVE;
         if (h) {
             if (strchr(h, ':')) {
@@ -705,7 +707,7 @@ int BIO_get_accept_socket(char *host, int bind_mode)
     if (!BIO_get_port(p, &port))
         goto err;
 
-    memset((char *)&server, 0, sizeof(server));
+    sgx_memset((char *)&server, 0, sizeof(server));
     server.sa_in.sin_family = AF_INET;
     server.sa_in.sin_port = htons(port);
     addrlen = sizeof(server.sa_in);
@@ -755,7 +757,7 @@ int BIO_get_accept_socket(char *host, int bind_mode)
             if (h == NULL || strcmp(h, "*") == 0) {
 #  if OPENSSL_USE_IPV6
                 if (client.sa.sa_family == AF_INET6) {
-                    memset(&client.sa_in6.sin6_addr, 0,
+                    sgx_memset(&client.sa_in6.sin6_addr, 0,
                            sizeof(client.sa_in6.sin6_addr));
                     client.sa_in6.sin6_addr.s6_addr[15] = 1;
                 } else
@@ -846,7 +848,7 @@ int BIO_accept(int sock, char **addr)
 
     sa.len.s = 0;
     sa.len.i = sizeof(sa.from);
-    memset(&sa.from, 0, sizeof(sa.from));
+    sgx_memset(&sa.from, 0, sizeof(sa.from));
     ret = accept(sock, &sa.from.sa, (void *)&sa.len);
     if (sizeof(sa.len.i) != sizeof(sa.len.s) && sa.len.i == 0) {
         OPENSSL_assert(sa.len.s <= sizeof(sa.from));

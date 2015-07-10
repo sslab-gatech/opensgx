@@ -117,6 +117,8 @@
 #include "cryptlib.h"
 #include <openssl/safestack.h>
 
+#include "sgx.h"
+
 #if defined(OPENSSL_SYS_WIN32) || defined(OPENSSL_SYS_WIN16)
 static double SSLeay_MSVC5_hack = 0.0; /* and for VC1.5 */
 #endif
@@ -426,7 +428,7 @@ void CRYPTO_set_add_lock_callback(int (*func) (int *num, int mount, int type,
  */
 void CRYPTO_THREADID_set_numeric(CRYPTO_THREADID *id, unsigned long val)
 {
-    memset(id, 0, sizeof(*id));
+    sgx_memset(id, 0, sizeof(*id));
     id->val = val;
 }
 
@@ -438,7 +440,7 @@ void CRYPTO_THREADID_set_pointer(CRYPTO_THREADID *id, void *ptr)
     unsigned int accum = 0;
     unsigned char dnum = sizeof(id->val);
 
-    memset(id, 0, sizeof(*id));
+    sgx_memset(id, 0, sizeof(*id));
     id->ptr = ptr;
     if (sizeof(id->val) >= sizeof(id->ptr)) {
         /*
@@ -503,18 +505,20 @@ void CRYPTO_THREADID_current(CRYPTO_THREADID *id)
     CRYPTO_THREADID_set_numeric(id, (unsigned long)find_thread(NULL));
 #else
     /* For everything else, default to using the address of 'errno' */
-    CRYPTO_THREADID_set_pointer(id, (void *)&errno);
+//TODO : errno_location support
+//    CRYPTO_THREADID_set_pointer(id, (void *)&errno);
+    CRYPTO_THREADID_set_pointer(id, NULL);
 #endif
 }
 
 int CRYPTO_THREADID_cmp(const CRYPTO_THREADID *a, const CRYPTO_THREADID *b)
 {
-    return memcmp(a, b, sizeof(*a));
+    return sgx_memcmp(a, b, sizeof(*a));
 }
 
 void CRYPTO_THREADID_cpy(CRYPTO_THREADID *dest, const CRYPTO_THREADID *src)
 {
-    memcpy(dest, src, sizeof(*src));
+    sgx_memcpy(dest, src, sizeof(*src));
 }
 
 unsigned long CRYPTO_THREADID_hash(const CRYPTO_THREADID *id)

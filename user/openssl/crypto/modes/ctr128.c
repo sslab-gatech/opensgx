@@ -59,6 +59,8 @@
 #endif
 #include <assert.h>
 
+#include "../sgx.h"
+
 /*
  * NOTE: the IV/counter CTR mode is big-endian.  The code itself is
  * endian-neutral.
@@ -254,7 +256,7 @@ void CRYPTO_ctr128_encrypt_ctr32(const unsigned char *in, unsigned char *out,
         in += blocks;
     }
     if (len) {
-        memset(ecount_buf, 0, 16);
+        sgx_memset(ecount_buf, 0, 16);
         (*func) (ecount_buf, ecount_buf, 1, key, ivec);
         ++ctr32;
         PUTU32(ivec + 12, ctr32);

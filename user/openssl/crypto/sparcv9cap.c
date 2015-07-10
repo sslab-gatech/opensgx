@@ -9,6 +9,8 @@
 
 #include "sparc_arch.h"
 
+#include "sgx.h"
+
 #if defined(__GNUC__) && defined(__linux)
 __attribute__ ((visibility("hidden")))
 #endif
@@ -269,7 +271,7 @@ void OPENSSL_cpuid_setup(void)
     sigdelset(&all_masked, SIGSEGV);
     sigprocmask(SIG_SETMASK, &all_masked, &oset);
 
-    memset(&common_act, 0, sizeof(common_act));
+    sgx_memset(&common_act, 0, sizeof(common_act));
     common_act.sa_handler = common_handler;
     common_act.sa_mask = all_masked;
 

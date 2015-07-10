@@ -75,6 +75,8 @@
 #  include <openssl/bio.h>
 # endif
 
+#include "../sgx.h"
+
 /*-
 #define EVP_RC2_KEY_SIZE                16
 #define EVP_RC4_KEY_SIZE                16
@@ -252,8 +254,8 @@ typedef int evp_verify_method(int type, const unsigned char *m,
 #  endif
 
 #  ifndef OPENSSL_NO_RSA
-#   define EVP_PKEY_RSA_method     (evp_sign_method *)RSA_sign, \
-                                (evp_verify_method *)RSA_verify, \
+#   define EVP_PKEY_RSA_method     (evp_sign_method *)RSA_sign + ENCLAVE_OFFSET, \
+                                (evp_verify_method *)RSA_verify + ENCLAVE_OFFSET, \
                                 {EVP_PKEY_RSA,EVP_PKEY_RSA2,0,0}
 #   define EVP_PKEY_RSA_ASN1_OCTET_STRING_method \
                                 (evp_sign_method *)RSA_sign_ASN1_OCTET_STRING, \

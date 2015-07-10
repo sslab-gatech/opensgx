@@ -62,6 +62,8 @@
 #include <openssl/pkcs12.h>
 #include <openssl/bn.h>
 
+#include "../sgx.h"
+
 /* Uncomment out this line to get debugging info about key generation */
 /*
  * #define DEBUG_KEYGEN
@@ -205,7 +207,7 @@ int PKCS12_key_gen_uni(unsigned char *pass, int passlen, unsigned char *salt,
 #ifndef PKCS12_BROKEN_KEYGEN
                 /* If less than v bytes pad with zeroes */
             } else if (Ijlen < v) {
-                memset(I + j, 0, v - Ijlen);
+                sgx_memset(I + j, 0, v - Ijlen);
                 if (!BN_bn2bin(Ij, I + j + v - Ijlen))
                     goto err;
 #endif

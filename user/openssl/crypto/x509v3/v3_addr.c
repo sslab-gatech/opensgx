@@ -69,6 +69,8 @@
 #include <openssl/buffer.h>
 #include <openssl/x509v3.h>
 
+#include "../sgx.h"
+
 #ifndef OPENSSL_NO_RFC3779
 
 /*
@@ -156,7 +158,7 @@ static int addr_expand(unsigned char *addr,
                 addr[bs->length - 1] |= mask;
         }
     }
-    memset(addr + bs->length, fill, length - bs->length);
+    sgx_memset(addr + bs->length, fill, length - bs->length);
     return 1;
 }
 

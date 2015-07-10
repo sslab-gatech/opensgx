@@ -70,6 +70,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "../crypto/sgx.h"
 
 #include "../e_os.h"
 
@@ -447,7 +448,7 @@ static int ecdh_kat(BIO *out, const char *cname, int nid,
         goto err;
     if (memcmp(Ztmp, Z, Zlen))
         goto err;
-    memset(Ztmp, 0, Zlen);
+    sgx_memset(Ztmp, 0, Zlen);
     if (!ECDH_compute_key(Ztmp, Ztmplen,
                           EC_KEY_get0_public_key(key1), key2, 0))
         goto err;

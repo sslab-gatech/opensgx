@@ -5,6 +5,8 @@
  * ====================================================================
  */
 #include <openssl/opensslconf.h>
+#include "../sgx.h"
+
 #if !defined(OPENSSL_NO_SHA) && !defined(OPENSSL_NO_SHA512)
 /*-
  * IMPLEMENTATION NOTES.
@@ -108,11 +110,13 @@ int SHA512_Final(unsigned char *md, SHA512_CTX *c)
 
     p[n] = 0x80;                /* There always is a room for one */
     n++;
-    if (n > (sizeof(c->u) - 16))
-        memset(p + n, 0, sizeof(c->u) - n), n = 0,
-            sha512_block_data_order(c, p, 1);
+    if (n > (sizeof(c->u) - 16)) {
+        sgx_memset(p + n, 0, sizeof(c->u) - n);
+        n = 0;
+        sha512_block_data_order(c, p, 1);
+    }
 
-    memset(p + n, 0, sizeof(c->u) - 16 - n);
+    sgx_memset(p + n, 0, sizeof(c->u) - 16 - n);
 # ifdef  B_ENDIAN
     c->u.d[SHA_LBLOCK - 2] = c->Nh;
     c->u.d[SHA_LBLOCK - 1] = c->Nl;

@@ -71,6 +71,8 @@
 #include <openssl/objects.h>
 #include "vpm_int.h"
 
+#include "../sgx.h"
+
 /* CRL score values */
 
 /* No unhandled critical extensions */
@@ -2163,7 +2165,7 @@ X509_STORE_CTX *X509_STORE_CTX_new(void)
         X509err(X509_F_X509_STORE_CTX_NEW, ERR_R_MALLOC_FAILURE);
         return NULL;
     }
-    memset(ctx, 0, sizeof(X509_STORE_CTX));
+    sgx_memset(ctx, 0, sizeof(X509_STORE_CTX));
     return ctx;
 }
 
@@ -2324,7 +2326,7 @@ void X509_STORE_CTX_cleanup(X509_STORE_CTX *ctx)
         ctx->chain = NULL;
     }
     CRYPTO_free_ex_data(CRYPTO_EX_INDEX_X509_STORE_CTX, ctx, &(ctx->ex_data));
-    memset(&ctx->ex_data, 0, sizeof(CRYPTO_EX_DATA));
+    sgx_memset(&ctx->ex_data, 0, sizeof(CRYPTO_EX_DATA));
 }
 
 void X509_STORE_CTX_set_depth(X509_STORE_CTX *ctx, int depth)

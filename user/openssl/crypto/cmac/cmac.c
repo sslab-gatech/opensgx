@@ -62,6 +62,8 @@
 # include <openssl/fips.h>
 #endif
 
+#include "../sgx.h"
+
 struct CMAC_CTX_st {
     /* Cipher context to use */
     EVP_CIPHER_CTX cctx;
@@ -173,7 +175,7 @@ int CMAC_Init(CMAC_CTX *ctx, const void *key, size_t keylen,
             return 0;
         if (!EVP_EncryptInit_ex(&ctx->cctx, NULL, NULL, NULL, zero_iv))
             return 0;
-        memset(ctx->tbl, 0, EVP_CIPHER_CTX_block_size(&ctx->cctx));
+        sgx_memset(ctx->tbl, 0, EVP_CIPHER_CTX_block_size(&ctx->cctx));
         ctx->nlast_block = 0;
         return 1;
     }
@@ -199,7 +201,7 @@ int CMAC_Init(CMAC_CTX *ctx, const void *key, size_t keylen,
         if (!EVP_EncryptInit_ex(&ctx->cctx, NULL, NULL, NULL, zero_iv))
             return 0;
         /* Zero tbl so resume works */
-        memset(ctx->tbl, 0, bl);
+        sgx_memset(ctx->tbl, 0, bl);
         ctx->nlast_block = 0;
     }
     return 1;
@@ -270,7 +272,7 @@ int CMAC_Final(CMAC_CTX *ctx, unsigned char *out, size_t *poutlen)
     } else {
         ctx->last_block[lb] = 0x80;
         if (bl - lb > 1)
-            memset(ctx->last_block + lb + 1, 0, bl - lb - 1);
+            sgx_memset(ctx->last_block + lb + 1, 0, bl - lb - 1);
         for (i = 0; i < bl; i++)
             out[i] = ctx->last_block[i] ^ ctx->k2[i];
     }

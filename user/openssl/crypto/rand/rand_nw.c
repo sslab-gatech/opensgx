@@ -113,6 +113,8 @@
 #include <openssl/rand.h>
 #include "rand_lcl.h"
 
+#include "../sgx.h"
+
 #if defined (OPENSSL_SYS_NETWARE)
 
 # if defined(NETWARE_LIBC)

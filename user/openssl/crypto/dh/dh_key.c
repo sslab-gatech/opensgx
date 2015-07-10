@@ -62,6 +62,8 @@
 #include <openssl/rand.h>
 #include <openssl/dh.h>
 
+#include "../sgx.h"
+
 static int generate_key(DH *dh);
 static int compute_key(unsigned char *key, const BIGNUM *pub_key, DH *dh);
 static int dh_bn_mod_exp(const DH *dh, BIGNUM *r,
@@ -103,7 +105,7 @@ int DH_compute_key_padded(unsigned char *key, const BIGNUM *pub_key, DH *dh)
     pad = BN_num_bytes(dh->p) - rv;
     if (pad > 0) {
         memmove(key + pad, key, rv);
-        memset(key, 0, pad);
+        sgx_memset(key, 0, pad);
     }
     return rv + pad;
 }

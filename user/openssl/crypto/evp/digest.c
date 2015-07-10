@@ -122,9 +122,11 @@
 # include "evp_locl.h"
 #endif
 
+#include "../sgx.h"
+
 void EVP_MD_CTX_init(EVP_MD_CTX *ctx)
 {
-    memset(ctx, '\0', sizeof *ctx);
+    sgx_memset(ctx, '\0', sizeof *ctx);
 }
 
 EVP_MD_CTX *EVP_MD_CTX_create(void)
@@ -242,6 +244,7 @@ int EVP_DigestInit_ex(EVP_MD_CTX *ctx, const EVP_MD *type, ENGINE *impl)
         return 0;
     }
 #endif
+
     return ctx->digest->init(ctx);
 }
 
@@ -273,13 +276,15 @@ int EVP_DigestFinal_ex(EVP_MD_CTX *ctx, unsigned char *md, unsigned int *size)
 
     OPENSSL_assert(ctx->digest->md_size <= EVP_MAX_MD_SIZE);
     ret = ctx->digest->final(ctx, md);
+
     if (size != NULL)
         *size = ctx->digest->md_size;
     if (ctx->digest->cleanup) {
         ctx->digest->cleanup(ctx);
         EVP_MD_CTX_set_flags(ctx, EVP_MD_CTX_FLAG_CLEANED);
     }
-    memset(ctx->md_data, 0, ctx->digest->ctx_size);
+
+    sgx_memset(ctx->md_data, 0, ctx->digest->ctx_size);
     return ret;
 #endif
 }
@@ -311,7 +316,7 @@ int EVP_MD_CTX_copy_ex(EVP_MD_CTX *out, const EVP_MD_CTX *in)
     } else
         tmp_buf = NULL;
     EVP_MD_CTX_cleanup(out);
-    memcpy(out, in, sizeof *out);
+    sgx_memcpy(out, in, sizeof *out);
 
     if (in->md_data && out->digest->ctx_size) {
         if (tmp_buf)
@@ -323,7 +328,7 @@ int EVP_MD_CTX_copy_ex(EVP_MD_CTX *out, const EVP_MD_CTX *in)
                 return 0;
             }
         }
-        memcpy(out->md_data, in->md_data, out->digest->ctx_size);
+        sgx_memcpy(out->md_data, in->md_data, out->digest->ctx_size);
     }
 
     out->update = in->update;
@@ -397,7 +402,7 @@ int EVP_MD_CTX_cleanup(EVP_MD_CTX *ctx)
 #ifdef OPENSSL_FIPS
     FIPS_md_ctx_cleanup(ctx);
 #endif
-    memset(ctx, '\0', sizeof *ctx);
+    sgx_memset(ctx, '\0', sizeof *ctx);
 
     return 1;
 }

@@ -60,6 +60,8 @@
 #include "cryptlib.h"
 #include "bn_lcl.h"
 
+#include "../sgx.h"
+
 /* r must not be a */
 /*
  * I've just gone over this and it is now %20 faster on x86 - eay - 27 Jun 96
@@ -245,7 +247,7 @@ void bn_sqr_recursive(BN_ULONG *r, const BN_ULONG *a, int n2, BN_ULONG *t)
     if (!zero)
         bn_sqr_recursive(&(t[n2]), t, n, p);
     else
-        memset(&(t[n2]), 0, n2 * sizeof(BN_ULONG));
+        sgx_memset(&(t[n2]), 0, n2 * sizeof(BN_ULONG));
     bn_sqr_recursive(r, a, n, p);
     bn_sqr_recursive(&(r[n2]), &(a[n]), n, p);
 

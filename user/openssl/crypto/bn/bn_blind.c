@@ -113,6 +113,8 @@
 #include "cryptlib.h"
 #include "bn_lcl.h"
 
+#include "../sgx.h"
+
 #define BN_BLINDING_COUNTER     32
 
 struct bn_blinding_st {
@@ -142,7 +144,7 @@ BN_BLINDING *BN_BLINDING_new(const BIGNUM *A, const BIGNUM *Ai, BIGNUM *mod)
         BNerr(BN_F_BN_BLINDING_NEW, ERR_R_MALLOC_FAILURE);
         return (NULL);
     }
-    memset(ret, 0, sizeof(BN_BLINDING));
+    sgx_memset(ret, 0, sizeof(BN_BLINDING));
     if (A != NULL) {
         if ((ret->A = BN_dup(A)) == NULL)
             goto err;

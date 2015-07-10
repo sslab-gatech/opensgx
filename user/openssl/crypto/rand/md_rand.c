@@ -240,7 +240,7 @@ static void ssleay_rand_add(const void *buf, int num, double add)
     md_c[0] = md_count[0];
     md_c[1] = md_count[1];
 
-    memcpy(local_md, md, sizeof md);
+    sgx_memcpy(local_md, md, sizeof md);
 
     /* state_index <= state_num <= STATE_SIZE */
     state_index += num;
@@ -311,6 +311,7 @@ static void ssleay_rand_add(const void *buf, int num, double add)
 
     if (!do_not_lock)
         CRYPTO_w_lock(CRYPTO_LOCK_RAND);
+
     /*
      * Don't just copy back local_md into md -- this could mean that other
      * thread's seeding remains without effect (except for the incremented
@@ -320,8 +321,11 @@ static void ssleay_rand_add(const void *buf, int num, double add)
     for (k = 0; k < (int)sizeof(md); k++) {
         md[k] ^= local_md[k];
     }
-    if (entropy < ENTROPY_NEEDED) /* stop counting when we have enough */
-        entropy += add;
+
+//TODO : accessing entropy causes problem.. why?
+//    if (entropy < ENTROPY_NEEDED) // stop counting when we have enough
+//        entropy += add;
+
     if (!do_not_lock)
         CRYPTO_w_unlock(CRYPTO_LOCK_RAND);
 
@@ -335,6 +339,8 @@ static void ssleay_rand_seed(const void *buf, int num)
     ssleay_rand_add(buf, num, (double)num);
 }
 
+//TODO: Temporarily disable getpid()
+#define GETPID_IS_MEANINGLESS
 int ssleay_rand_bytes(unsigned char *buf, int num, int pseudo, int lock)
 {
     static volatile int stirred_pool = 0;
@@ -384,6 +390,7 @@ int ssleay_rand_bytes(unsigned char *buf, int num, int pseudo, int lock)
      * are fed into the hash function and the results are kept in the
      * global 'md'.
      */
+#if 0
     if (lock)
         CRYPTO_w_lock(CRYPTO_LOCK_RAND);
 
@@ -392,15 +399,19 @@ int ssleay_rand_bytes(unsigned char *buf, int num, int pseudo, int lock)
     CRYPTO_THREADID_current(&locking_threadid);
     CRYPTO_w_unlock(CRYPTO_LOCK_RAND2);
     crypto_lock_rand = 1;
+#endif
 
     if (!initialized) {
-        RAND_poll();
+//TODO : disable getpid
+//        RAND_poll();
         initialized = 1;
     }
 
     if (!stirred_pool)
         do_stir_pool = 1;
 
+//TODO : entropy related one
+#if 0
     ok = (entropy >= ENTROPY_NEEDED);
     if (!ok) {
         /*
@@ -418,6 +429,7 @@ int ssleay_rand_bytes(unsigned char *buf, int num, int pseudo, int lock)
         if (entropy < 0)
             entropy = 0;
     }
+#endif
 
     if (do_stir_pool) {
         /*
@@ -449,7 +461,7 @@ int ssleay_rand_bytes(unsigned char *buf, int num, int pseudo, int lock)
     st_num = state_num;
     md_c[0] = md_count[0];
     md_c[1] = md_count[1];
-    memcpy(local_md, md, sizeof md);
+    sgx_memcpy(local_md, md, sizeof md);
 
     state_index += num_ceil;
     if (state_index > state_num)

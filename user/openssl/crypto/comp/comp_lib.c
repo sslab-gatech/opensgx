@@ -4,6 +4,8 @@
 #include <openssl/objects.h>
 #include <openssl/comp.h>
 
+#include "../sgx.h"
+
 COMP_CTX *COMP_CTX_new(COMP_METHOD *meth)
 {
     COMP_CTX *ret;
@@ -12,7 +14,7 @@ COMP_CTX *COMP_CTX_new(COMP_METHOD *meth)
         /* ZZZZZZZZZZZZZZZZ */
         return (NULL);
     }
-    memset(ret, 0, sizeof(COMP_CTX));
+    sgx_memset(ret, 0, sizeof(COMP_CTX));
     ret->meth = meth;
     if ((ret->meth->init != NULL) && !ret->meth->init(ret)) {
         OPENSSL_free(ret);

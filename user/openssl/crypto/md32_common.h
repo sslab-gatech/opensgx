@@ -109,6 +109,8 @@
  *                                      <appro@fy.chalmers.se>
  */
 
+#include "sgx.h"
+
 #if !defined(DATA_ORDER_IS_BIG_ENDIAN) && !defined(DATA_ORDER_IS_LITTLE_ENDIAN)
 # error "DATA_ORDER must be defined!"
 #endif
@@ -323,15 +325,15 @@ int HASH_UPDATE(HASH_CTX *c, const void *data_, size_t len)
         p = (unsigned char *)c->data;
 
         if (len >= HASH_CBLOCK || len + n >= HASH_CBLOCK) {
-            memcpy(p + n, data, HASH_CBLOCK - n);
+            sgx_memcpy(p + n, data, HASH_CBLOCK - n);
             HASH_BLOCK_DATA_ORDER(c, p, 1);
             n = HASH_CBLOCK - n;
             data += n;
             len -= n;
             c->num = 0;
-            memset(p, 0, HASH_CBLOCK); /* keep it zeroed */
+            sgx_memset(p, 0, HASH_CBLOCK); /* keep it zeroed */
         } else {
-            memcpy(p + n, data, len);
+            sgx_memcpy(p + n, data, len);
             c->num += (unsigned int)len;
             return 1;
         }
@@ -348,7 +350,7 @@ int HASH_UPDATE(HASH_CTX *c, const void *data_, size_t len)
     if (len != 0) {
         p = (unsigned char *)c->data;
         c->num = (unsigned int)len;
-        memcpy(p, data, len);
+        sgx_memcpy(p, data, len);
     }
     return 1;
 }
@@ -367,11 +369,11 @@ int HASH_FINAL(unsigned char *md, HASH_CTX *c)
     n++;
 
     if (n > (HASH_CBLOCK - 8)) {
-        memset(p + n, 0, HASH_CBLOCK - n);
+        sgx_memset(p + n, 0, HASH_CBLOCK - n);
         n = 0;
         HASH_BLOCK_DATA_ORDER(c, p, 1);
     }
-    memset(p + n, 0, HASH_CBLOCK - 8 - n);
+    sgx_memset(p + n, 0, HASH_CBLOCK - 8 - n);
 
     p += HASH_CBLOCK - 8;
 #if   defined(DATA_ORDER_IS_BIG_ENDIAN)
@@ -384,7 +386,7 @@ int HASH_FINAL(unsigned char *md, HASH_CTX *c)
     p -= HASH_CBLOCK;
     HASH_BLOCK_DATA_ORDER(c, p, 1);
     c->num = 0;
-    memset(p, 0, HASH_CBLOCK);
+    sgx_memset(p, 0, HASH_CBLOCK);
 
 #ifndef HASH_MAKE_STRING
 # error "HASH_MAKE_STRING must be defined!"

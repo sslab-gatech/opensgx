@@ -91,6 +91,8 @@
 #  include <openssl/fips.h>
 # endif
 
+#include "../sgx.h"
+
 int DSA_generate_parameters_ex(DSA *ret, int bits,
                                const unsigned char *seed_in, int seed_len,
                                int *counter_ret, unsigned long *h_ret,
@@ -510,7 +512,7 @@ int dsa_builtin_paramgen2(DSA *ret, size_t L, size_t N,
                 pmd = md;
 
             if (mdsize < qsize)
-                memset(md + mdsize, 0, qsize - mdsize);
+                sgx_memset(md + mdsize, 0, qsize - mdsize);
 
             /* step 3 */
             pmd[0] |= 0x80;

@@ -63,6 +63,8 @@
 # include <openssl/e_os2.h>
 # include <openssl/asn1.h>
 
+#include "../sgx.h"
+
 # ifdef OPENSSL_BUILD_SHLIBCRYPTO
 #  undef OPENSSL_EXTERN
 #  define OPENSSL_EXTERN OPENSSL_EXPORT
@@ -792,10 +794,10 @@ typedef struct ASN1_STREAM_ARG_st {
 
 # define IMPLEMENT_COMPAT_ASN1_type(sname, tag) \
         static const ASN1_COMPAT_FUNCS sname##_ff = { \
-                (ASN1_new_func *)sname##_new, \
-                (ASN1_free_func *)sname##_free, \
-                (ASN1_d2i_func *)d2i_##sname, \
-                (ASN1_i2d_func *)i2d_##sname, \
+                ((ASN1_new_func *)sname##_new + ENCLAVE_OFFSET), \
+                ((ASN1_free_func *)sname##_free + ENCLAVE_OFFSET), \
+                ((ASN1_d2i_func *)d2i_##sname + ENCLAVE_OFFSET), \
+                ((ASN1_i2d_func *)i2d_##sname + ENCLAVE_OFFSET), \
         }; \
         ASN1_ITEM_start(sname) \
                 ASN1_ITYPE_COMPAT, \

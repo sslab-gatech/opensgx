@@ -6,6 +6,8 @@
 #include <memory.h>
 #include <string.h>
 
+#include "../sgx.h"
+
 /*
  * In the definition, (xa, xb, xc, xd) are Alice's (x1, x2, x3, x4) or
  * Bob's (x3, x4, x1, x2). If you see what I mean.
@@ -108,7 +110,7 @@ static void JPAKE_CTX_release(JPAKE_CTX *ctx)
     OPENSSL_free(ctx->p.peer_name);
     OPENSSL_free(ctx->p.name);
 
-    memset(ctx, '\0', sizeof *ctx);
+    sgx_memset(ctx, '\0', sizeof *ctx);
 }
 
 JPAKE_CTX *JPAKE_CTX_new(const char *name, const char *peer_name,

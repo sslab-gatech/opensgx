@@ -66,6 +66,8 @@
 #include "cryptlib.h"
 #include "bn_lcl.h"
 
+#include "../sgx.h"
+
 #if defined(OPENSSL_NO_ASM) || !defined(OPENSSL_BN_ASM_PART_WORDS)
 /*
  * Here follows specialised variants of bn_add_words() and bn_sub_words().
@@ -455,7 +457,7 @@ void bn_mul_recursive(BN_ULONG *r, BN_ULONG *a, BN_ULONG *b, int n2,
     if (n2 < BN_MUL_RECURSIVE_SIZE_NORMAL) {
         bn_mul_normal(r, a, n2 + dna, b, n2 + dnb);
         if ((dna + dnb) < 0)
-            memset(&r[2 * n2 + dna + dnb], 0,
+            sgx_memset(&r[2 * n2 + dna + dnb], 0,
                    sizeof(BN_ULONG) * -(dna + dnb));
         return;
     }
@@ -501,7 +503,7 @@ void bn_mul_recursive(BN_ULONG *r, BN_ULONG *a, BN_ULONG *b, int n2,
         if (!zero)
             bn_mul_comba4(&(t[n2]), t, &(t[n]));
         else
-            memset(&(t[n2]), 0, 8 * sizeof(BN_ULONG));
+            sgx_memset(&(t[n2]), 0, 8 * sizeof(BN_ULONG));
 
         bn_mul_comba4(r, a, b);
         bn_mul_comba4(&(r[n2]), &(a[n]), &(b[n]));
@@ -511,7 +513,7 @@ void bn_mul_recursive(BN_ULONG *r, BN_ULONG *a, BN_ULONG *b, int n2,
         if (!zero)
             bn_mul_comba8(&(t[n2]), t, &(t[n]));
         else
-            memset(&(t[n2]), 0, 16 * sizeof(BN_ULONG));
+            sgx_memset(&(t[n2]), 0, 16 * sizeof(BN_ULONG));
 
         bn_mul_comba8(r, a, b);
         bn_mul_comba8(&(r[n2]), &(a[n]), &(b[n]));
@@ -522,7 +524,7 @@ void bn_mul_recursive(BN_ULONG *r, BN_ULONG *a, BN_ULONG *b, int n2,
         if (!zero)
             bn_mul_recursive(&(t[n2]), t, &(t[n]), n, 0, 0, p);
         else
-            memset(&(t[n2]), 0, n2 * sizeof(BN_ULONG));
+            sgx_memset(&(t[n2]), 0, n2 * sizeof(BN_ULONG));
         bn_mul_recursive(r, a, b, n, 0, 0, p);
         bn_mul_recursive(&(r[n2]), &(a[n]), &(b[n]), n, dna, dnb, p);
     }
@@ -631,14 +633,14 @@ void bn_mul_part_recursive(BN_ULONG *r, BN_ULONG *a, BN_ULONG *b, int n,
         bn_mul_comba4(&(t[n2]), t, &(t[n]));
         bn_mul_comba4(r, a, b);
         bn_mul_normal(&(r[n2]), &(a[n]), tn, &(b[n]), tn);
-        memset(&(r[n2 + tn * 2]), 0, sizeof(BN_ULONG) * (n2 - tn * 2));
+        sgx_memset(&(r[n2 + tn * 2]), 0, sizeof(BN_ULONG) * (n2 - tn * 2));
     } else
 # endif
     if (n == 8) {
         bn_mul_comba8(&(t[n2]), t, &(t[n]));
         bn_mul_comba8(r, a, b);
         bn_mul_normal(&(r[n2]), &(a[n]), tna, &(b[n]), tnb);
-        memset(&(r[n2 + tna + tnb]), 0, sizeof(BN_ULONG) * (n2 - tna - tnb));
+        sgx_memset(&(r[n2 + tna + tnb]), 0, sizeof(BN_ULONG) * (n2 - tna - tnb));
     } else {
         p = &(t[n2 * 2]);
         bn_mul_recursive(&(t[n2]), t, &(t[n]), n, 0, 0, p);
@@ -654,15 +656,15 @@ void bn_mul_part_recursive(BN_ULONG *r, BN_ULONG *a, BN_ULONG *b, int n,
         if (j == 0) {
             bn_mul_recursive(&(r[n2]), &(a[n]), &(b[n]),
                              i, tna - i, tnb - i, p);
-            memset(&(r[n2 + i * 2]), 0, sizeof(BN_ULONG) * (n2 - i * 2));
+            sgx_memset(&(r[n2 + i * 2]), 0, sizeof(BN_ULONG) * (n2 - i * 2));
         } else if (j > 0) {     /* eg, n == 16, i == 8 and tn == 11 */
             bn_mul_part_recursive(&(r[n2]), &(a[n]), &(b[n]),
                                   i, tna - i, tnb - i, p);
-            memset(&(r[n2 + tna + tnb]), 0,
+            sgx_memset(&(r[n2 + tna + tnb]), 0,
                    sizeof(BN_ULONG) * (n2 - tna - tnb));
         } else {                /* (j < 0) eg, n == 16, i == 8 and tn == 5 */
 
-            memset(&(r[n2]), 0, sizeof(BN_ULONG) * n2);
+            sgx_memset(&(r[n2]), 0, sizeof(BN_ULONG) * n2);
             if (tna < BN_MUL_RECURSIVE_SIZE_NORMAL
                 && tnb < BN_MUL_RECURSIVE_SIZE_NORMAL) {
                 bn_mul_normal(&(r[n2]), &(a[n]), tna, &(b[n]), tnb);

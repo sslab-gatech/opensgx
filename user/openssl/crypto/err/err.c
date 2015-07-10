@@ -119,6 +119,8 @@
 #include <openssl/bio.h>
 #include <openssl/err.h>
 
+#include "../sgx.h"
+
 DECLARE_LHASH_OF(ERR_STRING_DATA);
 DECLARE_LHASH_OF(ERR_STATE);
 
@@ -252,17 +254,17 @@ static void int_thread_del_item(const ERR_STATE *);
 static int int_err_get_next_lib(void);
 /* The static ERR_FNS table using these defaults functions */
 static const ERR_FNS err_defaults = {
-    int_err_get,
-    int_err_del,
-    int_err_get_item,
-    int_err_set_item,
-    int_err_del_item,
-    int_thread_get,
-    int_thread_release,
-    int_thread_get_item,
-    int_thread_set_item,
-    int_thread_del_item,
-    int_err_get_next_lib
+    int_err_get + ENCLAVE_OFFSET,
+    int_err_del + ENCLAVE_OFFSET,
+    int_err_get_item + ENCLAVE_OFFSET,
+    int_err_set_item + ENCLAVE_OFFSET,
+    int_err_del_item + ENCLAVE_OFFSET,
+    int_thread_get + ENCLAVE_OFFSET,
+    int_thread_release + ENCLAVE_OFFSET,
+    int_thread_get_item + ENCLAVE_OFFSET,
+    int_thread_set_item + ENCLAVE_OFFSET,
+    int_thread_del_item + ENCLAVE_OFFSET,
+    int_err_get_next_lib + ENCLAVE_OFFSET
 };
 
 /* The replacable table of ERR_FNS functions we use at run-time */
@@ -1096,7 +1098,7 @@ void ERR_add_error_vdata(int num, va_list args)
         a = va_arg(args, char *);
         /* ignore NULLs, thanks to Bob Beck <beck@obtuse.com> */
         if (a != NULL) {
-            n += strlen(a);
+            n += sgx_strlen(a);
             if (n > s) {
                 s = n + 20;
                 p = OPENSSL_realloc(str, s + 1);

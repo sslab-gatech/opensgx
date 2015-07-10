@@ -62,6 +62,8 @@
 #include "cryptlib.h"
 #include <openssl/dso.h>
 
+#include "../sgx.h"
+
 static DSO_METHOD *default_DSO_meth = NULL;
 
 DSO *DSO_new(void)
@@ -108,7 +110,7 @@ DSO *DSO_new_method(DSO_METHOD *meth)
         DSOerr(DSO_F_DSO_NEW_METHOD, ERR_R_MALLOC_FAILURE);
         return (NULL);
     }
-    memset(ret, 0, sizeof(DSO));
+    sgx_memset(ret, 0, sizeof(DSO));
     ret->meth_data = sk_void_new_null();
     if (ret->meth_data == NULL) {
         /* sk_new doesn't generate any errors so we do */

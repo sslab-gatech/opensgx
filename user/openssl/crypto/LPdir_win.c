@@ -29,6 +29,8 @@
 # include "LPdir.h"
 #endif
 
+#include "sgx.h"
+
 /*
  * We're most likely overcautious here, but let's reserve for broken WinCE
  * headers and explicitly opt for UNICODE call. Keep in mind that our WinCE
@@ -69,17 +71,17 @@ const char *LP_find_file(LP_DIR_CTX **ctx, const char *directory)
             return 0;
         }
 
-        *ctx = (LP_DIR_CTX *)malloc(sizeof(LP_DIR_CTX));
+        *ctx = (LP_DIR_CTX *)sgx_malloc(sizeof(LP_DIR_CTX));
         if (*ctx == NULL) {
             errno = ENOMEM;
             return 0;
         }
-        memset(*ctx, '\0', sizeof(LP_DIR_CTX));
+        sgx_memset(*ctx, '\0', sizeof(LP_DIR_CTX));
 
         if (directory[dirlen - 1] != '*') {
-            extdirbuf = (char *)malloc(dirlen + 3);
+            extdirbuf = (char *)sgx_malloc(dirlen + 3);
             if (extdirbuf == NULL) {
-                free(*ctx);
+                sgx_free(*ctx);
                 *ctx = NULL;
                 errno = ENOMEM;
                 return 0;
@@ -98,9 +100,9 @@ const char *LP_find_file(LP_DIR_CTX **ctx, const char *directory)
             wdir = (TCHAR *)calloc(len_0, sizeof(TCHAR));
             if (wdir == NULL) {
                 if (extdirbuf != NULL) {
-                    free(extdirbuf);
+                    sgx_free(extdirbuf);
                 }
-                free(*ctx);
+                sgx_free(*ctx);
                 *ctx = NULL;
                 errno = ENOMEM;
                 return 0;
@@ -114,16 +116,16 @@ const char *LP_find_file(LP_DIR_CTX **ctx, const char *directory)
 
             (*ctx)->handle = FindFirstFile(wdir, &(*ctx)->ctx);
 
-            free(wdir);
+            sgx_free(wdir);
         } else {
             (*ctx)->handle = FindFirstFile((TCHAR *)extdir, &(*ctx)->ctx);
         }
         if (extdirbuf != NULL) {
-            free(extdirbuf);
+            sgx_free(extdirbuf);
         }
 
         if ((*ctx)->handle == INVALID_HANDLE_VALUE) {
-            free(*ctx);
+            sgx_free(*ctx);
             *ctx = NULL;
             errno = EINVAL;
             return 0;
@@ -161,7 +163,7 @@ int LP_find_file_end(LP_DIR_CTX **ctx)
 {
     if (ctx != NULL && *ctx != NULL) {
         FindClose((*ctx)->handle);
-        free(*ctx);
+        sgx_free(*ctx);
         *ctx = NULL;
         return 1;
     }

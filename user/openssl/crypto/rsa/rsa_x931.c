@@ -64,6 +64,8 @@
 #include <openssl/rand.h>
 #include <openssl/objects.h>
 
+#include "../sgx.h"
+
 int RSA_padding_add_X931(unsigned char *to, int tlen,
                          const unsigned char *from, int flen)
 {
@@ -90,7 +92,7 @@ int RSA_padding_add_X931(unsigned char *to, int tlen,
     else {
         *p++ = 0x6B;
         if (j > 1) {
-            memset(p, 0xBB, j - 1);
+            sgx_memset(p, 0xBB, j - 1);
             p += j - 1;
         }
         *p++ = 0xBA;

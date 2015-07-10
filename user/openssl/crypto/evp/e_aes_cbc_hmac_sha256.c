@@ -61,6 +61,8 @@
 # include <openssl/rand.h>
 # include "modes_lcl.h"
 
+#include "../sgx.h"
+
 # ifndef EVP_CIPH_FLAG_AEAD_CIPHER
 #  define EVP_CIPH_FLAG_AEAD_CIPHER       0x200000
 #  define EVP_CTRL_AEAD_TLS1_AAD          0x16
@@ -121,7 +123,7 @@ static int aesni_cbc_hmac_sha256_init_key(EVP_CIPHER_CTX *ctx,
     int ret;
 
     if (enc)
-        memset(&key->ks, 0, sizeof(key->ks.rd_key)),
+        sgx_memset(&key->ks, 0, sizeof(key->ks.rd_key)),
             ret = aesni_set_encrypt_key(inkey, ctx->key_len * 8, &key->ks);
     else
         ret = aesni_set_decrypt_key(inkey, ctx->key_len * 8, &key->ks);
@@ -337,7 +339,7 @@ static size_t tls1_1_multi_block_encrypt(EVP_AES_HMAC_SHA256 *key,
 #   undef  MAXCHUNKSIZE
     sha256_multi_block(ctx, hash_d, n4x);
 
-    memset(blocks, 0, sizeof(blocks));
+    sgx_memset(blocks, 0, sizeof(blocks));
     for (i = 0; i < x4; i++) {
         unsigned int len = (i == (x4 - 1) ? last : frag),
             off = hash_d[i].blocks * 64;
@@ -369,7 +371,7 @@ static size_t tls1_1_multi_block_encrypt(EVP_AES_HMAC_SHA256 *key,
     /* hash input tails and finalize */
     sha256_multi_block(ctx, edges, n4x);
 
-    memset(blocks, 0, sizeof(blocks));
+    sgx_memset(blocks, 0, sizeof(blocks));
     for (i = 0; i < x4; i++) {
 #   ifdef BSWAP4
         blocks[i].d[0] = BSWAP4(ctx->A[i]);
@@ -665,7 +667,7 @@ static int aesni_cbc_hmac_sha256_cipher(EVP_CIPHER_CTX *ctx,
                 pmac->u[6] |= key->md.h[6] & mask;
                 pmac->u[7] |= key->md.h[7] & mask;
 
-                memset(data, 0, SHA256_CBLOCK);
+                sgx_memset(data, 0, SHA256_CBLOCK);
                 j += 64;
             }
             data->u[SHA_LBLOCK - 1] = bitlen;
@@ -784,7 +786,7 @@ static int aesni_cbc_hmac_sha256_ctrl(EVP_CIPHER_CTX *ctx, int type, int arg,
             unsigned int i;
             unsigned char hmac_key[64];
 
-            memset(hmac_key, 0, sizeof(hmac_key));
+            sgx_memset(hmac_key, 0, sizeof(hmac_key));
 
             if (arg > (int)sizeof(hmac_key)) {
                 SHA256_Init(&key->head);

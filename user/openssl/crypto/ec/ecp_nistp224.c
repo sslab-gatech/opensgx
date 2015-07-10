@@ -34,6 +34,8 @@
 #  include <inttypes.h>
 # endif
 
+#include "../sgx.h"
+
 # include <string.h>
 # include <openssl/err.h>
 # include "ec_lcl.h"
@@ -351,7 +353,7 @@ static int BN_to_felem(felem out, const BIGNUM *bn)
     unsigned num_bytes;
 
     /* BN_bn2bin eats leading zeroes */
-    memset(b_out, 0, sizeof b_out);
+    sgx_memset(b_out, 0, sizeof b_out);
     num_bytes = BN_num_bytes(bn);
     if (num_bytes > sizeof b_out) {
         ECerr(EC_F_BN_TO_FELEM, EC_R_BIGNUM_OUT_OF_RANGE);
@@ -1103,7 +1105,7 @@ static void select_point(const u64 idx, unsigned int size,
 {
     unsigned i, j;
     limb *outlimbs = &out[0][0];
-    memset(outlimbs, 0, 3 * sizeof(felem));
+    sgx_memset(outlimbs, 0, 3 * sizeof(felem));
 
     for (i = 0; i < size; i++) {
         const limb *inlimbs = &pre_comp[i][0][0];
@@ -1147,7 +1149,7 @@ static void batch_mul(felem x_out, felem y_out, felem z_out,
     u8 sign, digit;
 
     /* set nq to the point at infinity */
-    memset(nq, 0, 3 * sizeof(felem));
+    sgx_memset(nq, 0, 3 * sizeof(felem));
 
     /*
      * Loop over all scalars msb-to-lsb, interleaving additions of multiples
@@ -1239,7 +1241,7 @@ static NISTP224_PRE_COMP *nistp224_pre_comp_new()
         ECerr(EC_F_NISTP224_PRE_COMP_NEW, ERR_R_MALLOC_FAILURE);
         return ret;
     }
-    memset(ret->g_pre_comp, 0, sizeof(ret->g_pre_comp));
+    sgx_memset(ret->g_pre_comp, 0, sizeof(ret->g_pre_comp));
     ret->references = 1;
     return ret;
 }
@@ -1508,8 +1510,8 @@ int ec_GFp_nistp224_points_mul(const EC_GROUP *group, EC_POINT *r,
          * we treat NULL scalars as 0, and NULL points as points at infinity,
          * i.e., they contribute nothing to the linear combination
          */
-        memset(secrets, 0, num_points * sizeof(felem_bytearray));
-        memset(pre_comp, 0, num_points * 17 * 3 * sizeof(felem));
+        sgx_memset(secrets, 0, num_points * sizeof(felem_bytearray));
+        sgx_memset(pre_comp, 0, num_points * 17 * 3 * sizeof(felem));
         for (i = 0; i < num_points; ++i) {
             if (i == num)
                 /* the generator */
@@ -1569,7 +1571,7 @@ int ec_GFp_nistp224_points_mul(const EC_GROUP *group, EC_POINT *r,
 
     /* the scalar for the generator */
     if ((scalar != NULL) && (have_pre_comp)) {
-        memset(g_secret, 0, sizeof g_secret);
+        sgx_memset(g_secret, 0, sizeof g_secret);
         /* reduce scalar to 0 <= scalar < 2^224 */
         if ((BN_num_bits(scalar) > 224) || (BN_is_negative(scalar))) {
             /*
@@ -1694,7 +1696,7 @@ int ec_GFp_nistp224_precompute_mult(EC_GROUP *group, BN_CTX *ctx)
     }
     for (i = 0; i < 2; i++) {
         /* g_pre_comp[i][0] is the point at infinity */
-        memset(pre->g_pre_comp[i][0], 0, sizeof(pre->g_pre_comp[i][0]));
+        sgx_memset(pre->g_pre_comp[i][0], 0, sizeof(pre->g_pre_comp[i][0]));
         /* the remaining multiples */
         /* 2^56*G + 2^112*G resp. 2^84*G + 2^140*G */
         point_add(pre->g_pre_comp[i][6][0], pre->g_pre_comp[i][6][1],

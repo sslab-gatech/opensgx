@@ -62,6 +62,8 @@
 #define USE_SOCKETS
 #include "cryptlib.h"
 
+#include "../sgx.h"
+
 #include <openssl/bio.h>
 #ifndef OPENSSL_NO_DGRAM
 
@@ -225,7 +227,7 @@ static int dgram_new(BIO *bi)
     data = OPENSSL_malloc(sizeof(bio_dgram_data));
     if (data == NULL)
         return 0;
-    memset(data, 0x00, sizeof(bio_dgram_data));
+    sgx_memset(data, 0x00, sizeof(bio_dgram_data));
     bi->ptr = data;
 
     bi->flags = 0;
@@ -393,7 +395,7 @@ static int dgram_read(BIO *b, char *out, int outl)
 
     if (out != NULL) {
         clear_socket_error();
-        memset(&sa.peer, 0x00, sizeof(sa.peer));
+        sgx_memset(&sa.peer, 0x00, sizeof(sa.peer));
         dgram_adjust_rcv_timeout(b);
         ret = recvfrom(b->num, out, outl, 0, &sa.peer.sa, (void *)&sa.len);
         if (sizeof(sa.len.i) != sizeof(sa.len.s) && sa.len.i == 0) {
@@ -583,7 +585,7 @@ static long dgram_ctrl(BIO *b, int cmd, long num, void *ptr)
     case BIO_CTRL_DGRAM_MTU_DISCOVER:
 # if defined(OPENSSL_SYS_LINUX) && defined(IP_MTU_DISCOVER) && defined(IP_PMTUDISC_DO)
         addr_len = (socklen_t) sizeof(addr);
-        memset((void *)&addr, 0, sizeof(addr));
+        sgx_memset((void *)&addr, 0, sizeof(addr));
         if (getsockname(b->num, &addr.sa, &addr_len) < 0) {
             ret = 0;
             break;
@@ -614,7 +616,7 @@ static long dgram_ctrl(BIO *b, int cmd, long num, void *ptr)
     case BIO_CTRL_DGRAM_QUERY_MTU:
 # if defined(OPENSSL_SYS_LINUX) && defined(IP_MTU)
         addr_len = (socklen_t) sizeof(addr);
-        memset((void *)&addr, 0, sizeof(addr));
+        sgx_memset((void *)&addr, 0, sizeof(addr));
         if (getsockname(b->num, &addr.sa, &addr_len) < 0) {
             ret = 0;
             break;
@@ -708,7 +710,7 @@ static long dgram_ctrl(BIO *b, int cmd, long num, void *ptr)
             }
         } else {
             data->connected = 0;
-            memset(&(data->peer), 0x00, sizeof(data->peer));
+            sgx_memset(&(data->peer), 0x00, sizeof(data->peer));
         }
         break;
     case BIO_CTRL_DGRAM_GET_PEER:
@@ -1012,7 +1014,7 @@ BIO *BIO_new_dgram_sctp(int fd, int close_flag)
      */
     sockopt_len = (socklen_t) (sizeof(sctp_assoc_t) + 256 * sizeof(uint8_t));
     authchunks = OPENSSL_malloc(sockopt_len);
-    memset(authchunks, 0, sizeof(sockopt_len));
+    sgx_memset(authchunks, 0, sizeof(sockopt_len));
     ret =
         getsockopt(fd, IPPROTO_SCTP, SCTP_LOCAL_AUTH_CHUNKS, authchunks,
                    &sockopt_len);
@@ -1039,7 +1041,7 @@ BIO *BIO_new_dgram_sctp(int fd, int close_flag)
 
 #  ifdef SCTP_AUTHENTICATION_EVENT
 #   ifdef SCTP_EVENT
-    memset(&event, 0, sizeof(struct sctp_event));
+    sgx_memset(&event, 0, sizeof(struct sctp_event));
     event.se_assoc_id = 0;
     event.se_type = SCTP_AUTHENTICATION_EVENT;
     event.se_on = 1;
@@ -1099,7 +1101,7 @@ static int dgram_sctp_new(BIO *bi)
     data = OPENSSL_malloc(sizeof(bio_dgram_sctp_data));
     if (data == NULL)
         return 0;
-    memset(data, 0x00, sizeof(bio_dgram_sctp_data));
+    sgx_memset(data, 0x00, sizeof(bio_dgram_sctp_data));
 #  ifdef SCTP_PR_SCTP_NONE
     data->prinfo.pr_policy = SCTP_PR_SCTP_NONE;
 #  endif
@@ -1161,7 +1163,7 @@ static int dgram_sctp_read(BIO *b, char *out, int outl)
         clear_socket_error();
 
         do {
-            memset(&data->rcvinfo, 0x00,
+            sgx_memset(&data->rcvinfo, 0x00,
                    sizeof(struct bio_dgram_sctp_rcvinfo));
             iov.iov_base = out;
             iov.iov_len = outl;
@@ -1241,7 +1243,7 @@ static int dgram_sctp_read(BIO *b, char *out, int outl)
 
                     /* disable sender dry event */
 #  ifdef SCTP_EVENT
-                    memset(&event, 0, sizeof(struct sctp_event));
+                    sgx_memset(&event, 0, sizeof(struct sctp_event));
                     event.se_assoc_id = 0;
                     event.se_type = SCTP_SENDER_DRY_EVENT;
                     event.se_on = 0;
@@ -1279,7 +1281,7 @@ static int dgram_sctp_read(BIO *b, char *out, int outl)
                     data->handle_notifications(b, data->notification_context,
                                                (void *)out);
 
-                memset(out, 0, outl);
+                sgx_memset(out, 0, outl);
             } else
                 ret += n;
         }
@@ -1325,7 +1327,7 @@ static int dgram_sctp_read(BIO *b, char *out, int outl)
              * Everything seems ok till now, so it's most likely a message
              * dropped by PR-SCTP.
              */
-            memset(out, 0, outl);
+            sgx_memset(out, 0, outl);
             BIO_set_retry_read(b);
             return -1;
         }
@@ -1347,7 +1349,7 @@ static int dgram_sctp_read(BIO *b, char *out, int outl)
             optlen =
                 (socklen_t) (sizeof(sctp_assoc_t) + 256 * sizeof(uint8_t));
             authchunks = OPENSSL_malloc(optlen);
-            memset(authchunks, 0, sizeof(optlen));
+            sgx_memset(authchunks, 0, sizeof(optlen));
             ii = getsockopt(b->num, IPPROTO_SCTP, SCTP_PEER_AUTH_CHUNKS,
                             authchunks, &optlen);
 
@@ -1401,7 +1403,7 @@ static int dgram_sctp_write(BIO *b, const char *in, int inl)
      * parameters and flags.
      */
     if (in[0] != 23) {
-        memset(&handshake_sinfo, 0x00, sizeof(struct bio_dgram_sctp_sndinfo));
+        sgx_memset(&handshake_sinfo, 0x00, sizeof(struct bio_dgram_sctp_sndinfo));
 #  ifdef SCTP_SACK_IMMEDIATELY
         handshake_sinfo.snd_flags = SCTP_SACK_IMMEDIATELY;
 #  endif
@@ -1437,7 +1439,7 @@ static int dgram_sctp_write(BIO *b, const char *in, int inl)
     cmsg->cmsg_type = SCTP_SNDINFO;
     cmsg->cmsg_len = CMSG_LEN(sizeof(struct sctp_sndinfo));
     sndinfo = (struct sctp_sndinfo *)CMSG_DATA(cmsg);
-    memset(sndinfo, 0, sizeof(struct sctp_sndinfo));
+    sgx_memset(sndinfo, 0, sizeof(struct sctp_sndinfo));
     sndinfo->snd_sid = sinfo->snd_sid;
     sndinfo->snd_flags = sinfo->snd_flags;
     sndinfo->snd_ppid = sinfo->snd_ppid;
@@ -1450,7 +1452,7 @@ static int dgram_sctp_write(BIO *b, const char *in, int inl)
     cmsg->cmsg_type = SCTP_PRINFO;
     cmsg->cmsg_len = CMSG_LEN(sizeof(struct sctp_prinfo));
     prinfo = (struct sctp_prinfo *)CMSG_DATA(cmsg);
-    memset(prinfo, 0, sizeof(struct sctp_prinfo));
+    sgx_memset(prinfo, 0, sizeof(struct sctp_prinfo));
     prinfo->pr_policy = pinfo->pr_policy;
     prinfo->pr_value = pinfo->pr_value;
     msg.msg_controllen += CMSG_SPACE(sizeof(struct sctp_prinfo));
@@ -1460,7 +1462,7 @@ static int dgram_sctp_write(BIO *b, const char *in, int inl)
     cmsg->cmsg_type = SCTP_SNDRCV;
     cmsg->cmsg_len = CMSG_LEN(sizeof(struct sctp_sndrcvinfo));
     sndrcvinfo = (struct sctp_sndrcvinfo *)CMSG_DATA(cmsg);
-    memset(sndrcvinfo, 0, sizeof(struct sctp_sndrcvinfo));
+    sgx_memset(sndrcvinfo, 0, sizeof(struct sctp_sndrcvinfo));
     sndrcvinfo->sinfo_stream = sinfo->snd_sid;
     sndrcvinfo->sinfo_flags = sinfo->snd_flags;
 #   ifdef __FreeBSD__
@@ -1557,7 +1559,7 @@ static long dgram_sctp_ctrl(BIO *b, int cmd, long num, void *ptr)
             ret = -1;
             break;
         }
-        memset(authkey, 0x00, sockopt_len);
+        sgx_memset(authkey, 0x00, sockopt_len);
         authkey->sca_keynumber = authkeyid.scact_keynumber + 1;
 #  ifndef __FreeBSD__
         /*
@@ -1754,7 +1756,7 @@ int BIO_dgram_sctp_wait_for_dry(BIO *b)
 
     /* set sender dry event */
 #  ifdef SCTP_EVENT
-    memset(&event, 0, sizeof(struct sctp_event));
+    sgx_memset(&event, 0, sizeof(struct sctp_event));
     event.se_assoc_id = 0;
     event.se_type = SCTP_SENDER_DRY_EVENT;
     event.se_on = 1;
@@ -1777,7 +1779,7 @@ int BIO_dgram_sctp_wait_for_dry(BIO *b)
         return -1;
 
     /* peek for notification */
-    memset(&snp, 0x00, sizeof(union sctp_notification));
+    sgx_memset(&snp, 0x00, sizeof(union sctp_notification));
     iov.iov_base = (char *)&snp;
     iov.iov_len = sizeof(union sctp_notification);
     msg.msg_name = NULL;
@@ -1799,7 +1801,7 @@ int BIO_dgram_sctp_wait_for_dry(BIO *b)
 
     /* if we find a notification, process it and try again if necessary */
     while (msg.msg_flags & MSG_NOTIFICATION) {
-        memset(&snp, 0x00, sizeof(union sctp_notification));
+        sgx_memset(&snp, 0x00, sizeof(union sctp_notification));
         iov.iov_base = (char *)&snp;
         iov.iov_len = sizeof(union sctp_notification);
         msg.msg_name = NULL;
@@ -1824,7 +1826,7 @@ int BIO_dgram_sctp_wait_for_dry(BIO *b)
 
             /* disable sender dry event */
 #  ifdef SCTP_EVENT
-            memset(&event, 0, sizeof(struct sctp_event));
+            sgx_memset(&event, 0, sizeof(struct sctp_event));
             event.se_assoc_id = 0;
             event.se_type = SCTP_SENDER_DRY_EVENT;
             event.se_on = 0;
@@ -1858,7 +1860,7 @@ int BIO_dgram_sctp_wait_for_dry(BIO *b)
                                        (void *)&snp);
 
         /* found notification, peek again */
-        memset(&snp, 0x00, sizeof(union sctp_notification));
+        sgx_memset(&snp, 0x00, sizeof(union sctp_notification));
         iov.iov_base = (char *)&snp;
         iov.iov_len = sizeof(union sctp_notification);
         msg.msg_name = NULL;
@@ -1904,7 +1906,7 @@ int BIO_dgram_sctp_msg_waiting(BIO *b)
 
     /* Check if there are any messages waiting to be read */
     do {
-        memset(&snp, 0x00, sizeof(union sctp_notification));
+        sgx_memset(&snp, 0x00, sizeof(union sctp_notification));
         iov.iov_base = (char *)&snp;
         iov.iov_len = sizeof(union sctp_notification);
         msg.msg_name = NULL;
@@ -1927,7 +1929,7 @@ int BIO_dgram_sctp_msg_waiting(BIO *b)
                 dgram_sctp_handle_auth_free_key_event(b, &snp);
 #  endif
 
-            memset(&snp, 0x00, sizeof(union sctp_notification));
+            sgx_memset(&snp, 0x00, sizeof(union sctp_notification));
             iov.iov_base = (char *)&snp;
             iov.iov_len = sizeof(union sctp_notification);
             msg.msg_name = NULL;

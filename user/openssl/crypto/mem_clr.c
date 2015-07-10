@@ -60,6 +60,8 @@
 #include <string.h>
 #include <openssl/crypto.h>
 
+#include "sgx.h"
+
 unsigned char cleanse_ctr = 0;
 
 void OPENSSL_cleanse(void *ptr, size_t len)
@@ -70,7 +72,7 @@ void OPENSSL_cleanse(void *ptr, size_t len)
         *(p++) = (unsigned char)ctr;
         ctr += (17 + ((size_t)p & 0xF));
     }
-    p = memchr(ptr, (unsigned char)ctr, len);
+    p = sgx_memchr(ptr, (unsigned char)ctr, len);
     if (p)
         ctr += (63 + (size_t)p);
     cleanse_ctr = (unsigned char)ctr;

@@ -245,7 +245,7 @@ crypto_pk_t *crypto_pk_new(void)
     rsa = RSA_new();
     
 //    assert(rsa);
-    return crypto_new_pk_from_rsa_(&rsa);
+    return crypto_new_pk_from_rsa_(rsa);
 }
 
 /** Generate a <b>bits</b>-bit new public/private keypair in <b>env</b>.
@@ -257,10 +257,11 @@ int crypto_pk_generate_key_with_bits(crypto_pk_t *env, int bits)
     if (env->key)
         RSA_free(env->key);
 */
-     env->key = NULL;
+    env->key = NULL;
 
     {
         BIGNUM *e = BN_new();
+
         RSA *r = NULL;
         if (!e)
             goto done;
@@ -273,14 +274,12 @@ int crypto_pk_generate_key_with_bits(crypto_pk_t *env, int bits)
 
         if (RSA_generate_key_ex(r, bits, e, NULL) == -1)
             goto done;
-/*
+
         env->key = r;
         r = NULL;
-*/
-
 done:
-        e = NULL;
-        r = NULL;
+        if(e)   e = NULL;
+        if(r)   r = NULL;
 /*
         if (e)
             BN_clear_free(e);
@@ -316,10 +315,10 @@ void crypto_pk_free(crypto_pk_t *env)
         return;
 //    assert(env->refs == 0);
 
-    if (env->key)
-        RSA_free(env->key);
+//    if (env->key)
+//        RSA_free(env->key);
 
-    free(env);
+//    free(env);
 }
 
 /** Return the size of the public key modulus in <b>env</b>, in bytes. */
@@ -416,10 +415,10 @@ int crypto_pk_get_digest(crypto_pk_t *pk, char *digest_out)
     if (len < 0 || buf == NULL)
         return -1;
     if (crypto_digest(digest_out, (char*)buf, len) < 0) {
-        OPENSSL_free(buf);
+//        OPENSSL_free(buf);
         return -1;
     }
-    OPENSSL_free(buf);
+//    OPENSSL_free(buf);
     return 0;
 }
 
@@ -531,12 +530,12 @@ int crypto_pk_read_private_key_from_string(crypto_pk_t *env,
     if (!b)
         return -1;
 
-    if (env->key)
-        RSA_free(env->key);
+//    if (env->key)
+//        RSA_free(env->key);
 
     env->key = PEM_read_bio_RSAPrivateKey(b,NULL,NULL,NULL);
 
-    BIO_free(b);
+//    BIO_free(b);
 
     if (!env->key) {
         err(1, "Error parsing private key");
@@ -589,10 +588,10 @@ int crypto_pk_read_public_key_from_string(crypto_pk_t *env, const char *src,
 
     BIO_write(b, src, (int)len);
 
-    if (env->key)
-        RSA_free(env->key);
+//    if (env->key)
+//        RSA_free(env->key);
     env->key = PEM_read_bio_RSAPublicKey(b, NULL, NULL, NULL);
-    BIO_free(b);
+//    BIO_free(b);
     if (!env->key) {
         err(1, "reading public key from string");
         return -1;
@@ -627,19 +626,19 @@ int crypto_pk_write_key_to_string_impl(crypto_pk_t *env, char **dest,
 
     if (!r) {
         err(1, "writing RSA key to string");
-        BIO_free(b);
+//        BIO_free(b);
         return -1;
     }
 
     BIO_get_mem_ptr(b, &buf);
     (void)BIO_set_close(b, BIO_NOCLOSE); /* so BIO_free doesn't free buf */
-    BIO_free(b);
+//    BIO_free(b);
 
     *dest = sgx_malloc(buf->length+1);
     sgx_memcpy(*dest, buf->data, buf->length);
     (*dest)[buf->length] = 0; /* nul terminate it */
     *len = buf->length;
-    BUF_MEM_free(buf);
+//    BUF_MEM_free(buf);
 
     return 0;
 }
@@ -676,10 +675,10 @@ EVP_PKEY *crypto_pk_get_evp_pkey_(crypto_pk_t *env, int private)
         goto error;
     return pkey;
 error:
-    if (pkey)
-        EVP_PKEY_free(pkey);
-    if (key)
-        RSA_free(key);
+//    if (pkey)
+//        EVP_PKEY_free(pkey);
+//    if (key)
+//        RSA_free(key);
     return NULL;
 }
 
@@ -728,10 +727,12 @@ static RSA * generate_key(int bits)
 
 	if (crypto_pk_generate_key_with_bits(env,bits) < 0)
 	    goto done;
-/*
+
 	rsa = crypto_pk_get_rsa_(env);
+
+//TODO
  	rsa = RSAPrivateKey_dup(rsa);
-*/
+
  done:
 //  	crypto_pk_free(env);
   	return rsa;
@@ -751,7 +752,7 @@ tor_x509_name_new(const char *cname)
 		goto error;
 	return name;
 error:
-	X509_NAME_free(name);
+//	X509_NAME_free(name);
 	return NULL;
 }
 
@@ -800,14 +801,14 @@ router_get_dirobj_signature(const char *digest,
     if (strlcat(buf, "-----END SIGNATURE-----\n", buf_len) >= buf_len)
         goto truncated;
 
-    free(signature);
+//    sgx_free(signature);
     return buf;
 
 truncated:
     printf("tried to exceed string length.\n");
 err:
-    free(signature);
-    free(buf);
+//    sgx_free(signature);
+//    sgx_free(buf);
     return NULL;
 
 }
@@ -826,11 +827,11 @@ router_append_dirobj_signature(char *buf, size_t buf_len, const char *digest,
   s_len = sgx_strlen(buf);
   if (sig_len + s_len + 1 > buf_len) {
     printf("Not enough room for signature\n");
-    free(sig);
+//    sgx_free(sig);
     return -1;
   }
   sgx_memcpy(buf+s_len, sig, sig_len+1);
-  free(sig);
+//  sgx_free(sig);
   return 0;
 }
 
@@ -854,11 +855,11 @@ static char *key_to_string_priv(EVP_PKEY *key)
 
 	BIO_get_mem_ptr(b, &buf);
 	(void) BIO_set_close(b, BIO_NOCLOSE);
-	BIO_free(b);
+//	BIO_free(b);
 	result = (char *)sgx_malloc(buf->length + 1);
 	sgx_memcpy(result, buf->data, buf->length);
 	result[buf->length] = 0;
-	BUF_MEM_free(buf);
+//	BUF_MEM_free(buf);
 
 	return result;
 }
@@ -877,6 +878,7 @@ static int create_identity_key()
 		sgx_puts("Couldn't generate identity key.\n");
 		return 1;
 	}
+//TODO
 /*
 	identity_key = EVP_PKEY_new();
 
@@ -906,21 +908,21 @@ static int load_identity_key()
 static int create_signing_key() 
 {
 	if(signing_key_flag == 1) {
-		printf("Signing key already exists.\n");
+		sgx_puts("Signing key already exists.\n");
 		return 1;
 	}
 
 	RSA *key;
 	
 	if(!(key = generate_key(SIGNING_KEY_BITS))) {
-		printf("Couldn't generate signing key.\n");
+		sgx_puts("Couldn't generate signing key.\n");
 		return 1;
 	}
 
 	signing_key = EVP_PKEY_new();
 
 	if(!(EVP_PKEY_assign_RSA(signing_key, key))) {
-		printf("Couldn't assign signing key.\n");
+		sgx_puts("Couldn't assign signing key.\n");
 		return 1;
 	}
 
@@ -957,11 +959,11 @@ static char *key_to_string(EVP_PKEY *key)
 
 	BIO_get_mem_ptr(b, &buf);
 	(void) BIO_set_close(b, BIO_NOCLOSE);
-	BIO_free(b);
+//	BIO_free(b);
 	result = (char *)sgx_malloc(buf->length + 1);
 	sgx_memcpy(result, buf->data, buf->length);
 	result[buf->length] = 0;
-	BUF_MEM_free(buf);
+//	BUF_MEM_free(buf);
 
 	return result;
 }
@@ -975,7 +977,7 @@ get_fingerprint(EVP_PKEY *pkey, char *out)
   crypto_pk_t *pk = crypto_new_pk_from_rsa_(EVP_PKEY_get1_RSA(pkey));
   if (pk) {
     r = crypto_pk_get_fingerprint(pk, out, 0);
-    crypto_pk_free(pk);
+//    crypto_pk_free(pk);
   }
   return r;
 }
@@ -988,7 +990,7 @@ get_digest(EVP_PKEY *pkey, char *out)
   crypto_pk_t *pk = crypto_new_pk_from_rsa_(EVP_PKEY_get1_RSA(pkey));
   if (pk) {
     r = crypto_pk_get_digest(pk, out);
-    crypto_pk_free(pk);
+//    crypto_pk_free(pk);
   }
   return r;
 }
@@ -1033,8 +1035,8 @@ static int generate_certificate()
 			fingerprint, published, expires, ident, signing
 			);
 
-	free(ident);
-	free(signing);
+//	sgx_free(ident);
+//	sgx_free(signing);
 
 	/* Append a cross-certification */
 	r = RSA_private_encrypt(DIGEST_LEN, (unsigned char*)id_digest,
@@ -1112,8 +1114,10 @@ int directory_configure(int fd_te, int fd_et)
 		sgx_write(fd_et, "LD_IDENTITY_KEY_DONE", buf_len+1);
 	}
 
-	sgx_free(tmp_buf);
+//	sgx_free(tmp_buf);
+    tmp_buf = NULL;
 
+//TODO
 /*
 	// signing key process
 	sgx_read(fd_te, &buf_len, sizeof(int));
@@ -1151,16 +1155,19 @@ int directory_configure(int fd_te, int fd_et)
 		sgx_write(fd_et, "LD_SIGNING_KEY_DONE", buf_len+1);
 	}
 
-	sgx_free(tmp_buf);
-//----------------------------------------------------------------
+//	sgx_free(tmp_buf);
+    tmp_buf = NULL;
+
 	// recv data related to certificate
-	printf("Receiving global variables for certificate.\n");
+//	printf("Receiving global variables for certificate.\n");
+	sgx_puts("Receiving global variables for certificate.\n");
 	sgx_read(fd_te, &buf_len, sizeof(int));
 	sgx_read(fd_te, address, buf_len+1);
 	addr_success = 1;
 	sgx_read(fd_te, &months_lifetime, sizeof(int));
 
-	printf("Creating certificate of %d.\n", authority_num);
+//	printf("Creating certificate of %d.\n", authority_num);
+    sgx_puts("Creating certificate.\n");
 
 	if(generate_certificate()) {
 		buf_len = sgx_strlen("CR_CERTIFICATE_ERROR");
@@ -1174,7 +1181,8 @@ int directory_configure(int fd_te, int fd_et)
 	sgx_write(fd_et, "CR_CERTIFICATE_DONE", buf_len+1);
 
 	sgx_write(fd_et, certificate, CERTIFICATE_BUF_SIZE);
-	printf("Send successfully!\n");
+//	printf("Send successfully!\n");
+    sgx_puts("Send successfully!\n");
 */
 	return 1;
 }
@@ -2223,6 +2231,7 @@ void enclave_main()
 	if(exit_node_num != 3)
 		retval = directory_configure(fd_te, fd_et);
 	else {
+//TODO
 //		retval = exit_node_handling(fd_te, fd_et, 0);	
 	}
 
@@ -2233,8 +2242,9 @@ void enclave_main()
 
     sgx_close(fd_et);
     sgx_close(fd_te);
-	
+
 // ------------------- chutney start ------------------- //
+//TODO
 /*
 	if(authority_num == 1) {
 		key_enc_to_tor = 1212;

@@ -65,6 +65,8 @@
 #include <openssl/err.h>
 #include "ui_locl.h"
 
+#include "../sgx.h"
+
 IMPLEMENT_STACK_OF(UI_STRING_ST)
 
 static const UI_METHOD *default_UI_meth = NULL;
@@ -453,7 +455,7 @@ static int print_error(const char *str, size_t len, UI *ui)
 {
     UI_STRING uis;
 
-    memset(&uis, 0, sizeof(uis));
+    sgx_memset(&uis, 0, sizeof(uis));
     uis.type = UIT_ERROR;
     uis.out_string = str;
 
@@ -590,7 +592,7 @@ UI_METHOD *UI_create_method(char *name)
     UI_METHOD *ui_method = (UI_METHOD *)OPENSSL_malloc(sizeof(UI_METHOD));
 
     if (ui_method) {
-        memset(ui_method, 0, sizeof(*ui_method));
+        sgx_memset(ui_method, 0, sizeof(*ui_method));
         ui_method->name = BUF_strdup(name);
     }
     return ui_method;

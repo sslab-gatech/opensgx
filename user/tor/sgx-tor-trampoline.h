@@ -24,7 +24,8 @@ typedef enum {
     FUNC_WRITE,
     FUNC_READ,
     FUNC_SNPRINTF,
-    FUNC_TIME
+    FUNC_TIME,
+    FUNC_MEMCHR
 }fcode_t_tor;
 
 typedef struct sgx_stub_info_tor {

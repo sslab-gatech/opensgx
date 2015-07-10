@@ -120,3 +120,17 @@ int sgx_time(time_t *arg1)
 
     return stub->in_arg1;
 }
+
+void *sgx_memchr(const void *s, int c, size_t n)
+{
+    sgx_stub_info_tor *stub = (sgx_stub_info_tor *)STUB_ADDR_TOR;
+
+    stub->fcode = FUNC_MEMCHR;
+    stub->out_arg1 = c;
+    stub->out_arg2 = n;
+    sgx_memcpy(stub->out_data1, s, n);
+
+    sgx_exit(stub->trampoline);
+    
+    return (void *)stub->in_data1;
+}

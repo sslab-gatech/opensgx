@@ -14,11 +14,13 @@
 # include <openssl/sha.h>
 # include <openssl/opensslv.h>
 
+#include "../sgx.h"
+
 const char SHA256_version[] = "SHA-256" OPENSSL_VERSION_PTEXT;
 
 fips_md_init_ctx(SHA224, SHA256)
 {
-    memset(c, 0, sizeof(*c));
+    sgx_memset(c, 0, sizeof(*c));
     c->h[0] = 0xc1059ed8UL;
     c->h[1] = 0x367cd507UL;
     c->h[2] = 0x3070dd17UL;
@@ -33,7 +35,7 @@ fips_md_init_ctx(SHA224, SHA256)
 
 fips_md_init(SHA256)
 {
-    memset(c, 0, sizeof(*c));
+    sgx_memset(c, 0, sizeof(*c));
     c->h[0] = 0x6a09e667UL;
     c->h[1] = 0xbb67ae85UL;
     c->h[2] = 0x3c6ef372UL;

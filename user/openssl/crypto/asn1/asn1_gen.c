@@ -61,6 +61,8 @@
 #include <openssl/asn1.h>
 #include <openssl/x509v3.h>
 
+#include "../sgx.h"
+
 #define ASN1_GEN_FLAG           0x10000
 #define ASN1_GEN_FLAG_IMP       (ASN1_GEN_FLAG|1)
 #define ASN1_GEN_FLAG_EXP       (ASN1_GEN_FLAG|2)
@@ -252,7 +254,7 @@ ASN1_TYPE *ASN1_generate_v3(char *str, X509V3_CTX *cnf)
     }
 
     /* Copy across original encoding */
-    memcpy(p, cpy_start, cpy_len);
+    sgx_memcpy(p, cpy_start, cpy_len);
 
     cp = new_der;
 
@@ -594,7 +596,7 @@ static int asn1_str2tag(const char *tagstr, int len)
     };
 
     if (len == -1)
-        len = strlen(tagstr);
+        len = sgx_strlen(tagstr);
 
     tntmp = tnst;
     for (i = 0; i < sizeof(tnst) / sizeof(struct tag_name_st); i++, tntmp++) {

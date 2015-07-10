@@ -59,6 +59,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "../crypto/sgx.h"
+
 #include <openssl/e_os2.h>
 #if defined(OPENSSL_SYS_WIN32) || defined(OPENSSL_SYS_WIN16) || defined(OPENSSL_SYS_WINDOWS)
 # ifndef OPENSSL_SYS_MSDOS
@@ -393,12 +395,12 @@ int main(int argc, char *argv[])
         printf("Key error %d\n", j);
         err = 1;
     }
-    memset(cbc_out, 0, 40);
-    memset(cbc_in, 0, 40);
+    sgx_memset(cbc_out, 0, 40);
+    sgx_memset(cbc_in, 0, 40);
     i = strlen((char *)cbc_data) + 1;
     /* i=((i+7)/8)*8; */
     memcpy(iv3, cbc_iv, sizeof(cbc_iv));
-    memset(iv2, '\0', sizeof iv2);
+    sgx_memset(iv2, '\0', sizeof iv2);
 
     DES_ede3_cbcm_encrypt(cbc_data, cbc_out, 16L, &ks, &ks2, &ks3, &iv3, &iv2,
                           DES_ENCRYPT);
@@ -412,7 +414,7 @@ int main(int argc, char *argv[])
         }
 */
     memcpy(iv3, cbc_iv, sizeof(cbc_iv));
-    memset(iv2, '\0', sizeof iv2);
+    sgx_memset(iv2, '\0', sizeof iv2);
     DES_ede3_cbcm_encrypt(cbc_out, cbc_in, i, &ks, &ks2, &ks3, &iv3, &iv2,
                           DES_DECRYPT);
     if (memcmp(cbc_in, cbc_data, strlen((char *)cbc_data) + 1) != 0) {
@@ -433,8 +435,8 @@ int main(int argc, char *argv[])
     for (i = 0; i < NUM_TESTS; i++) {
         DES_set_key_unchecked(&key_data[i], &ks);
         memcpy(in, plain_data[i], 8);
-        memset(out, 0, 8);
-        memset(outin, 0, 8);
+        sgx_memset(out, 0, 8);
+        sgx_memset(outin, 0, 8);
         des_ecb_encrypt(&in, &out, ks, DES_ENCRYPT);
         des_ecb_encrypt(&out, &outin, ks, DES_DECRYPT);
 
@@ -458,8 +460,8 @@ int main(int argc, char *argv[])
         DES_set_key_unchecked(&key_data[i + 1], &ks2);
         DES_set_key_unchecked(&key_data[i + 2], &ks3);
         memcpy(in, plain_data[i], 8);
-        memset(out, 0, 8);
-        memset(outin, 0, 8);
+        sgx_memset(out, 0, 8);
+        sgx_memset(outin, 0, 8);
         des_ecb2_encrypt(&in, &out, ks, ks2, DES_ENCRYPT);
         des_ecb2_encrypt(&out, &outin, ks, ks2, DES_DECRYPT);
 
@@ -482,8 +484,8 @@ int main(int argc, char *argv[])
         printf("Key error %d\n", j);
         err = 1;
     }
-    memset(cbc_out, 0, 40);
-    memset(cbc_in, 0, 40);
+    sgx_memset(cbc_out, 0, 40);
+    sgx_memset(cbc_in, 0, 40);
     memcpy(iv3, cbc_iv, sizeof(cbc_iv));
     des_ncbc_encrypt(cbc_data, cbc_out, strlen((char *)cbc_data) + 1, ks,
                      &iv3, DES_ENCRYPT);
@@ -505,8 +507,8 @@ int main(int argc, char *argv[])
         printf("Key error %d\n", j);
         err = 1;
     }
-    memset(cbc_out, 0, 40);
-    memset(cbc_in, 0, 40);
+    sgx_memset(cbc_out, 0, 40);
+    sgx_memset(cbc_in, 0, 40);
     memcpy(iv3, cbc_iv, sizeof(cbc_iv));
     des_xcbc_encrypt(cbc_data, cbc_out, strlen((char *)cbc_data) + 1, ks,
                      &iv3, &cbc2_key, &cbc3_key, DES_ENCRYPT);
@@ -536,8 +538,8 @@ int main(int argc, char *argv[])
         printf("Key error %d\n", j);
         err = 1;
     }
-    memset(cbc_out, 0, 40);
-    memset(cbc_in, 0, 40);
+    sgx_memset(cbc_out, 0, 40);
+    sgx_memset(cbc_in, 0, 40);
     i = strlen((char *)cbc_data) + 1;
     /* i=((i+7)/8)*8; */
     memcpy(iv3, cbc_iv, sizeof(cbc_iv));
@@ -581,8 +583,8 @@ int main(int argc, char *argv[])
         printf("Key error %d\n", j);
         err = 1;
     }
-    memset(cbc_out, 0, 40);
-    memset(cbc_in, 0, 40);
+    sgx_memset(cbc_out, 0, 40);
+    sgx_memset(cbc_in, 0, 40);
     des_pcbc_encrypt(cbc_data, cbc_out, strlen((char *)cbc_data) + 1, ks,
                      &cbc_iv, DES_ENCRYPT);
     if (memcmp(cbc_out, pcbc_ok, 32) != 0) {
@@ -668,8 +670,8 @@ int main(int argc, char *argv[])
     printf("Doing ofb64\n");
     DES_set_key_checked(&ofb_key, &ks);
     memcpy(ofb_tmp, ofb_iv, sizeof(ofb_iv));
-    memset(ofb_buf1, 0, sizeof(ofb_buf1));
-    memset(ofb_buf2, 0, sizeof(ofb_buf1));
+    sgx_memset(ofb_buf1, 0, sizeof(ofb_buf1));
+    sgx_memset(ofb_buf2, 0, sizeof(ofb_buf1));
     num = 0;
     for (i = 0; i < sizeof(plain); i++) {
         des_ofb64_encrypt(&(plain[i]), &(ofb_buf1[i]), 1, ks, &ofb_tmp, &num);
@@ -690,8 +692,8 @@ int main(int argc, char *argv[])
     printf("Doing ede_ofb64\n");
     DES_set_key_checked(&ofb_key, &ks);
     memcpy(ofb_tmp, ofb_iv, sizeof(ofb_iv));
-    memset(ofb_buf1, 0, sizeof(ofb_buf1));
-    memset(ofb_buf2, 0, sizeof(ofb_buf1));
+    sgx_memset(ofb_buf1, 0, sizeof(ofb_buf1));
+    sgx_memset(ofb_buf2, 0, sizeof(ofb_buf1));
     num = 0;
     for (i = 0; i < sizeof(plain); i++) {
         des_ede3_ofb64_encrypt(&(plain[i]), &(ofb_buf1[i]), 1, ks, ks,

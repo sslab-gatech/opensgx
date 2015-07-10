@@ -68,6 +68,8 @@
 #include "asn1_locl.h"
 #include "evp_locl.h"
 
+#include "../sgx.h"
+
 typedef int sk_cmp_fn_type(const char *const *a, const char *const *b);
 
 DECLARE_STACK_OF(EVP_PKEY_METHOD)
@@ -201,7 +203,7 @@ EVP_PKEY_METHOD *EVP_PKEY_meth_new(int id, int flags)
     if (!pmeth)
         return NULL;
 
-    memset(pmeth, 0, sizeof(EVP_PKEY_METHOD));
+    sgx_memset(pmeth, 0, sizeof(EVP_PKEY_METHOD));
 
     pmeth->pkey_id = id;
     pmeth->flags = flags | EVP_PKEY_FLAG_DYNAMIC;

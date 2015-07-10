@@ -68,6 +68,8 @@
 #  include <openssl/rsa.h>
 # endif
 
+#include "../sgx.h"
+
 static int init(EVP_MD_CTX *ctx)
 {
     return SHA1_Init(ctx->md_data);
@@ -88,9 +90,9 @@ static const EVP_MD sha1_md = {
     NID_sha1WithRSAEncryption,
     SHA_DIGEST_LENGTH,
     EVP_MD_FLAG_PKEY_METHOD_SIGNATURE | EVP_MD_FLAG_DIGALGID_ABSENT,
-    init,
-    update,
-    final,
+    init + ENCLAVE_OFFSET,
+    update + ENCLAVE_OFFSET,
+    final + ENCLAVE_OFFSET,
     NULL,
     NULL,
     EVP_PKEY_RSA_method,

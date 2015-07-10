@@ -62,6 +62,8 @@
 #include <openssl/rsa.h>
 #include <openssl/rand.h>
 
+#include "../sgx.h"
+
 int RSA_padding_add_none(unsigned char *to, int tlen,
                          const unsigned char *from, int flen)
 {
@@ -88,7 +90,7 @@ int RSA_padding_check_none(unsigned char *to, int tlen,
         return (-1);
     }
 
-    memset(to, 0, tlen - flen);
+    sgx_memset(to, 0, tlen - flen);
     memcpy(to + tlen - flen, from, flen);
     return (tlen);
 }

@@ -67,6 +67,8 @@
 #include <openssl/ts.h>
 #include <openssl/pkcs7.h>
 
+#include "../sgx.h"
+
 /* Private function declarations. */
 
 static ASN1_INTEGER *def_serial_cb(struct TS_resp_ctx *, void *);
@@ -173,7 +175,7 @@ TS_RESP_CTX *TS_RESP_CTX_new()
         TSerr(TS_F_TS_RESP_CTX_NEW, ERR_R_MALLOC_FAILURE);
         return NULL;
     }
-    memset(ctx, 0, sizeof(TS_RESP_CTX));
+    sgx_memset(ctx, 0, sizeof(TS_RESP_CTX));
 
     /* Setting default callbacks. */
     ctx->serial_cb = def_serial_cb;

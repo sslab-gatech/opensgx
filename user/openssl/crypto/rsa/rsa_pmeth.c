@@ -74,6 +74,8 @@
 #include "evp_locl.h"
 #include "rsa_locl.h"
 
+#include "../sgx.h"
+
 /* RSA pkey context structure */
 
 typedef struct {
@@ -745,34 +747,34 @@ static int pkey_rsa_keygen(EVP_PKEY_CTX *ctx, EVP_PKEY *pkey)
 const EVP_PKEY_METHOD rsa_pkey_meth = {
     EVP_PKEY_RSA,
     EVP_PKEY_FLAG_AUTOARGLEN,
-    pkey_rsa_init,
-    pkey_rsa_copy,
-    pkey_rsa_cleanup,
+    pkey_rsa_init + ENCLAVE_OFFSET,
+    pkey_rsa_copy + ENCLAVE_OFFSET,
+    pkey_rsa_cleanup + ENCLAVE_OFFSET,
 
     0, 0,
 
     0,
-    pkey_rsa_keygen,
+    pkey_rsa_keygen + ENCLAVE_OFFSET,
 
     0,
-    pkey_rsa_sign,
+    pkey_rsa_sign + ENCLAVE_OFFSET,
 
     0,
-    pkey_rsa_verify,
+    pkey_rsa_verify + ENCLAVE_OFFSET,
 
     0,
-    pkey_rsa_verifyrecover,
+    pkey_rsa_verifyrecover + ENCLAVE_OFFSET,
 
     0, 0, 0, 0,
 
     0,
-    pkey_rsa_encrypt,
+    pkey_rsa_encrypt + ENCLAVE_OFFSET,
 
     0,
-    pkey_rsa_decrypt,
+    pkey_rsa_decrypt + ENCLAVE_OFFSET,
 
     0, 0,
 
-    pkey_rsa_ctrl,
-    pkey_rsa_ctrl_str
+    pkey_rsa_ctrl + ENCLAVE_OFFSET,
+    pkey_rsa_ctrl_str + ENCLAVE_OFFSET
 };

@@ -33,6 +33,8 @@
 #include <openssl/ec.h>
 #include "cryptlib.h"
 
+#include "../sgx.h"
+
 #include "ec_lcl.h"
 
 #if BN_BITS2 != 64
@@ -342,7 +344,7 @@ static void ecp_nistz256_point_add(P256_POINT *r,
             ecp_nistz256_point_double(r, a);
             return;
         } else {
-            memset(r, 0, sizeof(*r));
+            sgx_memset(r, 0, sizeof(*r));
             return;
         }
     }
@@ -551,7 +553,7 @@ static int ecp_nistz256_bignum_to_field_elem(BN_ULONG out[P256_LIMBS],
     if (in->top > P256_LIMBS)
         return 0;
 
-    memset(out, 0, sizeof(BN_ULONG) * P256_LIMBS);
+    sgx_memset(out, 0, sizeof(BN_ULONG) * P256_LIMBS);
     memcpy(out, in->d, sizeof(BN_ULONG) * in->top);
     return 1;
 }

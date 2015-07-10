@@ -1,3 +1,22 @@
+/*
+ *  Copyright (C) 2015, OpenSGX team, Georgia Tech & KAIST, All Rights Reserved
+ *
+ *  This file is part of OpenSGX (https://github.com/sslab-gatech/opensgx).
+ *
+ *  OpenSGX is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  OpenSGX is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with OpenSGX.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include <string.h>
 #include <sgx-kern.h>
 #include <sgx-user.h>
@@ -8,6 +27,7 @@
 #include <netdb.h>
 #include <unistd.h>
 #include <sgx-malloc.h>
+#include <stdarg.h>
 
 static keid_t stat;
 static uint64_t _tcs_app;
@@ -395,15 +415,16 @@ const char *fcode_to_str(fcode_t fcode)
 {
     switch (fcode) {
 	case FUNC_PUTS        : return "PUTS";
-        case FUNC_CLOSE_SOCK  : return "CLOSE_SOCK";
-        case FUNC_SEND        : return "SEND";
-        case FUNC_RECV        : return "RECV";
+    case FUNC_CLOSE_SOCK  : return "CLOSE_SOCK";
+    case FUNC_SEND        : return "SEND";
+    case FUNC_RECV        : return "RECV";
 
 	case FUNC_MALLOC      : return "MALLOC";
-        case FUNC_FREE        : return "FREE";
-        case FUNC_SYSCALL     : return "SYSCALL";
-        case PRINT_HEX        : return "PRINT_HEX";
-        default:
+    case FUNC_FREE        : return "FREE";
+    case FUNC_SYSCALL     : return "SYSCALL";
+    case PRINT_HEX        : return "PRINT_HEX";
+    case FUNC_PUTCHAR     : return "PUTCHAR";
+    default:
         {
             sgx_dbg(err, "unknown function code (%d)", fcode);
                 assert(false);
@@ -691,6 +712,9 @@ void sgx_trampoline()
         break;
     case PRINT_HEX:
         printf("print hex test: %p\n", (void *)stub->addr);
+        break;
+    case FUNC_PUTCHAR:
+        putchar(stub->out_arg1);
         break;
 /*
     case FUNC_SYSCALL:

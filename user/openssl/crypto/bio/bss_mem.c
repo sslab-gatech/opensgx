@@ -61,6 +61,8 @@
 #include "cryptlib.h"
 #include <openssl/bio.h>
 
+#include "../sgx.h"
+
 static int mem_write(BIO *h, const char *buf, int num);
 static int mem_read(BIO *h, char *buf, int size);
 static int mem_puts(BIO *h, const char *str);
@@ -210,7 +212,7 @@ static long mem_ctrl(BIO *b, int cmd, long num, void *ptr)
                 bm->data -= bm->max - bm->length;
                 bm->length = bm->max;
             } else {
-                memset(bm->data, 0, bm->max);
+                sgx_memset(bm->data, 0, bm->max);
                 bm->length = 0;
             }
         }

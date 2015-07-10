@@ -65,6 +65,8 @@
 #include <openssl/objects.h>
 #include <openssl/bn.h>
 
+#include "../sgx.h"
+
 /* obj_dat.h is generated from objects.h by obj_dat.pl */
 #ifndef OPENSSL_NO_OBJECT
 # include "obj_dat.h"
@@ -101,14 +103,14 @@ static LHASH_OF(ADDED_OBJ) *added = NULL;
 
 static int sn_cmp(const ASN1_OBJECT *const *a, const unsigned int *b)
 {
-    return (strcmp((*a)->sn, nid_objs[*b].sn));
+    return (sgx_strcmp((*a)->sn, nid_objs[*b].sn));
 }
 
 IMPLEMENT_OBJ_BSEARCH_CMP_FN(const ASN1_OBJECT *, unsigned int, sn);
 
 static int ln_cmp(const ASN1_OBJECT *const *a, const unsigned int *b)
 {
-    return (strcmp((*a)->ln, nid_objs[*b].ln));
+    return (sgx_strcmp((*a)->ln, nid_objs[*b].ln));
 }
 
 IMPLEMENT_OBJ_BSEARCH_CMP_FN(const ASN1_OBJECT *, unsigned int, ln);
@@ -163,7 +165,7 @@ static int added_obj_cmp(const ADDED_OBJ *ca, const ADDED_OBJ *cb)
         i = (a->length - b->length);
         if (i)
             return (i);
-        return (memcmp(a->data, b->data, (size_t)a->length));
+        return (sgx_memcmp(a->data, b->data, (size_t)a->length));
     case ADDED_SNAME:
         if (a->sn == NULL)
             return (-1);
@@ -400,7 +402,7 @@ static int obj_cmp(const ASN1_OBJECT *const *ap, const unsigned int *bp)
     j = (a->length - b->length);
     if (j)
         return (j);
-    return (memcmp(a->data, b->data, a->length));
+    return (sgx_memcmp(a->data, b->data, a->length));
 }
 
 IMPLEMENT_OBJ_BSEARCH_CMP_FN(const ASN1_OBJECT *, unsigned int, obj);

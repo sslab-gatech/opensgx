@@ -1,9 +1,28 @@
+/*
+ *  Copyright (C) 2015, OpenSGX team, Georgia Tech & KAIST, All Rights Reserved
+ *
+ *  This file is part of OpenSGX (https://github.com/sslab-gatech/opensgx).
+ *
+ *  OpenSGX is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  OpenSGX is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with OpenSGX.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #pragma once
 
 #include <sgx.h>
 #include <sgx-user.h>
 #include <sgx-kern.h>
-
+#include <stdarg.h>
 
 #define sgx_exit(ptr) {                         \
     asm volatile("movl %0, %%eax\n\t"           \
@@ -63,3 +82,5 @@ extern void *sgx_memcpy (void *dest, const void *src, size_t size);
 extern int sgx_recv(const char *port, const char *buf);
 extern int sgx_send(const char *ip, const char *port, const void *msg, size_t length);
 extern void sgx_close_sock(void);
+extern int sgx_printf(const char *format, ...);
+extern void sgx_putchar(char c);

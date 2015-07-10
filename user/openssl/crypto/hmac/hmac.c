@@ -65,6 +65,8 @@
 # include <openssl/fips.h>
 #endif
 
+#include "../sgx.h"
+
 int HMAC_Init_ex(HMAC_CTX *ctx, const void *key, int len,
                  const EVP_MD *md, ENGINE *impl)
 {
@@ -122,7 +124,7 @@ int HMAC_Init_ex(HMAC_CTX *ctx, const void *key, int len,
             ctx->key_length = len;
         }
         if (ctx->key_length != HMAC_MAX_MD_CBLOCK)
-            memset(&ctx->key[ctx->key_length], 0,
+            sgx_memset(&ctx->key[ctx->key_length], 0,
                    HMAC_MAX_MD_CBLOCK - ctx->key_length);
     }
 
@@ -220,7 +222,7 @@ void HMAC_CTX_cleanup(HMAC_CTX *ctx)
     EVP_MD_CTX_cleanup(&ctx->i_ctx);
     EVP_MD_CTX_cleanup(&ctx->o_ctx);
     EVP_MD_CTX_cleanup(&ctx->md_ctx);
-    memset(ctx, 0, sizeof *ctx);
+    sgx_memset(ctx, 0, sizeof *ctx);
 }
 
 unsigned char *HMAC(const EVP_MD *evp_md, const void *key, int key_len,

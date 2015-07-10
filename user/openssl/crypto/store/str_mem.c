@@ -61,6 +61,8 @@
 #include <openssl/err.h>
 #include "str_locl.h"
 
+#include "../sgx.h"
+
 /*
  * The memory store is currently highly experimental.  It's meant to become a
  * base store used by other stores for internal caching (for full caching
@@ -253,7 +255,7 @@ static void *mem_list_start(STORE *s, STORE_OBJECT_TYPES type,
         STOREerr(STORE_F_MEM_LIST_START, ERR_R_MALLOC_FAILURE);
         return 0;
     }
-    memset(context, 0, sizeof(struct mem_ctx_st));
+    sgx_memset(context, 0, sizeof(struct mem_ctx_st));
 
     attribute_context = STORE_parse_attrs_start(attributes);
     if (!attribute_context) {

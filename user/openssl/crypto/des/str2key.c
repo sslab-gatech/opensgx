@@ -59,13 +59,15 @@
 #include <openssl/crypto.h>
 #include "des_locl.h"
 
+#include "../sgx.h"
+
 void DES_string_to_key(const char *str, DES_cblock *key)
 {
     DES_key_schedule ks;
     int i, length;
     register unsigned char j;
 
-    memset(key, 0, 8);
+    sgx_memset(key, 0, 8);
     length = strlen(str);
 #ifdef OLD_STR_TO_KEY
     for (i = 0; i < length; i++)
@@ -103,8 +105,8 @@ void DES_string_to_2keys(const char *str, DES_cblock *key1, DES_cblock *key2)
     int i, length;
     register unsigned char j;
 
-    memset(key1, 0, 8);
-    memset(key2, 0, 8);
+    sgx_memset(key1, 0, 8);
+    sgx_memset(key2, 0, 8);
     length = strlen(str);
 #ifdef OLD_STR_TO_KEY
     if (length <= 8) {

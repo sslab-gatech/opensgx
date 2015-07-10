@@ -63,6 +63,8 @@
 #include <openssl/des.h>
 #include <openssl/mdc2.h>
 
+#include "../sgx.h"
+
 #undef c2l
 #define c2l(c,l)        (l =((DES_LONG)(*((c)++)))    , \
                          l|=((DES_LONG)(*((c)++)))<< 8L, \
@@ -80,8 +82,8 @@ fips_md_init(MDC2)
 {
     c->num = 0;
     c->pad_type = 1;
-    memset(&(c->h[0]), 0x52, MDC2_BLOCK);
-    memset(&(c->hh[0]), 0x25, MDC2_BLOCK);
+    sgx_memset(&(c->h[0]), 0x52, MDC2_BLOCK);
+    sgx_memset(&(c->hh[0]), 0x25, MDC2_BLOCK);
     return 1;
 }
 
@@ -166,7 +168,7 @@ int MDC2_Final(unsigned char *md, MDC2_CTX *c)
     if ((i > 0) || (j == 2)) {
         if (j == 2)
             c->data[i++] = 0x80;
-        memset(&(c->data[i]), 0, MDC2_BLOCK - i);
+        sgx_memset(&(c->data[i]), 0, MDC2_BLOCK - i);
         mdc2_body(c, c->data, MDC2_BLOCK);
     }
     memcpy(md, (char *)c->h, MDC2_BLOCK);

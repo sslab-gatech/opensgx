@@ -67,6 +67,8 @@
 #include <openssl/x509.h>
 #include "str_locl.h"
 
+#include "../sgx.h"
+
 const char *const STORE_object_type_string[STORE_OBJECT_TYPE_NUM + 1] = {
     0,
     "X.509 Certificate",
@@ -1158,7 +1160,7 @@ STORE_OBJECT *STORE_OBJECT_new(void)
 {
     STORE_OBJECT *object = OPENSSL_malloc(sizeof(STORE_OBJECT));
     if (object)
-        memset(object, 0, sizeof(STORE_OBJECT));
+        sgx_memset(object, 0, sizeof(STORE_OBJECT));
     return object;
 }
 

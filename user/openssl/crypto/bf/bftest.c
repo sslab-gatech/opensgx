@@ -68,6 +68,8 @@
 
 #include "../e_os.h"
 
+#include "../crypto/sgx.h"
+
 #ifdef OPENSSL_NO_BF
 int main(int argc, char *argv[])
 {
@@ -462,8 +464,8 @@ static int test(void)
     len = strlen(cbc_data) + 1;
 
     BF_set_key(&key, 16, cbc_key);
-    memset(cbc_in, 0, sizeof cbc_in);
-    memset(cbc_out, 0, sizeof cbc_out);
+    sgx_memset(cbc_in, 0, sizeof cbc_in);
+    sgx_memset(cbc_out, 0, sizeof cbc_out);
     memcpy(iv, cbc_iv, sizeof iv);
     BF_cbc_encrypt((unsigned char *)cbc_data, cbc_out, len,
                    &key, iv, BF_ENCRYPT);
@@ -483,8 +485,8 @@ static int test(void)
     printf("testing blowfish in cfb64 mode\n");
 
     BF_set_key(&key, 16, cbc_key);
-    memset(cbc_in, 0, 40);
-    memset(cbc_out, 0, 40);
+    sgx_memset(cbc_in, 0, 40);
+    sgx_memset(cbc_out, 0, 40);
     memcpy(iv, cbc_iv, 8);
     n = 0;
     BF_cfb64_encrypt((unsigned char *)cbc_data, cbc_out, (long)13,
@@ -510,8 +512,8 @@ static int test(void)
     printf("testing blowfish in ofb64\n");
 
     BF_set_key(&key, 16, cbc_key);
-    memset(cbc_in, 0, 40);
-    memset(cbc_out, 0, 40);
+    sgx_memset(cbc_in, 0, 40);
+    sgx_memset(cbc_out, 0, 40);
     memcpy(iv, cbc_iv, 8);
     n = 0;
     BF_ofb64_encrypt((unsigned char *)cbc_data, cbc_out, (long)13, &key, iv,

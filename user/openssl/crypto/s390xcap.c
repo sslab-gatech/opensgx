@@ -4,6 +4,8 @@
 #include <setjmp.h>
 #include <signal.h>
 
+#include "sgx.h"
+
 extern unsigned long OPENSSL_s390xcap_P[];
 
 static sigjmp_buf ill_jmp;
@@ -24,7 +26,7 @@ void OPENSSL_cpuid_setup(void)
 
     OPENSSL_s390xcap_P[0] = 1UL << (8 * sizeof(unsigned long) - 1);
 
-    memset(&ill_act, 0, sizeof(ill_act));
+    sgx_memset(&ill_act, 0, sizeof(ill_act));
     ill_act.sa_handler = ill_handler;
     sigfillset(&ill_act.sa_mask);
     sigdelset(&ill_act.sa_mask, SIGILL);

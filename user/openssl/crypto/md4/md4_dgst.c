@@ -61,6 +61,8 @@
 #include <openssl/crypto.h>
 #include "md4_locl.h"
 
+#include "../sgx.h"
+
 const char MD4_version[] = "MD4" OPENSSL_VERSION_PTEXT;
 
 /*
@@ -74,7 +76,7 @@ const char MD4_version[] = "MD4" OPENSSL_VERSION_PTEXT;
 
 fips_md_init(MD4)
 {
-    memset(c, 0, sizeof(*c));
+    sgx_memset(c, 0, sizeof(*c));
     c->A = INIT_DATA_A;
     c->B = INIT_DATA_B;
     c->C = INIT_DATA_C;

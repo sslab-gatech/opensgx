@@ -64,6 +64,8 @@
 #include <openssl/asn1t.h>
 #include <openssl/objects.h>
 
+#include "../sgx.h"
+
 static int asn1_i2d_ex_primitive(ASN1_VALUE **pval, unsigned char **out,
                                  const ASN1_ITEM *it, int tag, int aclass);
 static int asn1_set_seq_out(STACK_OF(ASN1_VALUE) *sk, unsigned char **out,
@@ -103,6 +105,7 @@ static int asn1_item_flags_i2d(ASN1_VALUE *val, unsigned char **out,
     if (out && !*out) {
         unsigned char *p, *buf;
         int len;
+
         len = ASN1_item_ex_i2d(&val, NULL, it, -1, flags);
         if (len <= 0)
             return len;
@@ -141,7 +144,6 @@ int ASN1_item_ex_i2d(ASN1_VALUE **pval, unsigned char **out,
         asn1_cb = aux->asn1_cb;
 
     switch (it->itype) {
-
     case ASN1_ITYPE_PRIMITIVE:
         if (it->templates)
             return asn1_template_ex_i2d(pval, out, it->templates,
@@ -178,6 +180,7 @@ int ASN1_item_ex_i2d(ASN1_VALUE **pval, unsigned char **out,
         cf = it->funcs;
         if (out)
             p = *out;
+
         i = cf->asn1_i2d(*pval, out);
         /*
          * Fixup for IMPLICIT tag: note this messes up for tags > 30, but so
@@ -186,7 +189,6 @@ int ASN1_item_ex_i2d(ASN1_VALUE **pval, unsigned char **out,
         if (out && (tag != -1))
             *p = aclass | tag | (*p & V_ASN1_CONSTRUCTED);
         return i;
-
     case ASN1_ITYPE_NDEF_SEQUENCE:
         /* Use indefinite length constructed if requested */
         if (aclass & ASN1_TFLG_NDEF)
@@ -194,6 +196,7 @@ int ASN1_item_ex_i2d(ASN1_VALUE **pval, unsigned char **out,
         /* fall through */
 
     case ASN1_ITYPE_SEQUENCE:
+        sgx_printf("SMKIM!\n");
         i = asn1_enc_restore(&seqcontlen, out, pval, it);
         /* An error occurred */
         if (i < 0)
@@ -248,8 +251,8 @@ int ASN1_item_ex_i2d(ASN1_VALUE **pval, unsigned char **out,
 
     default:
         return 0;
-
     }
+
     return 0;
 }
 
@@ -344,6 +347,7 @@ static int asn1_template_ex_i2d(ASN1_VALUE **pval, unsigned char **out,
                                           ASN1_ITEM_ptr(tt->item),
                                           -1, iclass);
         }
+
         sklen = ASN1_object_size(ndef, skcontlen, sktag);
         /* If EXPLICIT need length of surrounding tag */
         if (flags & ASN1_TFLG_EXPTAG)
@@ -394,6 +398,7 @@ static int asn1_template_ex_i2d(ASN1_VALUE **pval, unsigned char **out,
     return ASN1_item_ex_i2d(pval, out, ASN1_ITEM_ptr(tt->item),
                             ttag, tclass | iclass);
 
+    return 0;
 }
 
 /* Temporary structure used to hold DER encoding of items for SET OF */
@@ -409,7 +414,7 @@ static int der_cmp(const void *a, const void *b)
     const DER_ENC *d1 = a, *d2 = b;
     int cmplen, i;
     cmplen = (d1->length < d2->length) ? d1->length : d2->length;
-    i = memcmp(d1->data, d2->data, cmplen);
+    i = sgx_memcmp(d1->data, d2->data, cmplen);
     if (i)
         return i;
     return d1->length - d2->length;
@@ -464,7 +469,7 @@ static int asn1_set_seq_out(STACK_OF(ASN1_VALUE) *sk, unsigned char **out,
     /* Output sorted DER encoding */
     p = *out;
     for (i = 0, tder = derlst; i < sk_ASN1_VALUE_num(sk); i++, tder++) {
-        memcpy(p, tder->data, tder->length);
+        sgx_memcpy(p, tder->data, tder->length);
         p += tder->length;
     }
     *out = p;
@@ -493,7 +498,6 @@ static int asn1_i2d_ex_primitive(ASN1_VALUE **pval, unsigned char **out,
      */
 
     len = asn1_ex_i2c(pval, NULL, &utype, it);
-
     /*
      * If SEQUENCE, SET or OTHER then header is included in pseudo content
      * octets so don't include tag+length. We need to check here because the
@@ -549,6 +553,7 @@ int asn1_ex_i2c(ASN1_VALUE **pval, unsigned char *cout, int *putype,
     unsigned char c;
     int len;
     const ASN1_PRIMITIVE_FUNCS *pf;
+
     pf = it->funcs;
     if (pf && pf->prim_i2c)
         return pf->prim_i2c(pval, cout, putype, it);
@@ -574,7 +579,6 @@ int asn1_ex_i2c(ASN1_VALUE **pval, unsigned char *cout, int *putype,
         pval = &typ->value.asn1_value;
     } else
         utype = *putype;
-
     switch (utype) {
     case V_ASN1_OBJECT:
         otmp = (ASN1_OBJECT *)*pval;
@@ -656,6 +660,6 @@ int asn1_ex_i2c(ASN1_VALUE **pval, unsigned char *cout, int *putype,
 
     }
     if (cout && len)
-        memcpy(cout, cont, len);
+        sgx_memcpy(cout, cont, len);
     return len;
 }

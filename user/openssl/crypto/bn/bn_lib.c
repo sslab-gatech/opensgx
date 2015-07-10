@@ -263,7 +263,7 @@ void BN_free(BIGNUM *a)
 
 void BN_init(BIGNUM *a)
 {
-    memset(a, 0, sizeof(BIGNUM));
+    sgx_memset(a, 0, sizeof(BIGNUM));
     bn_check_top(a);
 }
 
@@ -318,7 +318,7 @@ static BN_ULONG *bn_expand_internal(const BIGNUM *b, int words)
      * function - what's important is constant time operation (we're not
      * actually going to use the data)
      */
-    memset(a, 0, sizeof(BN_ULONG) * words);
+    sgx_memset(a, 0, sizeof(BN_ULONG) * words);
 #endif
 
 #if 1

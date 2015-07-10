@@ -60,6 +60,8 @@
 #include "cryptlib.h"
 #include <openssl/buffer.h>
 
+#include "../sgx.h"
+
 size_t BUF_strnlen(const char *str, size_t maxlen)
 {
     const char *p;
@@ -106,7 +108,7 @@ void *BUF_memdup(const void *data, size_t siz)
         BUFerr(BUF_F_BUF_MEMDUP, ERR_R_MALLOC_FAILURE);
         return (NULL);
     }
-    return memcpy(ret, data, siz);
+    return sgx_memcpy(ret, data, siz);
 }
 
 size_t BUF_strlcpy(char *dst, const char *src, size_t size)
@@ -118,7 +120,7 @@ size_t BUF_strlcpy(char *dst, const char *src, size_t size)
     }
     if (size)
         *dst = '\0';
-    return l + strlen(src);
+    return l + sgx_strlen(src);
 }
 
 size_t BUF_strlcat(char *dst, const char *src, size_t size)

@@ -16,6 +16,8 @@
 #endif
 #include <assert.h>
 
+#include "../sgx.h"
+
 /*
  * Trouble with Ciphertext Stealing, CTS, mode is that there is no
  * common official specification, but couple of cipher/application
@@ -123,7 +125,7 @@ size_t CRYPTO_cts128_encrypt(const unsigned char *in, unsigned char *out,
     (*cbc) (in, out - 16, residue, key, ivec, 1);
     memcpy(out, tmp.c, residue);
 #else
-    memset(tmp.c, 0, sizeof(tmp));
+    sgx_memset(tmp.c, 0, sizeof(tmp));
     memcpy(tmp.c, in, residue);
     memcpy(out, out - 16, residue);
     (*cbc) (tmp.c, out - 16, 16, key, ivec, 1);
@@ -161,7 +163,7 @@ size_t CRYPTO_nistcts128_encrypt(const unsigned char *in, unsigned char *out,
 #if defined(CBC_HANDLES_TRUNCATED_IO)
     (*cbc) (in, out - 16 + residue, residue, key, ivec, 1);
 #else
-    memset(tmp.c, 0, sizeof(tmp));
+    sgx_memset(tmp.c, 0, sizeof(tmp));
     memcpy(tmp.c, in, residue);
     (*cbc) (tmp.c, out - 16 + residue, 16, key, ivec, 1);
 #endif
@@ -288,7 +290,7 @@ size_t CRYPTO_cts128_decrypt(const unsigned char *in, unsigned char *out,
         out += len;
     }
 
-    memset(tmp.c, 0, sizeof(tmp));
+    sgx_memset(tmp.c, 0, sizeof(tmp));
     /*
      * this places in[16] at &tmp.c[16] and decrypted block at &tmp.c[0]
      */
@@ -334,7 +336,7 @@ size_t CRYPTO_nistcts128_decrypt(const unsigned char *in, unsigned char *out,
         out += len;
     }
 
-    memset(tmp.c, 0, sizeof(tmp));
+    sgx_memset(tmp.c, 0, sizeof(tmp));
     /*
      * this places in[16] at &tmp.c[16] and decrypted block at &tmp.c[0]
      */

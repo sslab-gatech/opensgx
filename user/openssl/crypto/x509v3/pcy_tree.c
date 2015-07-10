@@ -63,6 +63,8 @@
 
 #include "pcy_int.h"
 
+#include "../sgx.h"
+
 /*
  * Enable this to print out the complete policy tree at various point during
  * evaluation.
@@ -237,7 +239,7 @@ static int tree_init(X509_POLICY_TREE **ptree, STACK_OF(X509) *certs,
         return 0;
     }
 
-    memset(tree->levels, 0, n * sizeof(X509_POLICY_LEVEL));
+    sgx_memset(tree->levels, 0, n * sizeof(X509_POLICY_LEVEL));
 
     tree->nlevel = n;
 

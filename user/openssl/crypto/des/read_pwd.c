@@ -57,6 +57,9 @@
  */
 
 #include <openssl/e_os2.h>
+
+#include "../sgx.h"
+
 #if !defined(OPENSSL_SYS_MSDOS) && !defined(OPENSSL_SYS_VMS) && !defined(OPENSSL_SYS_WIN32)
 # ifdef OPENSSL_UNISTD
 #  include OPENSSL_UNISTD
@@ -233,8 +236,8 @@ int des_read_pw_string(char *buf, int length, const char *prompt, int verify)
 int des_read_pw(char *buf, char *buff, int size, const char *prompt,
                 int verify)
 {
-    memset(buf, 0, size);
-    memset(buff, 0, size);
+    sgx_memset(buf, 0, size);
+    sgx_memset(buff, 0, size);
     return (0);
 }
 
@@ -242,8 +245,8 @@ int des_read_pw(char *buf, char *buff, int size, const char *prompt,
 
 int des_read_pw(char *buf, char *buff, int size, char *prompt, int verify)
 {
-    memset(buf, 0, size);
-    memset(buff, 0, size);
+    sgx_memset(buf, 0, size);
+    sgx_memset(buff, 0, size);
     return (0);
 }
 
@@ -434,7 +437,7 @@ static void pushsig(void)
 # ifdef SIGACTION
     struct sigaction sa;
 
-    memset(&sa, 0, sizeof sa);
+    sgx_memset(&sa, 0, sizeof sa);
     sa.sa_handler = recsig;
 # endif
 

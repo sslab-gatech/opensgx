@@ -61,6 +61,8 @@
 #include <openssl/opensslv.h>
 #include <openssl/crypto.h>
 
+#include "../sgx.h"
+
 const char RMD160_version[] = "RIPE-MD160" OPENSSL_VERSION_PTEXT;
 
 #ifdef RMD160_ASM
@@ -72,7 +74,7 @@ void ripemd160_block(RIPEMD160_CTX *c, unsigned long *p, size_t num);
 
 fips_md_init(RIPEMD160)
 {
-    memset(c, 0, sizeof(*c));
+    sgx_memset(c, 0, sizeof(*c));
     c->A = RIPEMD160_A;
     c->B = RIPEMD160_B;
     c->C = RIPEMD160_C;

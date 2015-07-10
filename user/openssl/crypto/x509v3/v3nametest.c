@@ -2,6 +2,7 @@
 #include <openssl/x509v3.h>
 #include "../e_os.h"
 #include <string.h>
+#include "../crypto/sgx.h"
 
 static const char *const names[] = {
     "a", "b", ".", "*", "@",
@@ -263,9 +264,9 @@ static void run_cert(X509 *crt, const char *nameincert,
     while (*pname) {
         int samename = strcasecmp(nameincert, *pname) == 0;
         size_t namelen = strlen(*pname);
-        char *name = malloc(namelen);
+        char *name = sgx_malloc(namelen);
         int match, ret;
-        memcpy(name, *pname, namelen);
+        sgx_memcpy(name, *pname, namelen);
 
         ret = X509_check_host(crt, name, namelen, 0, NULL);
         match = -1;
@@ -307,7 +308,7 @@ static void run_cert(X509 *crt, const char *nameincert,
             match = 1;
         check_message(fn, "email", nameincert, match, *pname);
         ++pname;
-        free(name);
+        sgx_free(name);
     }
 }
 
