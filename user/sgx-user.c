@@ -424,6 +424,11 @@ const char *fcode_to_str(fcode_t fcode)
     case FUNC_SYSCALL     : return "SYSCALL";
     case PRINT_HEX        : return "PRINT_HEX";
     case FUNC_PUTCHAR     : return "PUTCHAR";
+    case FUNC_SOCKET      : return "SOCKET";
+    case FUNC_BIND        : return "BIND";
+    case FUNC_LISTEN      : return "LISTEN";
+    case FUNC_ACCEPT      : return "ACCEPT";
+    case FUNC_CLOSE       : return "CLOSE";
     default:
         {
             sgx_dbg(err, "unknown function code (%d)", fcode);
@@ -582,7 +587,7 @@ int sgx_recv_tramp(char *port, void *buf, size_t len)
 
         for (iter = result; iter != NULL; iter = iter->ai_next) {
             recv_fd = socket(iter->ai_family, iter->ai_socktype,
-                            iter->ai_protocol);
+                             iter->ai_protocol);
             if (recv_fd == -1)
                 continue;
             if (bind(recv_fd, iter->ai_addr, iter->ai_addrlen) == 0)
@@ -600,11 +605,10 @@ int sgx_recv_tramp(char *port, void *buf, size_t len)
 
         listen(recv_fd, 1);
 
-
         sgx_msg(info, "Waiting for incoming connections...");
         client_addr_len = sizeof(struct sockaddr_in);
         client_fd = accept(recv_fd, (struct sockaddr *)&client_addr,
-                             (socklen_t *)&client_addr_len);
+                           (socklen_t *)&client_addr_len);
 
         if (client_fd < 0) {
             perror("accept");
@@ -623,6 +627,70 @@ int sgx_recv_tramp(char *port, void *buf, size_t len)
     sgx_dbg(info, "recv success   : %d bytes received", nread);
     sgx_dbg(info, "received string: %s", (char *)buf);
     return nread;
+}
+
+int sgx_socket_tramp()
+{
+    int rv;
+    rv = socket(PF_INET, SOCK_STREAM, 0);
+
+    if (rv == -1) {
+        fprintf(stderr, "failed to create socket");
+    }
+    fprintf(stderr, "created socket on %d", rv);
+    return rv;
+}
+
+int sgx_bind_tramp(int sockfd, int port)
+{
+    int rv;
+    struct sockaddr_in addr;
+
+    memset(&addr, 0, sizeof(addr));
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(port);
+    addr.sin_addr.s_addr = INADDR_ANY;
+
+    rv = bind(sockfd, (struct sockaddr*)&addr, sizeof(addr));
+    if (rv == -1) {
+        fprintf(stderr, "failed to bind");
+    }
+
+    return rv;
+}
+
+int sgx_listen_tramp(int sockfd)
+{
+    int rv;
+    rv = listen(sockfd, 10);
+    if (rv == -1) {
+        fprintf(stderr, "failed to listen");
+    }
+
+    return rv;
+}
+
+int sgx_accept_tramp(int sockfd)
+{
+    struct sockaddr_in addr;
+    socklen_t len = sizeof(addr);
+    int fd;
+
+    fd =  accept(sockfd, (struct sockaddr*)&addr, &len);
+
+    fprintf(stderr, "accept on %d: %d (%s:%d)", sockfd, fd,
+                                                inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
+    return fd;
+}
+
+int sgx_close_tramp(int fd)
+{
+    int rv;
+
+    rv = close(fd);
+    fprintf(stderr, "close %d, result: %d", fd, rv);
+
+    return rv;
 }
 
 static
@@ -676,13 +744,13 @@ void sgx_trampoline()
     case FUNC_SEND:
         // sgx_send(ip, port, msg, len)
         n_send = sgx_send_tramp((char *)stub->out_data1, (char *)stub->out_data2,
-                       (void *)stub->out_data3, (size_t)stub->out_arg1);
+                                (void *)stub->out_data3, (size_t)stub->out_arg1);
         stub->in_arg1 = n_send;
         break;
     case FUNC_RECV:
         //sgx_recv(port, recv_buf, bufSize): return #of bytes read from the recv
         n_read = sgx_recv_tramp((char *)stub->out_data1, (void *)stub->in_data1,
-                               (size_t)stub->out_arg1);
+                                (size_t)stub->out_arg1);
         stub->in_arg1 = n_read;
         break;
     case FUNC_CLOSE_SOCK:
@@ -715,6 +783,21 @@ void sgx_trampoline()
         break;
     case FUNC_PUTCHAR:
         putchar(stub->out_arg1);
+        break;
+    case FUNC_SOCKET:
+        stub->in_arg1 = sgx_socket_tramp();
+        break;
+    case FUNC_BIND:
+        stub->in_arg1 = sgx_bind_tramp(stub->out_arg1, stub->out_arg2);
+        break;
+    case FUNC_LISTEN:
+        stub->in_arg1 = sgx_listen_tramp(stub->out_arg1);
+        break;
+    case FUNC_ACCEPT:
+        stub->in_arg1 = sgx_accept_tramp(stub->out_arg1);
+        break;
+    case FUNC_CLOSE:
+        stub->in_arg1 = sgx_close_tramp(stub->out_arg1);
         break;
 /*
     case FUNC_SYSCALL:

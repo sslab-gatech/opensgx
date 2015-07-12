@@ -46,19 +46,6 @@ int sgx_open(char pathname[], size_t size, int flag)
     return stub->in_arg1;
 }
 
-int sgx_close(int fd)
-{
-    sgx_stub_info_tor *stub = (sgx_stub_info_tor *)STUB_ADDR_TOR;
-
-    stub->fcode = FUNC_CLOSE;
-    stub->out_arg1 = fd;
-
-    // Enclave exit & jump into user-space trampoline
-    sgx_exit(stub->trampoline);
-
-    return stub->in_arg1;
-}
-
 ssize_t sgx_write(int fd, void *buf, size_t count)
 {
     sgx_stub_info_tor *stub = (sgx_stub_info_tor *)STUB_ADDR_TOR;

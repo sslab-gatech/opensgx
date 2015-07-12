@@ -46,6 +46,11 @@ typedef enum {
 
     FUNC_SYSCALL,
     PRINT_HEX,
+    FUNC_SOCKET,
+    FUNC_BIND,
+    FUNC_LISTEN,
+    FUNC_ACCEPT,
+    FUNC_CLOSE
     // ...
 }fcode_t;
 

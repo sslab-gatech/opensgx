@@ -72,7 +72,7 @@ void *sgx_malloc(int size) {
 //    sgx_print_hex((unsigned long)cur_heap_ptr);
     sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
 
-    if(cur_heap_ptr == 0){
+    if (cur_heap_ptr == 0) {
         stub->fcode = FUNC_MALLOC;
         stub->mcode = MALLOC_INIT;
         // Enclave exit & jump into user-space trampoline
@@ -86,7 +86,7 @@ void *sgx_malloc(int size) {
     unsigned long extra_secinfo_size = sizeof(secinfo_t) + (SECINFO_ALIGN_SIZE - 1);
 
     // Check whether the malloc request overfills EPC heap area
-    if(((unsigned long)cur_heap_ptr + extra_secinfo_size + ((size+1)/8)*8) > heap_end){
+    if ((cur_heap_ptr + extra_secinfo_size + ((size + 1) / 8) * 8) > heap_end) {
         //XXX: calling sgx_puts in here makes prob.
         //sgx_puts("DEBUG pending page");
 
@@ -114,10 +114,9 @@ void *sgx_malloc(int size) {
         // EACCEPT should be called with [RBX:the address of secinfo, RCX:the adress of pending page]
         out_regs_t out;
         _enclu(ENCLU_EACCEPT, (uint64_t)secinfo, (uint64_t)pending_page, 0, &out);  // Check whether OS-provided pending page is legitimate for EPC heap area
-        if(out.oeax == 0){   // No error occurred in EACCEPT
+        if (out.oeax == 0) {   // No error occurred in EACCEPT
             heap_end += PAGE_SIZE;
-        }
-        else{
+        } else {
             return NULL;
         }
 
@@ -131,29 +130,27 @@ void *sgx_malloc(int size) {
 
 void *sgx_realloc(void *ptr, size_t size){
     void *new;
-    if(ptr == NULL){
+    if (ptr == NULL) {
         return sgx_malloc(size);
-    }
-    else{
-        if(size == 0){
+    } else {
+        if (size == 0) {
              sgx_free(ptr);
              return NULL;
-        } 
+        }
         new = sgx_malloc(size);
-        if(new != NULL){      
+        if (new != NULL) {
             //if new size > old size, old_size+alpha is written to new. Thus, some of garbage values would be copied
             //if old size > new size, new_size is written to new. Thus, some of old values would be lossed
             //sgx_print_hex(new);
             sgx_memcpy(new, ptr, size);
             return new;
-        }
-        else{
-            return NULL; 
+        } else {
+            return NULL;
         }
     }
 }
 
-void *sgx_memalign(size_t align, size_t size){
+void *sgx_memalign(size_t align, size_t size) {
 
     void *mem = sgx_malloc(size + (align - 1));
     void *ptr = (void *)(((unsigned long)mem + ((unsigned long)align - 1)) & ~ ((unsigned long)align - 1));
@@ -282,18 +279,18 @@ void *sgx_memset (void *ptr, int value, size_t num)
 {
     asm volatile("" ::: "memory");
     asm volatile("xor %%rax, %%rax\n\t"
-                 "movq %0, %%rdi\n\t"           
-                 "movb %1, %%al\n\t"            
-                 "movq %2, %%rcx\n\t"           
-                 "body:"                        
-                    "mov %%al, 0x0(%%rdi)\n\t"  
-                    "lea 0x1(%%rdi), %%rdi\n\t" 
-                    "loop body\n\t"             
-                 :                              
-                 :"r"((uint64_t) ptr),          
-                  "r"((uint8_t) value),         
-                  "r"((uint64_t) num)           
-                 :"%rdi", "%al", "%rcx");       
+                 "movq %0, %%rdi\n\t"
+                 "movb %1, %%al\n\t"
+                 "movq %2, %%rcx\n\t"
+                 "body:"
+                 "mov %%al, 0x0(%%rdi)\n\t"
+                 "lea 0x1(%%rdi), %%rdi\n\t"
+                 "loop body\n\t"
+                 :
+                 :"r"((uint64_t) ptr),
+                  "r"((uint8_t) value),
+                  "r"((uint64_t) num)
+                 :"%rdi", "%al", "%rcx");
 
     return ptr;
 }
@@ -302,18 +299,19 @@ void *sgx_memcpy (void *dest, const void *src, size_t size)
 {
     asm volatile("" ::: "memory");
     asm volatile("movq %0, %%rdi\n\t"
-                 "movq %1, %%rsi\n\t"           
-                 "movl %2, %%ecx\n\t"           
-                 "rep movsb \n\t"               
-                 :                              
-                 :"a"((uint64_t)dest),          
-                  "b"((uint64_t)src),           
+                 "movq %1, %%rsi\n\t"
+                 "movl %2, %%ecx\n\t"
+                 "rep movsb \n\t"
+                 :
+                 :"a"((uint64_t)dest),
+                  "b"((uint64_t)src),
                   "c"((uint32_t)size));
 
     return dest;
 }
 
-int sgx_send(const char *ip, const char *port, const void *msg, size_t length) {
+int sgx_send(const char *ip, const char *port, const void *msg, size_t length)
+{
     sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
 
     stub->fcode = FUNC_SEND;
@@ -329,7 +327,8 @@ int sgx_send(const char *ip, const char *port, const void *msg, size_t length) {
     return stub->in_arg1;
 }
 
-int sgx_recv(const char *port, const char *buf) {
+int sgx_recv(const char *port, const char *buf)
+{
 
     sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
 
@@ -341,8 +340,8 @@ int sgx_recv(const char *port, const char *buf) {
     // Enclave exit & jump into user-space trampoline
     sgx_exit(stub->trampoline);
 
-    // recv failure check 
-    if(stub->in_arg1 < 0 ){
+    // recv failure check
+    if (stub->in_arg1 < 0 ) {
         return;
     }
     else {
@@ -353,9 +352,69 @@ int sgx_recv(const char *port, const char *buf) {
     return stub->in_arg1;
 }
 
+int sgx_socket()
+{
+    sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
+
+    stub->fcode = FUNC_SOCKET;
+
+    sgx_exit(stub->trampoline);
+
+    return stub->in_arg1;
+}
+
+int sgx_bind(int sockfd, int port)
+{
+    sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
+
+    stub->fcode = FUNC_BIND;
+    stub->out_arg1 = sockfd;
+    stub->out_arg2 = port;
+
+    sgx_exit(stub->trampoline);
+
+    return stub->in_arg1;
+}
+
+int sgx_listen(int sockfd)
+{
+    sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
+
+    stub->fcode = FUNC_LISTEN;
+    stub->out_arg1 = sockfd;
+
+    sgx_exit(stub->trampoline);
+
+    return stub->in_arg1;
+}
+
+int sgx_accept(int sockfd)
+{
+    sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
+
+    stub->fcode = FUNC_ACCEPT;
+    stub->out_arg1 = sockfd;
+
+    sgx_exit(stub->trampoline);
+
+    return stub->in_arg1;
+}
+
+int sgx_close(int fd)
+{
+    sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
+
+    stub->fcode = FUNC_CLOSE;
+    stub->out_arg1 = fd;
+
+    sgx_exit(stub->trampoline);
+
+    return stub->in_arg1;
+}
+
 void sgx_close_sock(void) {
     sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
-    stub->fcode = FUNC_CLOSE_SOCK; 
+    stub->fcode = FUNC_CLOSE_SOCK;
 
     sgx_exit(stub->trampoline);
 }
@@ -368,7 +427,7 @@ void sgx_putchar(char c) {
     sgx_exit(stub->trampoline);
 }
 
-static 
+static
 void printchar(char **str, int c)
 {
     sgx_putchar((char)c);
@@ -377,7 +436,7 @@ void printchar(char **str, int c)
 #define PAD_RIGHT 1
 #define PAD_ZERO 2
 
-static 
+static
 int prints(char **out, const char *string, int width, int pad) {
     register int pc = 0, padchar = ' ';
 
@@ -410,7 +469,7 @@ int prints(char **out, const char *string, int width, int pad) {
 /* the following should be enough for 32 bit int */
 #define PRINT_BUF_LEN 12
 
-static 
+static
 int printi(char **out, int i, int b, int sg, int width, int pad, int letbase) {
     char print_buf[PRINT_BUF_LEN];
     register char *s;
@@ -433,14 +492,14 @@ int printi(char **out, int i, int b, int sg, int width, int pad, int letbase) {
 
     while (u) {
         t = u % b;
-        if( t >= 10 )
+        if ( t >= 10 )
             t += letbase - '0' - 10;
         *--s = t + '0';
         u /= b;
     }
 
     if (neg) {
-        if( width && (pad & PAD_ZERO) ) {
+        if ( width && (pad & PAD_ZERO) ) {
             printchar (out, '-');
             ++pc;
             --width;
@@ -477,28 +536,28 @@ int sgx_print(char **out, const char *format, va_list args) {
                 width *= 10;
                 width += *format - '0';
             }
-            if( *format == 's' ) {
+            if (*format == 's') {
                 register void *s = (char *)va_arg( args, int );
                 pc += prints (out, s?s:"(null)", width, pad);
                 continue;
             }
-            if( *format == 'd' ) {
+            if (*format == 'd') {
                 pc += printi (out, va_arg( args, int ), 10, 1, width, pad, 'a');
                 continue;
             }
-            if( *format == 'x' ) {
+            if (*format == 'x') {
                 pc += printi (out, va_arg( args, int ), 16, 0, width, pad, 'a');
                 continue;
             }
-            if( *format == 'X' ) {
+            if (*format == 'X') {
                 pc += printi (out, va_arg( args, int ), 16, 0, width, pad, 'A');
                 continue;
             }
-            if( *format == 'u' ) {
+            if (*format == 'u') {
                 pc += printi (out, va_arg( args, int ), 10, 0, width, pad, 'a');
                 continue;
             }
-            if( *format == 'c' ) {
+            if (*format == 'c') {
                 /* char are converted to int then pushed on the stack */
                 scr[0] = (char)va_arg( args, int );
                 scr[1] = '\0';
@@ -513,7 +572,7 @@ out:
         }
     }
     if (out) **out = '\0';
-    va_end( args );
+    va_end(args);
     return pc;
 }
 

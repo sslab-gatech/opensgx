@@ -21,7 +21,6 @@ const char *fcode_to_str(fcode_t_tor fcode)
     switch (fcode) {
         case FUNC_UNSET_TOR   : return "UNSET";
         case FUNC_OPEN    : return "OPEN";
-        case FUNC_CLOSE   : return "CLOSE";
         case FUNC_MKDIR   : return "MKDIR";
         case FUNC_MKNOD   : return "MKNOD";
         case FUNC_READ    : return "READ";
@@ -138,12 +137,6 @@ int sgx_open_tramp(char pathname[], int flag)
 }
 
 static
-int sgx_close_tramp(int fd)
-{
-    return close(fd);
-}
-
-static
 int sgx_snprintf_tramp(char dst[], size_t dst_size, char buf1[], char buf2[], int arg)
 {
     return snprintf(dst, dst_size, buf1, buf2, arg);
@@ -192,14 +185,11 @@ void sgx_trampoline_tor()
     case FUNC_OPEN:
         stub->in_arg1 = sgx_open_tramp(stub->out_data1, stub->out_arg1);
         break;
-    case FUNC_CLOSE:
-        stub->in_arg1 = sgx_close_tramp(stub->out_arg1);
-        break;
     case FUNC_MKDIR:
         stub->in_arg1 = sgx_mkdir_tramp(stub->out_data1, (mode_t)stub->out_arg1);
         break;
     case FUNC_MKNOD:
-        stub->in_arg1 = sgx_mknod_tramp(stub->out_data1, (mode_t)stub->out_arg1, 
+        stub->in_arg1 = sgx_mknod_tramp(stub->out_data1, (mode_t)stub->out_arg1,
                                         (dev_t)stub->out_arg2);
         break;
     case FUNC_WRITE:

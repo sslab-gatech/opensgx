@@ -18,7 +18,6 @@
 typedef enum {
     FUNC_UNSET_TOR,
     FUNC_OPEN,
-    FUNC_CLOSE,
     FUNC_MKDIR,
     FUNC_MKNOD,
     FUNC_WRITE,
