@@ -63,7 +63,8 @@ void init_epc(int nepc) {
         err(1, "failed to allocate EPC map in kernel");
 
     memset(g_epc, 0, g_num_epc * sizeof(epc_t));
-    memset(g_epc_info, 0, g_num_epc * sizeof(int));
+    memset(g_epc_info, 0, g_num_epc * sizeof(epc_info_t));
+
 }
 
 static
