@@ -219,7 +219,7 @@ int cms_EncryptedContent_init(CMS_EncryptedContentInfo *ec,
         ec->key = OPENSSL_malloc(keylen);
         if (!ec->key)
             return 0;
-        memcpy(ec->key, key, keylen);
+        sgx_memcpy(ec->key, key, keylen);
     }
     ec->keylen = keylen;
     if (cipher)

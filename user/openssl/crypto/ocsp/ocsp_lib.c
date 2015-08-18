@@ -192,17 +192,17 @@ int OCSP_parse_url(const char *url, char **phost, char **pport, char **ppath,
         goto mem_err;
 
     /* Check for initial colon */
-    p = strchr(buf, ':');
+    p = sgx_strchr(buf, ':');
 
     if (!p)
         goto parse_err;
 
     *(p++) = '\0';
 
-    if (!strcmp(buf, "http")) {
+    if (!sgx_strcmp(buf, "http")) {
         *pssl = 0;
         port = "80";
-    } else if (!strcmp(buf, "https")) {
+    } else if (!sgx_strcmp(buf, "https")) {
         *pssl = 1;
         port = "443";
     } else
@@ -218,7 +218,7 @@ int OCSP_parse_url(const char *url, char **phost, char **pport, char **ppath,
 
     /* Check for trailing part of path */
 
-    p = strchr(p, '/');
+    p = sgx_strchr(p, '/');
 
     if (!p)
         *ppath = BUF_strdup("/");
@@ -235,7 +235,7 @@ int OCSP_parse_url(const char *url, char **phost, char **pport, char **ppath,
     if (host[0] == '[') {
         /* ipv6 literal */
         host++;
-        p = strchr(host, ']');
+        p = sgx_strchr(host, ']');
         if (!p)
             goto parse_err;
         *p = '\0';
@@ -243,7 +243,7 @@ int OCSP_parse_url(const char *url, char **phost, char **pport, char **ppath,
     }
 
     /* Look for optional ':' for port number */
-    if ((p = strchr(p, ':'))) {
+    if ((p = sgx_strchr(p, ':'))) {
         *p = 0;
         port = p + 1;
     } else {

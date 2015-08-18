@@ -524,8 +524,8 @@ int X509_NAME_print(BIO *bp, X509_NAME *name, int obase)
               ))) || (*s == '\0'))
 #else
         if (((*s == '/') &&
-             (isupper(s[1]) && ((s[2] == '=') ||
-                                (isupper(s[2]) && (s[3] == '='))
+             (sgx_isupper(s[1]) && ((s[2] == '=') ||
+                                (sgx_isupper(s[2]) && (s[3] == '='))
               ))) || (*s == '\0'))
 #endif
         {

@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
                     test[i].key, test[i].key_len,
                     test[i].data, test[i].data_len, NULL, NULL));
 
-        if (strcmp(p, (char *)test[i].digest) != 0) {
+        if (sgx_strcmp(p, (char *)test[i].digest) != 0) {
             printf("error calculating HMAC on %d entry'\n", i);
             printf("got %s instead of %s\n", p, test[i].digest);
             err++;

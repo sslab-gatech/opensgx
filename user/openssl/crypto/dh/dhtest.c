@@ -196,7 +196,7 @@ int main(int argc, char *argv[])
         BIO_puts(out, buf);
     }
     BIO_puts(out, "\n");
-    if ((aout < 4) || (bout != aout) || (memcmp(abuf, bbuf, aout) != 0)) {
+    if ((aout < 4) || (bout != aout) || (sgx_memcmp(abuf, bbuf, aout) != 0)) {
         fprintf(stderr, "Error in DH routines\n");
         ret = 1;
     } else
@@ -538,9 +538,9 @@ static int run_rfc5114_tests(void)
         if (!DH_compute_key(Z2, dhA->pub_key, dhB))
             goto bad_err;
 
-        if (memcmp(Z1, td->Z, td->Z_len))
+        if (sgx_memcmp(Z1, td->Z, td->Z_len))
             goto err;
-        if (memcmp(Z2, td->Z, td->Z_len))
+        if (sgx_memcmp(Z2, td->Z, td->Z_len))
             goto err;
 
         printf("RFC5114 parameter test %d OK\n", i + 1);

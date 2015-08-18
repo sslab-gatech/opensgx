@@ -127,7 +127,7 @@ cfb64ede.o: ../../include/openssl/opensslconf.h
 cfb64ede.o: ../../include/openssl/ossl_typ.h ../../include/openssl/safestack.h
 cfb64ede.o: ../../include/openssl/stack.h ../../include/openssl/symhacks.h
 cfb64ede.o: ../../include/openssl/ui.h ../../include/openssl/ui_compat.h
-cfb64ede.o: cfb64ede.c des_locl.h
+cfb64ede.o: ../sgx.h cfb64ede.c des_locl.h
 cfb64enc.o: ../../include/openssl/des.h ../../include/openssl/des_old.h
 cfb64enc.o: ../../include/openssl/e_os2.h ../../include/openssl/opensslconf.h
 cfb64enc.o: ../../include/openssl/ossl_typ.h ../../include/openssl/safestack.h
@@ -139,7 +139,7 @@ cfb_enc.o: ../../include/openssl/des_old.h ../../include/openssl/e_os2.h
 cfb_enc.o: ../../include/openssl/opensslconf.h ../../include/openssl/ossl_typ.h
 cfb_enc.o: ../../include/openssl/safestack.h ../../include/openssl/stack.h
 cfb_enc.o: ../../include/openssl/symhacks.h ../../include/openssl/ui.h
-cfb_enc.o: ../../include/openssl/ui_compat.h cfb_enc.c des_locl.h
+cfb_enc.o: ../../include/openssl/ui_compat.h ../sgx.h cfb_enc.c des_locl.h
 des_enc.o: ../../include/openssl/des.h ../../include/openssl/des_old.h
 des_enc.o: ../../include/openssl/e_os2.h ../../include/openssl/opensslconf.h
 des_enc.o: ../../include/openssl/ossl_typ.h ../../include/openssl/safestack.h
@@ -186,7 +186,7 @@ enc_read.o: ../../include/openssl/lhash.h ../../include/openssl/opensslconf.h
 enc_read.o: ../../include/openssl/opensslv.h ../../include/openssl/ossl_typ.h
 enc_read.o: ../../include/openssl/safestack.h ../../include/openssl/stack.h
 enc_read.o: ../../include/openssl/symhacks.h ../../include/openssl/ui.h
-enc_read.o: ../../include/openssl/ui_compat.h ../cryptlib.h des_locl.h
+enc_read.o: ../../include/openssl/ui_compat.h ../cryptlib.h ../sgx.h des_locl.h
 enc_read.o: enc_read.c
 enc_writ.o: ../../e_os.h ../../include/openssl/bio.h
 enc_writ.o: ../../include/openssl/buffer.h ../../include/openssl/crypto.h
@@ -197,12 +197,12 @@ enc_writ.o: ../../include/openssl/opensslv.h ../../include/openssl/ossl_typ.h
 enc_writ.o: ../../include/openssl/rand.h ../../include/openssl/safestack.h
 enc_writ.o: ../../include/openssl/stack.h ../../include/openssl/symhacks.h
 enc_writ.o: ../../include/openssl/ui.h ../../include/openssl/ui_compat.h
-enc_writ.o: ../cryptlib.h des_locl.h enc_writ.c
+enc_writ.o: ../cryptlib.h ../sgx.h des_locl.h enc_writ.c
 fcrypt.o: ../../include/openssl/des.h ../../include/openssl/des_old.h
 fcrypt.o: ../../include/openssl/e_os2.h ../../include/openssl/opensslconf.h
 fcrypt.o: ../../include/openssl/ossl_typ.h ../../include/openssl/safestack.h
 fcrypt.o: ../../include/openssl/stack.h ../../include/openssl/symhacks.h
-fcrypt.o: ../../include/openssl/ui.h ../../include/openssl/ui_compat.h
+fcrypt.o: ../../include/openssl/ui.h ../../include/openssl/ui_compat.h ../sgx.h
 fcrypt.o: des_locl.h fcrypt.c
 fcrypt_b.o: ../../include/openssl/des.h ../../include/openssl/des_old.h
 fcrypt_b.o: ../../include/openssl/e_os2.h ../../include/openssl/opensslconf.h
@@ -265,14 +265,14 @@ set_key.o: ../../include/openssl/opensslconf.h ../../include/openssl/opensslv.h
 set_key.o: ../../include/openssl/ossl_typ.h ../../include/openssl/safestack.h
 set_key.o: ../../include/openssl/stack.h ../../include/openssl/symhacks.h
 set_key.o: ../../include/openssl/ui.h ../../include/openssl/ui_compat.h
-set_key.o: des_locl.h set_key.c
+set_key.o: ../sgx.h des_locl.h set_key.c
 str2key.o: ../../include/openssl/crypto.h ../../include/openssl/des.h
 str2key.o: ../../include/openssl/des_old.h ../../include/openssl/e_os2.h
 str2key.o: ../../include/openssl/opensslconf.h ../../include/openssl/opensslv.h
 str2key.o: ../../include/openssl/ossl_typ.h ../../include/openssl/safestack.h
 str2key.o: ../../include/openssl/stack.h ../../include/openssl/symhacks.h
 str2key.o: ../../include/openssl/ui.h ../../include/openssl/ui_compat.h
-str2key.o: des_locl.h str2key.c
+str2key.o: ../sgx.h des_locl.h str2key.c
 xcbc_enc.o: ../../include/openssl/des.h ../../include/openssl/des_old.h
 xcbc_enc.o: ../../include/openssl/e_os2.h ../../include/openssl/opensslconf.h
 xcbc_enc.o: ../../include/openssl/ossl_typ.h ../../include/openssl/safestack.h

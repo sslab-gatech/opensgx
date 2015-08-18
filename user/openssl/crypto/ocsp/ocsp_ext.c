@@ -360,7 +360,7 @@ static int ocsp_add1_nonce(STACK_OF(X509_EXTENSION) **exts,
     tmpval = os.data;
     ASN1_put_object(&tmpval, 0, len, V_ASN1_OCTET_STRING, V_ASN1_UNIVERSAL);
     if (val)
-        memcpy(tmpval, val, len);
+        sgx_memcpy(tmpval, val, len);
     else
         RAND_pseudo_bytes(tmpval, len);
     if (!X509V3_add1_i2d(exts, NID_id_pkix_OCSP_Nonce,

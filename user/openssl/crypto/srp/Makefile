@@ -86,7 +86,7 @@ srp_lib.o: ../../include/openssl/opensslconf.h ../../include/openssl/opensslv.h
 srp_lib.o: ../../include/openssl/ossl_typ.h ../../include/openssl/safestack.h
 srp_lib.o: ../../include/openssl/sha.h ../../include/openssl/srp.h
 srp_lib.o: ../../include/openssl/stack.h ../../include/openssl/symhacks.h
-srp_lib.o: ../cryptlib.h srp_grps.h srp_lcl.h srp_lib.c
+srp_lib.o: ../cryptlib.h ../sgx.h srp_grps.h srp_lcl.h srp_lib.c
 srp_vfy.o: ../../e_os.h ../../include/openssl/asn1.h
 srp_vfy.o: ../../include/openssl/bio.h ../../include/openssl/bn.h
 srp_vfy.o: ../../include/openssl/buffer.h ../../include/openssl/crypto.h
@@ -98,4 +98,4 @@ srp_vfy.o: ../../include/openssl/ossl_typ.h ../../include/openssl/rand.h
 srp_vfy.o: ../../include/openssl/safestack.h ../../include/openssl/sha.h
 srp_vfy.o: ../../include/openssl/srp.h ../../include/openssl/stack.h
 srp_vfy.o: ../../include/openssl/symhacks.h ../../include/openssl/txt_db.h
-srp_vfy.o: ../cryptlib.h srp_lcl.h srp_vfy.c
+srp_vfy.o: ../cryptlib.h ../sgx.h srp_lcl.h srp_vfy.c

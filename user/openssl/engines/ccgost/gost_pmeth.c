@@ -125,7 +125,7 @@ static int pkey_gost_ctrl94_str(EVP_PKEY_CTX *ctx,
                                 const char *type, const char *value)
 {
     int param_nid = 0;
-    if (!strcmp(type, param_ctrl_string)) {
+    if (!sgx_strcmp(type, param_ctrl_string)) {
         if (!value) {
             return 0;
         }
@@ -189,7 +189,7 @@ static int pkey_gost_ctrl01_str(EVP_PKEY_CTX *ctx,
                                 const char *type, const char *value)
 {
     int param_nid = 0;
-    if (!strcmp(type, param_ctrl_string)) {
+    if (!sgx_strcmp(type, param_ctrl_string)) {
         if (!value) {
             return 0;
         }
@@ -497,7 +497,7 @@ static int pkey_gost_mac_ctrl(EVP_PKEY_CTX *ctx, int type, int p1, void *p2)
 static int pkey_gost_mac_ctrl_str(EVP_PKEY_CTX *ctx,
                                   const char *type, const char *value)
 {
-    if (!strcmp(type, key_ctrl_string)) {
+    if (!sgx_strcmp(type, key_ctrl_string)) {
         if (strlen(value) != 32) {
             GOSTerr(GOST_F_PKEY_GOST_MAC_CTRL_STR,
                     GOST_R_INVALID_MAC_KEY_LENGTH);
@@ -506,7 +506,7 @@ static int pkey_gost_mac_ctrl_str(EVP_PKEY_CTX *ctx,
         return pkey_gost_mac_ctrl(ctx, EVP_PKEY_CTRL_SET_MAC_KEY,
                                   32, (char *)value);
     }
-    if (!strcmp(type, hexkey_ctrl_string)) {
+    if (!sgx_strcmp(type, hexkey_ctrl_string)) {
         long keylen;
         int ret;
         unsigned char *keybuf = string_to_hex(value, &keylen);

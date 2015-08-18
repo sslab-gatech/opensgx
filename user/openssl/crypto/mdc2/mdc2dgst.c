@@ -95,13 +95,13 @@ int MDC2_Update(MDC2_CTX *c, const unsigned char *in, size_t len)
     if (i != 0) {
         if (i + len < MDC2_BLOCK) {
             /* partial block */
-            memcpy(&(c->data[i]), in, len);
+            sgx_memcpy(&(c->data[i]), in, len);
             c->num += (int)len;
             return 1;
         } else {
             /* filled one */
             j = MDC2_BLOCK - i;
-            memcpy(&(c->data[i]), in, j);
+            sgx_memcpy(&(c->data[i]), in, j);
             len -= j;
             in += j;
             c->num = 0;
@@ -113,7 +113,7 @@ int MDC2_Update(MDC2_CTX *c, const unsigned char *in, size_t len)
         mdc2_body(c, in, i);
     j = len - i;
     if (j > 0) {
-        memcpy(&(c->data[0]), &(in[i]), j);
+        sgx_memcpy(&(c->data[0]), &(in[i]), j);
         c->num = (int)j;
     }
     return 1;
@@ -171,8 +171,8 @@ int MDC2_Final(unsigned char *md, MDC2_CTX *c)
         sgx_memset(&(c->data[i]), 0, MDC2_BLOCK - i);
         mdc2_body(c, c->data, MDC2_BLOCK);
     }
-    memcpy(md, (char *)c->h, MDC2_BLOCK);
-    memcpy(&(md[MDC2_BLOCK]), (char *)c->hh, MDC2_BLOCK);
+    sgx_memcpy(md, (char *)c->h, MDC2_BLOCK);
+    sgx_memcpy(&(md[MDC2_BLOCK]), (char *)c->hh, MDC2_BLOCK);
     return 1;
 }
 
@@ -187,7 +187,7 @@ main()
     static char *text = "Now is the time for all ";
 
     MDC2_Init(&c);
-    MDC2_Update(&c, text, strlen(text));
+    MDC2_Update(&c, text, sgx_strlen(text));
     MDC2_Final(&(md[0]), &c);
 
     for (i = 0; i < MDC2_DIGEST_LENGTH; i++)

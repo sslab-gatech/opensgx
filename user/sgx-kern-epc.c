@@ -27,7 +27,7 @@
 #include <sys/mman.h>
 #include <stdint.h>
 
-#include "sgx-kern-epc.h"
+#include <sgx-kern-epc.h>
 
 //
 // NOTE.
@@ -64,7 +64,6 @@ void init_epc(int nepc) {
 
     memset(g_epc, 0, g_num_epc * sizeof(epc_t));
     memset(g_epc_info, 0, g_num_epc * sizeof(epc_info_t));
-
 }
 
 static

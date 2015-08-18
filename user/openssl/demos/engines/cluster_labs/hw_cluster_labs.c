@@ -673,7 +673,7 @@ static int cluster_labs_rand_bytes(unsigned char *buf, int num)
 static int bind_fn(ENGINE *e, const char *id)
 {
     fprintf(stderr, "bind_fn CLUSTER_LABS\n");
-    if (id && (strcmp(id, engine_cluster_labs_id) != 0)) {
+    if (id && (sgx_strcmp(id, engine_cluster_labs_id) != 0)) {
         fprintf(stderr, "bind_fn return(0) first\n");
         return 0;
     }

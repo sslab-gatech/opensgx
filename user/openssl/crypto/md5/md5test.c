@@ -105,9 +105,9 @@ int main(int argc, char *argv[])
     R = ret;
     i = 1;
     while (*P != NULL) {
-        EVP_Digest(&(P[0][0]), strlen((char *)*P), md, NULL, EVP_md5(), NULL);
+        EVP_Digest(&(P[0][0]), sgx_strlen((char *)*P), md, NULL, EVP_md5(), NULL);
         p = pt(md);
-        if (strcmp(p, (char *)*R) != 0) {
+        if (sgx_strcmp(p, (char *)*R) != 0) {
             printf("error calculating MD5 on '%s'\n", *P);
             printf("got %s instead of %s\n", p, *R);
             err++;

@@ -153,9 +153,9 @@ int main(int argc, char *argv[])
     argc--;
     argv++;
     while (argc >= 1) {
-        if (strcmp(*argv, "-results") == 0)
+        if (sgx_strcmp(*argv, "-results") == 0)
             results = 1;
-        else if (strcmp(*argv, "-out") == 0) {
+        else if (sgx_strcmp(*argv, "-out") == 0) {
             if (--argc < 1)
                 break;
             outfile = *(++argv);

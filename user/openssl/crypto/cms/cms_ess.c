@@ -300,7 +300,7 @@ int cms_Receipt_verify(CMS_ContentInfo *cms, CMS_ContentInfo *req_cms)
         goto err;
     }
 
-    if (memcmp(dig, msig->data, diglen)) {
+    if (sgx_memcmp(dig, msig->data, diglen)) {
         CMSerr(CMS_F_CMS_RECEIPT_VERIFY,
                CMS_R_MSGSIGDIGEST_VERIFICATION_FAILURE);
         goto err;

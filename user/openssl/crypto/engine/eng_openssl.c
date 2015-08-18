@@ -208,7 +208,7 @@ void ENGINE_load_openssl(void)
 #ifdef ENGINE_DYNAMIC_SUPPORT
 static int bind_fn(ENGINE *e, const char *id)
 {
-    if (id && (strcmp(id, engine_openssl_id) != 0))
+    if (id && (sgx_strcmp(id, engine_openssl_id) != 0))
         return 0;
     if (!bind_helper(e))
         return 0;
@@ -246,7 +246,7 @@ static int test_rc4_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key,
 # ifdef TEST_ENG_OPENSSL_RC4_P_INIT
     fprintf(stderr, "(TEST_ENG_OPENSSL_RC4) test_init_key() called\n");
 # endif
-    memcpy(&test(ctx)->key[0], key, EVP_CIPHER_CTX_key_length(ctx));
+    sgx_memcpy(&test(ctx)->key[0], key, EVP_CIPHER_CTX_key_length(ctx));
     RC4_set_key(&test(ctx)->ks, EVP_CIPHER_CTX_key_length(ctx),
                 test(ctx)->key);
     return 1;

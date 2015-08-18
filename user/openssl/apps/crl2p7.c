@@ -115,25 +115,25 @@ int MAIN(int argc, char **argv)
     argc--;
     argv++;
     while (argc >= 1) {
-        if (strcmp(*argv, "-inform") == 0) {
+        if (sgx_strcmp(*argv, "-inform") == 0) {
             if (--argc < 1)
                 goto bad;
             informat = str2fmt(*(++argv));
-        } else if (strcmp(*argv, "-outform") == 0) {
+        } else if (sgx_strcmp(*argv, "-outform") == 0) {
             if (--argc < 1)
                 goto bad;
             outformat = str2fmt(*(++argv));
-        } else if (strcmp(*argv, "-in") == 0) {
+        } else if (sgx_strcmp(*argv, "-in") == 0) {
             if (--argc < 1)
                 goto bad;
             infile = *(++argv);
-        } else if (strcmp(*argv, "-nocrl") == 0) {
+        } else if (sgx_strcmp(*argv, "-nocrl") == 0) {
             nocrl = 1;
-        } else if (strcmp(*argv, "-out") == 0) {
+        } else if (sgx_strcmp(*argv, "-out") == 0) {
             if (--argc < 1)
                 goto bad;
             outfile = *(++argv);
-        } else if (strcmp(*argv, "-certfile") == 0) {
+        } else if (sgx_strcmp(*argv, "-certfile") == 0) {
             if (--argc < 1)
                 goto bad;
             if (!certflst)

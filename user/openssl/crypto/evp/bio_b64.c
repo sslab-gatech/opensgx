@@ -175,7 +175,7 @@ static int b64_read(BIO *b, char *out, int outl)
         if (i > outl)
             i = outl;
         OPENSSL_assert(ctx->buf_off + i < (int)sizeof(ctx->buf));
-        memcpy(out, &(ctx->buf[ctx->buf_off]), i);
+        sgx_memcpy(out, &(ctx->buf[ctx->buf_off]), i);
         ret = i;
         out += i;
         outl -= i;
@@ -316,7 +316,7 @@ static int b64_read(BIO *b, char *out, int outl)
              * z is now number of output bytes and jj is the number consumed
              */
             if (jj != i) {
-                memmove(ctx->tmp, &ctx->tmp[jj], i - jj);
+                sgx_memmove(ctx->tmp, &ctx->tmp[jj], i - jj);
                 ctx->tmp_len = i - jj;
             }
             ctx->buf_len = 0;
@@ -342,7 +342,7 @@ static int b64_read(BIO *b, char *out, int outl)
         else
             i = outl;
 
-        memcpy(out, ctx->buf, i);
+        sgx_memcpy(out, ctx->buf, i);
         ret += i;
         ctx->buf_off = i;
         if (ctx->buf_off == ctx->buf_len) {
@@ -410,7 +410,7 @@ static int b64_write(BIO *b, const char *in, int inl)
                  */
                 if (n > inl)
                     n = inl;
-                memcpy(&(ctx->tmp[ctx->tmp_len]), in, n);
+                sgx_memcpy(&(ctx->tmp[ctx->tmp_len]), in, n);
                 ctx->tmp_len += n;
                 ret += n;
                 if (ctx->tmp_len < 3)
@@ -427,7 +427,7 @@ static int b64_write(BIO *b, const char *in, int inl)
                 ctx->tmp_len = 0;
             } else {
                 if (n < 3) {
-                    memcpy(ctx->tmp, in, n);
+                    sgx_memcpy(ctx->tmp, in, n);
                     ctx->tmp_len = n;
                     ret += n;
                     break;
@@ -569,5 +569,5 @@ static long b64_callback_ctrl(BIO *b, int cmd, bio_info_cb *fp)
 
 static int b64_puts(BIO *b, const char *str)
 {
-    return b64_write(b, str, strlen(str));
+    return b64_write(b, str, sgx_strlen(str));
 }

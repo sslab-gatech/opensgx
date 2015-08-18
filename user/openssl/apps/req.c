@@ -219,21 +219,21 @@ int MAIN(int argc, char **argv)
     argc--;
     argv++;
     while (argc >= 1) {
-        if (strcmp(*argv, "-inform") == 0) {
+        if (sgx_strcmp(*argv, "-inform") == 0) {
             if (--argc < 1)
                 goto bad;
             informat = str2fmt(*(++argv));
-        } else if (strcmp(*argv, "-outform") == 0) {
+        } else if (sgx_strcmp(*argv, "-outform") == 0) {
             if (--argc < 1)
                 goto bad;
             outformat = str2fmt(*(++argv));
         }
 #ifndef OPENSSL_NO_ENGINE
-        else if (strcmp(*argv, "-engine") == 0) {
+        else if (sgx_strcmp(*argv, "-engine") == 0) {
             if (--argc < 1)
                 goto bad;
             engine = *(++argv);
-        } else if (strcmp(*argv, "-keygen_engine") == 0) {
+        } else if (sgx_strcmp(*argv, "-keygen_engine") == 0) {
             if (--argc < 1)
                 goto bad;
             gen_eng = ENGINE_by_id(*(++argv));
@@ -243,124 +243,124 @@ int MAIN(int argc, char **argv)
             }
         }
 #endif
-        else if (strcmp(*argv, "-key") == 0) {
+        else if (sgx_strcmp(*argv, "-key") == 0) {
             if (--argc < 1)
                 goto bad;
             keyfile = *(++argv);
-        } else if (strcmp(*argv, "-pubkey") == 0) {
+        } else if (sgx_strcmp(*argv, "-pubkey") == 0) {
             pubkey = 1;
-        } else if (strcmp(*argv, "-new") == 0) {
+        } else if (sgx_strcmp(*argv, "-new") == 0) {
             newreq = 1;
-        } else if (strcmp(*argv, "-config") == 0) {
+        } else if (sgx_strcmp(*argv, "-config") == 0) {
             if (--argc < 1)
                 goto bad;
             template = *(++argv);
-        } else if (strcmp(*argv, "-keyform") == 0) {
+        } else if (sgx_strcmp(*argv, "-keyform") == 0) {
             if (--argc < 1)
                 goto bad;
             keyform = str2fmt(*(++argv));
-        } else if (strcmp(*argv, "-in") == 0) {
+        } else if (sgx_strcmp(*argv, "-in") == 0) {
             if (--argc < 1)
                 goto bad;
             infile = *(++argv);
-        } else if (strcmp(*argv, "-out") == 0) {
+        } else if (sgx_strcmp(*argv, "-out") == 0) {
             if (--argc < 1)
                 goto bad;
             outfile = *(++argv);
-        } else if (strcmp(*argv, "-keyout") == 0) {
+        } else if (sgx_strcmp(*argv, "-keyout") == 0) {
             if (--argc < 1)
                 goto bad;
             keyout = *(++argv);
-        } else if (strcmp(*argv, "-passin") == 0) {
+        } else if (sgx_strcmp(*argv, "-passin") == 0) {
             if (--argc < 1)
                 goto bad;
             passargin = *(++argv);
-        } else if (strcmp(*argv, "-passout") == 0) {
+        } else if (sgx_strcmp(*argv, "-passout") == 0) {
             if (--argc < 1)
                 goto bad;
             passargout = *(++argv);
-        } else if (strcmp(*argv, "-rand") == 0) {
+        } else if (sgx_strcmp(*argv, "-rand") == 0) {
             if (--argc < 1)
                 goto bad;
             inrand = *(++argv);
-        } else if (strcmp(*argv, "-newkey") == 0) {
+        } else if (sgx_strcmp(*argv, "-newkey") == 0) {
             if (--argc < 1)
                 goto bad;
             keyalg = *(++argv);
             newreq = 1;
-        } else if (strcmp(*argv, "-pkeyopt") == 0) {
+        } else if (sgx_strcmp(*argv, "-pkeyopt") == 0) {
             if (--argc < 1)
                 goto bad;
             if (!pkeyopts)
                 pkeyopts = sk_OPENSSL_STRING_new_null();
             if (!pkeyopts || !sk_OPENSSL_STRING_push(pkeyopts, *(++argv)))
                 goto bad;
-        } else if (strcmp(*argv, "-sigopt") == 0) {
+        } else if (sgx_strcmp(*argv, "-sigopt") == 0) {
             if (--argc < 1)
                 goto bad;
             if (!sigopts)
                 sigopts = sk_OPENSSL_STRING_new_null();
             if (!sigopts || !sk_OPENSSL_STRING_push(sigopts, *(++argv)))
                 goto bad;
-        } else if (strcmp(*argv, "-batch") == 0)
+        } else if (sgx_strcmp(*argv, "-batch") == 0)
             batch = 1;
-        else if (strcmp(*argv, "-newhdr") == 0)
+        else if (sgx_strcmp(*argv, "-newhdr") == 0)
             newhdr = 1;
-        else if (strcmp(*argv, "-modulus") == 0)
+        else if (sgx_strcmp(*argv, "-modulus") == 0)
             modulus = 1;
-        else if (strcmp(*argv, "-verify") == 0)
+        else if (sgx_strcmp(*argv, "-verify") == 0)
             verify = 1;
-        else if (strcmp(*argv, "-nodes") == 0)
+        else if (sgx_strcmp(*argv, "-nodes") == 0)
             nodes = 1;
-        else if (strcmp(*argv, "-noout") == 0)
+        else if (sgx_strcmp(*argv, "-noout") == 0)
             noout = 1;
-        else if (strcmp(*argv, "-verbose") == 0)
+        else if (sgx_strcmp(*argv, "-verbose") == 0)
             verbose = 1;
-        else if (strcmp(*argv, "-utf8") == 0)
+        else if (sgx_strcmp(*argv, "-utf8") == 0)
             chtype = MBSTRING_UTF8;
-        else if (strcmp(*argv, "-nameopt") == 0) {
+        else if (sgx_strcmp(*argv, "-nameopt") == 0) {
             if (--argc < 1)
                 goto bad;
             if (!set_name_ex(&nmflag, *(++argv)))
                 goto bad;
-        } else if (strcmp(*argv, "-reqopt") == 0) {
+        } else if (sgx_strcmp(*argv, "-reqopt") == 0) {
             if (--argc < 1)
                 goto bad;
             if (!set_cert_ex(&reqflag, *(++argv)))
                 goto bad;
-        } else if (strcmp(*argv, "-subject") == 0)
+        } else if (sgx_strcmp(*argv, "-subject") == 0)
             subject = 1;
-        else if (strcmp(*argv, "-text") == 0)
+        else if (sgx_strcmp(*argv, "-text") == 0)
             text = 1;
-        else if (strcmp(*argv, "-x509") == 0)
+        else if (sgx_strcmp(*argv, "-x509") == 0)
             x509 = 1;
-        else if (strcmp(*argv, "-asn1-kludge") == 0)
+        else if (sgx_strcmp(*argv, "-asn1-kludge") == 0)
             kludge = 1;
-        else if (strcmp(*argv, "-no-asn1-kludge") == 0)
+        else if (sgx_strcmp(*argv, "-no-asn1-kludge") == 0)
             kludge = 0;
-        else if (strcmp(*argv, "-subj") == 0) {
+        else if (sgx_strcmp(*argv, "-subj") == 0) {
             if (--argc < 1)
                 goto bad;
             subj = *(++argv);
-        } else if (strcmp(*argv, "-multivalue-rdn") == 0)
+        } else if (sgx_strcmp(*argv, "-multivalue-rdn") == 0)
             multirdn = 1;
-        else if (strcmp(*argv, "-days") == 0) {
+        else if (sgx_strcmp(*argv, "-days") == 0) {
             if (--argc < 1)
                 goto bad;
             days = atoi(*(++argv));
             if (days == 0)
                 days = 30;
-        } else if (strcmp(*argv, "-set_serial") == 0) {
+        } else if (sgx_strcmp(*argv, "-set_serial") == 0) {
             if (--argc < 1)
                 goto bad;
             serial = s2i_ASN1_INTEGER(NULL, *(++argv));
             if (!serial)
                 goto bad;
-        } else if (strcmp(*argv, "-extensions") == 0) {
+        } else if (sgx_strcmp(*argv, "-extensions") == 0) {
             if (--argc < 1)
                 goto bad;
             extensions = *(++argv);
-        } else if (strcmp(*argv, "-reqexts") == 0) {
+        } else if (sgx_strcmp(*argv, "-reqexts") == 0) {
             if (--argc < 1)
                 goto bad;
             req_exts = *(++argv);
@@ -567,7 +567,7 @@ int MAIN(int argc, char **argv)
         p = NCONF_get_string(req_conf, SECTION, UTF8_IN);
         if (!p)
             ERR_clear_error();
-        else if (!strcmp(p, "yes"))
+        else if (!sgx_strcmp(p, "yes"))
             chtype = MBSTRING_UTF8;
     }
 
@@ -706,7 +706,7 @@ int MAIN(int argc, char **argv)
             if (p == NULL)
                 ERR_clear_error();
         }
-        if ((p != NULL) && (strcmp(p, "no") == 0))
+        if ((p != NULL) && (sgx_strcmp(p, "no") == 0))
             cipher = NULL;
         if (nodes)
             cipher = NULL;
@@ -919,7 +919,7 @@ int MAIN(int argc, char **argv)
         }
 #endif
     } else {
-        if ((keyout != NULL) && (strcmp(outfile, keyout) == 0))
+        if ((keyout != NULL) && (sgx_strcmp(outfile, keyout) == 0))
             i = (int)BIO_append_filename(out, outfile);
         else
             i = (int)BIO_write_filename(out, outfile);
@@ -1059,7 +1059,7 @@ static int make_REQ(X509_REQ *req, EVP_PKEY *pkey, char *subj, int multirdn,
     tmp = NCONF_get_string(req_conf, SECTION, PROMPT);
     if (tmp == NULL)
         ERR_clear_error();
-    if ((tmp != NULL) && !strcmp(tmp, "no"))
+    if ((tmp != NULL) && !sgx_strcmp(tmp, "no"))
         no_prompt = 1;
 
     dn_sect = NCONF_get_string(req_conf, SECTION, DISTINGUISHED_NAME);
@@ -1510,7 +1510,7 @@ static int check_end(const char *str, const char *end)
     if (elen > slen)
         return 1;
     tmp = str + slen - elen;
-    return strcmp(tmp, end);
+    return sgx_strcmp(tmp, end);
 }
 
 static EVP_PKEY_CTX *set_keygen_ctx(BIO *err, const char *gstr,

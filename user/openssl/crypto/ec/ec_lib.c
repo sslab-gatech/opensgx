@@ -68,6 +68,8 @@
 
 #include "ec_lcl.h"
 
+#include "../sgx.h"
+
 const char EC_version[] = "EC" OPENSSL_VERSION_PTEXT;
 
 /* functions for EC_GROUP objects */
@@ -243,7 +245,7 @@ int EC_GROUP_copy(EC_GROUP *dest, const EC_GROUP *src)
         dest->seed = OPENSSL_malloc(src->seed_len);
         if (dest->seed == NULL)
             return 0;
-        if (!memcpy(dest->seed, src->seed, src->seed_len))
+        if (!sgx_memcpy(dest->seed, src->seed, src->seed_len))
             return 0;
         dest->seed_len = src->seed_len;
     } else {
@@ -401,7 +403,7 @@ size_t EC_GROUP_set_seed(EC_GROUP *group, const unsigned char *p, size_t len)
 
     if ((group->seed = OPENSSL_malloc(len)) == NULL)
         return 0;
-    memcpy(group->seed, p, len);
+    sgx_memcpy(group->seed, p, len);
     group->seed_len = len;
 
     return len;

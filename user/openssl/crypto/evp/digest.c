@@ -279,6 +279,7 @@ int EVP_DigestFinal_ex(EVP_MD_CTX *ctx, unsigned char *md, unsigned int *size)
 
     if (size != NULL)
         *size = ctx->digest->md_size;
+
     if (ctx->digest->cleanup) {
         ctx->digest->cleanup(ctx);
         EVP_MD_CTX_set_flags(ctx, EVP_MD_CTX_FLAG_CLEANED);

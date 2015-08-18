@@ -84,7 +84,7 @@ int MAIN(int argc, char **argv)
 
     SSL_load_error_strings();
 
-    if ((argc > 1) && (strcmp(argv[1], "-stats") == 0)) {
+    if ((argc > 1) && (sgx_strcmp(argv[1], "-stats") == 0)) {
         BIO *out = NULL;
 
         out = BIO_new(BIO_s_file());

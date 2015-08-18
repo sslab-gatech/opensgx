@@ -207,35 +207,35 @@ int main(int argc, char *argv[])
     argv++;
 
     while (argc >= 1) {
-        if (strcmp(*argv, "-server_auth") == 0)
+        if (sgx_strcmp(*argv, "-server_auth") == 0)
             server_auth = 1;
-        else if (strcmp(*argv, "-client_auth") == 0)
+        else if (sgx_strcmp(*argv, "-client_auth") == 0)
             client_auth = 1;
-        else if (strcmp(*argv, "-reconnect") == 0)
+        else if (sgx_strcmp(*argv, "-reconnect") == 0)
             reconnect = 1;
-        else if (strcmp(*argv, "-stats") == 0)
+        else if (sgx_strcmp(*argv, "-stats") == 0)
             cache_stats = 1;
-        else if (strcmp(*argv, "-ssl3") == 0)
+        else if (sgx_strcmp(*argv, "-ssl3") == 0)
             ssl_method = SSLv3_method();
-        else if (strcmp(*argv, "-ssl2") == 0)
+        else if (sgx_strcmp(*argv, "-ssl2") == 0)
             ssl_method = SSLv2_method();
-        else if (strcmp(*argv, "-CApath") == 0) {
+        else if (sgx_strcmp(*argv, "-CApath") == 0) {
             if (--argc < 1)
                 goto bad;
             CApath = *(++argv);
-        } else if (strcmp(*argv, "-CAfile") == 0) {
+        } else if (sgx_strcmp(*argv, "-CAfile") == 0) {
             if (--argc < 1)
                 goto bad;
             CAfile = *(++argv);
-        } else if (strcmp(*argv, "-cert") == 0) {
+        } else if (sgx_strcmp(*argv, "-cert") == 0) {
             if (--argc < 1)
                 goto bad;
             scert = *(++argv);
-        } else if (strcmp(*argv, "-ccert") == 0) {
+        } else if (sgx_strcmp(*argv, "-ccert") == 0) {
             if (--argc < 1)
                 goto bad;
             ccert = *(++argv);
-        } else if (strcmp(*argv, "-threads") == 0) {
+        } else if (sgx_strcmp(*argv, "-threads") == 0) {
             if (--argc < 1)
                 goto bad;
             thread_number = atoi(*(++argv));
@@ -243,7 +243,7 @@ int main(int argc, char *argv[])
                 thread_number = 1;
             if (thread_number > MAX_THREAD_NUMBER)
                 thread_number = MAX_THREAD_NUMBER;
-        } else if (strcmp(*argv, "-loops") == 0) {
+        } else if (sgx_strcmp(*argv, "-loops") == 0) {
             if (--argc < 1)
                 goto bad;
             number_of_loops = atoi(*(++argv));
@@ -865,7 +865,7 @@ void thread_setup(void)
     int i;
     char filename[20];
 
-    strcpy(filename, "/tmp/mttest.XXXXXX");
+    sgx_strcpy(filename, "/tmp/mttest.XXXXXX");
     mktemp(filename);
 
     usconfig(CONF_STHREADIOOFF);

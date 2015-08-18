@@ -250,7 +250,7 @@ static int test_ecdh_curve(int nid, const char *text, BN_CTX *ctx, BIO *out)
     (void)BIO_flush(out);
 # endif
 
-    if ((aout < 4) || (bout != aout) || (memcmp(abuf, bbuf, aout) != 0)) {
+    if ((aout < 4) || (bout != aout) || (sgx_memcmp(abuf, bbuf, aout) != 0)) {
 # ifndef NOISY
         BIO_printf(out, " failed\n\n");
         BIO_printf(out, "key a:\n");
@@ -446,13 +446,13 @@ static int ecdh_kat(BIO *out, const char *cname, int nid,
     if (!ECDH_compute_key(Ztmp, Ztmplen,
                           EC_KEY_get0_public_key(key2), key1, 0))
         goto err;
-    if (memcmp(Ztmp, Z, Zlen))
+    if (sgx_memcmp(Ztmp, Z, Zlen))
         goto err;
     sgx_memset(Ztmp, 0, Zlen);
     if (!ECDH_compute_key(Ztmp, Ztmplen,
                           EC_KEY_get0_public_key(key1), key2, 0))
         goto err;
-    if (memcmp(Ztmp, Z, Zlen))
+    if (sgx_memcmp(Ztmp, Z, Zlen))
         goto err;
     rv = 1;
  err:

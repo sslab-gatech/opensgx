@@ -113,11 +113,11 @@ int MAIN(int argc, char **argv)
     argv++;
     for (;;) {
         if (argc >= 1) {
-            if (strcmp(*argv, "-CApath") == 0) {
+            if (sgx_strcmp(*argv, "-CApath") == 0) {
                 if (argc-- < 1)
                     goto end;
                 CApath = *(++argv);
-            } else if (strcmp(*argv, "-CAfile") == 0) {
+            } else if (sgx_strcmp(*argv, "-CAfile") == 0) {
                 if (argc-- < 1)
                     goto end;
                 CAfile = *(++argv);
@@ -125,30 +125,30 @@ int MAIN(int argc, char **argv)
                 if (badarg)
                     goto end;
                 continue;
-            } else if (strcmp(*argv, "-untrusted") == 0) {
+            } else if (sgx_strcmp(*argv, "-untrusted") == 0) {
                 if (argc-- < 1)
                     goto end;
                 untfile = *(++argv);
-            } else if (strcmp(*argv, "-trusted") == 0) {
+            } else if (sgx_strcmp(*argv, "-trusted") == 0) {
                 if (argc-- < 1)
                     goto end;
                 trustfile = *(++argv);
-            } else if (strcmp(*argv, "-CRLfile") == 0) {
+            } else if (sgx_strcmp(*argv, "-CRLfile") == 0) {
                 if (argc-- < 1)
                     goto end;
                 crlfile = *(++argv);
-            } else if (strcmp(*argv, "-crl_download") == 0)
+            } else if (sgx_strcmp(*argv, "-crl_download") == 0)
                 crl_download = 1;
 #ifndef OPENSSL_NO_ENGINE
-            else if (strcmp(*argv, "-engine") == 0) {
+            else if (sgx_strcmp(*argv, "-engine") == 0) {
                 if (--argc < 1)
                     goto end;
                 engine = *(++argv);
             }
 #endif
-            else if (strcmp(*argv, "-help") == 0)
+            else if (sgx_strcmp(*argv, "-help") == 0)
                 goto end;
-            else if (strcmp(*argv, "-verbose") == 0)
+            else if (sgx_strcmp(*argv, "-verbose") == 0)
                 v_verbose = 1;
             else if (argv[0][0] == '-')
                 goto end;

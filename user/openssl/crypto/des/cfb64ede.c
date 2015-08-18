@@ -59,6 +59,8 @@
 #include "des_locl.h"
 #include "e_os.h"
 
+#include "../sgx.h"
+
 /*
  * The input and output encrypted as though 64bit cfb mode is being used.
  * The extra state information to record how much of the 64bit block we have
@@ -188,7 +190,7 @@ void DES_ede3_cfb_encrypt(const unsigned char *in, unsigned char *out,
                 l2c(d0, iv);
                 l2c(d1, iv);
                 /* shift ovec left most of the bits... */
-                memmove(ovec, ovec + num / 8, 8 + (num % 8 ? 1 : 0));
+                sgx_memmove(ovec, ovec + num / 8, 8 + (num % 8 ? 1 : 0));
                 /* now the remaining bits */
                 if (num % 8 != 0)
                     for (i = 0; i < 8; ++i) {
@@ -225,7 +227,7 @@ void DES_ede3_cfb_encrypt(const unsigned char *in, unsigned char *out,
                 l2c(d0, iv);
                 l2c(d1, iv);
                 /* shift ovec left most of the bits... */
-                memmove(ovec, ovec + num / 8, 8 + (num % 8 ? 1 : 0));
+                sgx_memmove(ovec, ovec + num / 8, 8 + (num % 8 ? 1 : 0));
                 /* now the remaining bits */
                 if (num % 8 != 0)
                     for (i = 0; i < 8; ++i) {

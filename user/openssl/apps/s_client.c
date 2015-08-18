@@ -773,51 +773,51 @@ int MAIN(int argc, char **argv)
     argc--;
     argv++;
     while (argc >= 1) {
-        if (strcmp(*argv, "-host") == 0) {
+        if (sgx_strcmp(*argv, "-host") == 0) {
             if (--argc < 1)
                 goto bad;
             host = *(++argv);
-        } else if (strcmp(*argv, "-port") == 0) {
+        } else if (sgx_strcmp(*argv, "-port") == 0) {
             if (--argc < 1)
                 goto bad;
             port = atoi(*(++argv));
             if (port == 0)
                 goto bad;
-        } else if (strcmp(*argv, "-connect") == 0) {
+        } else if (sgx_strcmp(*argv, "-connect") == 0) {
             if (--argc < 1)
                 goto bad;
             if (!extract_host_port(*(++argv), &host, NULL, &port))
                 goto bad;
-        } else if (strcmp(*argv, "-verify") == 0) {
+        } else if (sgx_strcmp(*argv, "-verify") == 0) {
             verify = SSL_VERIFY_PEER;
             if (--argc < 1)
                 goto bad;
             verify_depth = atoi(*(++argv));
             if (!c_quiet)
                 BIO_printf(bio_err, "verify depth is %d\n", verify_depth);
-        } else if (strcmp(*argv, "-cert") == 0) {
+        } else if (sgx_strcmp(*argv, "-cert") == 0) {
             if (--argc < 1)
                 goto bad;
             cert_file = *(++argv);
-        } else if (strcmp(*argv, "-CRL") == 0) {
+        } else if (sgx_strcmp(*argv, "-CRL") == 0) {
             if (--argc < 1)
                 goto bad;
             crl_file = *(++argv);
-        } else if (strcmp(*argv, "-crl_download") == 0)
+        } else if (sgx_strcmp(*argv, "-crl_download") == 0)
             crl_download = 1;
-        else if (strcmp(*argv, "-sess_out") == 0) {
+        else if (sgx_strcmp(*argv, "-sess_out") == 0) {
             if (--argc < 1)
                 goto bad;
             sess_out = *(++argv);
-        } else if (strcmp(*argv, "-sess_in") == 0) {
+        } else if (sgx_strcmp(*argv, "-sess_in") == 0) {
             if (--argc < 1)
                 goto bad;
             sess_in = *(++argv);
-        } else if (strcmp(*argv, "-certform") == 0) {
+        } else if (sgx_strcmp(*argv, "-certform") == 0) {
             if (--argc < 1)
                 goto bad;
             cert_format = str2fmt(*(++argv));
-        } else if (strcmp(*argv, "-CRLform") == 0) {
+        } else if (sgx_strcmp(*argv, "-CRLform") == 0) {
             if (--argc < 1)
                 goto bad;
             crl_format = str2fmt(*(++argv));
@@ -825,11 +825,11 @@ int MAIN(int argc, char **argv)
             if (badarg)
                 goto bad;
             continue;
-        } else if (strcmp(*argv, "-verify_return_error") == 0)
+        } else if (sgx_strcmp(*argv, "-verify_return_error") == 0)
             verify_return_error = 1;
-        else if (strcmp(*argv, "-verify_quiet") == 0)
+        else if (sgx_strcmp(*argv, "-verify_quiet") == 0)
             verify_quiet = 1;
-        else if (strcmp(*argv, "-brief") == 0) {
+        else if (sgx_strcmp(*argv, "-brief") == 0) {
             c_brief = 1;
             verify_quiet = 1;
             c_quiet = 1;
@@ -841,54 +841,54 @@ int MAIN(int argc, char **argv)
             if (badarg)
                 goto bad;
             continue;
-        } else if (strcmp(*argv, "-prexit") == 0)
+        } else if (sgx_strcmp(*argv, "-prexit") == 0)
             prexit = 1;
-        else if (strcmp(*argv, "-crlf") == 0)
+        else if (sgx_strcmp(*argv, "-crlf") == 0)
             crlf = 1;
-        else if (strcmp(*argv, "-quiet") == 0) {
+        else if (sgx_strcmp(*argv, "-quiet") == 0) {
             c_quiet = 1;
             c_ign_eof = 1;
-        } else if (strcmp(*argv, "-ign_eof") == 0)
+        } else if (sgx_strcmp(*argv, "-ign_eof") == 0)
             c_ign_eof = 1;
-        else if (strcmp(*argv, "-no_ign_eof") == 0)
+        else if (sgx_strcmp(*argv, "-no_ign_eof") == 0)
             c_ign_eof = 0;
-        else if (strcmp(*argv, "-pause") == 0)
+        else if (sgx_strcmp(*argv, "-pause") == 0)
             c_Pause = 1;
-        else if (strcmp(*argv, "-debug") == 0)
+        else if (sgx_strcmp(*argv, "-debug") == 0)
             c_debug = 1;
 #ifndef OPENSSL_NO_TLSEXT
-        else if (strcmp(*argv, "-tlsextdebug") == 0)
+        else if (sgx_strcmp(*argv, "-tlsextdebug") == 0)
             c_tlsextdebug = 1;
-        else if (strcmp(*argv, "-status") == 0)
+        else if (sgx_strcmp(*argv, "-status") == 0)
             c_status_req = 1;
 #endif
 #ifdef WATT32
-        else if (strcmp(*argv, "-wdebug") == 0)
+        else if (sgx_strcmp(*argv, "-wdebug") == 0)
             dbug_init();
 #endif
-        else if (strcmp(*argv, "-msg") == 0)
+        else if (sgx_strcmp(*argv, "-msg") == 0)
             c_msg = 1;
-        else if (strcmp(*argv, "-msgfile") == 0) {
+        else if (sgx_strcmp(*argv, "-msgfile") == 0) {
             if (--argc < 1)
                 goto bad;
             bio_c_msg = BIO_new_file(*(++argv), "w");
         }
 #ifndef OPENSSL_NO_SSL_TRACE
-        else if (strcmp(*argv, "-trace") == 0)
+        else if (sgx_strcmp(*argv, "-trace") == 0)
             c_msg = 2;
 #endif
-        else if (strcmp(*argv, "-showcerts") == 0)
+        else if (sgx_strcmp(*argv, "-showcerts") == 0)
             c_showcerts = 1;
-        else if (strcmp(*argv, "-nbio_test") == 0)
+        else if (sgx_strcmp(*argv, "-nbio_test") == 0)
             nbio_test = 1;
-        else if (strcmp(*argv, "-state") == 0)
+        else if (sgx_strcmp(*argv, "-state") == 0)
             state = 1;
 #ifndef OPENSSL_NO_PSK
-        else if (strcmp(*argv, "-psk_identity") == 0) {
+        else if (sgx_strcmp(*argv, "-psk_identity") == 0) {
             if (--argc < 1)
                 goto bad;
             psk_identity = *(++argv);
-        } else if (strcmp(*argv, "-psk") == 0) {
+        } else if (sgx_strcmp(*argv, "-psk") == 0) {
             size_t j;
 
             if (--argc < 1)
@@ -903,125 +903,125 @@ int MAIN(int argc, char **argv)
         }
 #endif
 #ifndef OPENSSL_NO_SRP
-        else if (strcmp(*argv, "-srpuser") == 0) {
+        else if (sgx_strcmp(*argv, "-srpuser") == 0) {
             if (--argc < 1)
                 goto bad;
             srp_arg.srplogin = *(++argv);
             meth = TLSv1_client_method();
-        } else if (strcmp(*argv, "-srppass") == 0) {
+        } else if (sgx_strcmp(*argv, "-srppass") == 0) {
             if (--argc < 1)
                 goto bad;
             srppass = *(++argv);
             meth = TLSv1_client_method();
-        } else if (strcmp(*argv, "-srp_strength") == 0) {
+        } else if (sgx_strcmp(*argv, "-srp_strength") == 0) {
             if (--argc < 1)
                 goto bad;
             srp_arg.strength = atoi(*(++argv));
             BIO_printf(bio_err, "SRP minimal length for N is %d\n",
                        srp_arg.strength);
             meth = TLSv1_client_method();
-        } else if (strcmp(*argv, "-srp_lateuser") == 0) {
+        } else if (sgx_strcmp(*argv, "-srp_lateuser") == 0) {
             srp_lateuser = 1;
             meth = TLSv1_client_method();
-        } else if (strcmp(*argv, "-srp_moregroups") == 0) {
+        } else if (sgx_strcmp(*argv, "-srp_moregroups") == 0) {
             srp_arg.amp = 1;
             meth = TLSv1_client_method();
         }
 #endif
 #ifndef OPENSSL_NO_SSL2
-        else if (strcmp(*argv, "-ssl2") == 0)
+        else if (sgx_strcmp(*argv, "-ssl2") == 0)
             meth = SSLv2_client_method();
 #endif
 #ifndef OPENSSL_NO_SSL3_METHOD
-        else if (strcmp(*argv, "-ssl3") == 0)
+        else if (sgx_strcmp(*argv, "-ssl3") == 0)
             meth = SSLv3_client_method();
 #endif
 #ifndef OPENSSL_NO_TLS1
-        else if (strcmp(*argv, "-tls1_2") == 0)
+        else if (sgx_strcmp(*argv, "-tls1_2") == 0)
             meth = TLSv1_2_client_method();
-        else if (strcmp(*argv, "-tls1_1") == 0)
+        else if (sgx_strcmp(*argv, "-tls1_1") == 0)
             meth = TLSv1_1_client_method();
-        else if (strcmp(*argv, "-tls1") == 0)
+        else if (sgx_strcmp(*argv, "-tls1") == 0)
             meth = TLSv1_client_method();
 #endif
 #ifndef OPENSSL_NO_DTLS1
-        else if (strcmp(*argv, "-dtls") == 0) {
+        else if (sgx_strcmp(*argv, "-dtls") == 0) {
             meth = DTLS_client_method();
             socket_type = SOCK_DGRAM;
-        } else if (strcmp(*argv, "-dtls1") == 0) {
+        } else if (sgx_strcmp(*argv, "-dtls1") == 0) {
             meth = DTLSv1_client_method();
             socket_type = SOCK_DGRAM;
-        } else if (strcmp(*argv, "-dtls1_2") == 0) {
+        } else if (sgx_strcmp(*argv, "-dtls1_2") == 0) {
             meth = DTLSv1_2_client_method();
             socket_type = SOCK_DGRAM;
-        } else if (strcmp(*argv, "-timeout") == 0)
+        } else if (sgx_strcmp(*argv, "-timeout") == 0)
             enable_timeouts = 1;
-        else if (strcmp(*argv, "-mtu") == 0) {
+        else if (sgx_strcmp(*argv, "-mtu") == 0) {
             if (--argc < 1)
                 goto bad;
             socket_mtu = atol(*(++argv));
         }
 #endif
-        else if (strcmp(*argv, "-fallback_scsv") == 0) {
+        else if (sgx_strcmp(*argv, "-fallback_scsv") == 0) {
             fallback_scsv = 1;
-        } else if (strcmp(*argv, "-keyform") == 0) {
+        } else if (sgx_strcmp(*argv, "-keyform") == 0) {
             if (--argc < 1)
                 goto bad;
             key_format = str2fmt(*(++argv));
-        } else if (strcmp(*argv, "-pass") == 0) {
+        } else if (sgx_strcmp(*argv, "-pass") == 0) {
             if (--argc < 1)
                 goto bad;
             passarg = *(++argv);
-        } else if (strcmp(*argv, "-cert_chain") == 0) {
+        } else if (sgx_strcmp(*argv, "-cert_chain") == 0) {
             if (--argc < 1)
                 goto bad;
             chain_file = *(++argv);
-        } else if (strcmp(*argv, "-key") == 0) {
+        } else if (sgx_strcmp(*argv, "-key") == 0) {
             if (--argc < 1)
                 goto bad;
             key_file = *(++argv);
-        } else if (strcmp(*argv, "-reconnect") == 0) {
+        } else if (sgx_strcmp(*argv, "-reconnect") == 0) {
             reconnect = 5;
-        } else if (strcmp(*argv, "-CApath") == 0) {
+        } else if (sgx_strcmp(*argv, "-CApath") == 0) {
             if (--argc < 1)
                 goto bad;
             CApath = *(++argv);
-        } else if (strcmp(*argv, "-chainCApath") == 0) {
+        } else if (sgx_strcmp(*argv, "-chainCApath") == 0) {
             if (--argc < 1)
                 goto bad;
             chCApath = *(++argv);
-        } else if (strcmp(*argv, "-verifyCApath") == 0) {
+        } else if (sgx_strcmp(*argv, "-verifyCApath") == 0) {
             if (--argc < 1)
                 goto bad;
             vfyCApath = *(++argv);
-        } else if (strcmp(*argv, "-build_chain") == 0)
+        } else if (sgx_strcmp(*argv, "-build_chain") == 0)
             build_chain = 1;
-        else if (strcmp(*argv, "-CAfile") == 0) {
+        else if (sgx_strcmp(*argv, "-CAfile") == 0) {
             if (--argc < 1)
                 goto bad;
             CAfile = *(++argv);
-        } else if (strcmp(*argv, "-chainCAfile") == 0) {
+        } else if (sgx_strcmp(*argv, "-chainCAfile") == 0) {
             if (--argc < 1)
                 goto bad;
             chCAfile = *(++argv);
-        } else if (strcmp(*argv, "-verifyCAfile") == 0) {
+        } else if (sgx_strcmp(*argv, "-verifyCAfile") == 0) {
             if (--argc < 1)
                 goto bad;
             vfyCAfile = *(++argv);
         }
 #ifndef OPENSSL_NO_TLSEXT
 # ifndef OPENSSL_NO_NEXTPROTONEG
-        else if (strcmp(*argv, "-nextprotoneg") == 0) {
+        else if (sgx_strcmp(*argv, "-nextprotoneg") == 0) {
             if (--argc < 1)
                 goto bad;
             next_proto_neg_in = *(++argv);
         }
 # endif
-        else if (strcmp(*argv, "-alpn") == 0) {
+        else if (sgx_strcmp(*argv, "-alpn") == 0) {
             if (--argc < 1)
                 goto bad;
             alpn_in = *(++argv);
-        } else if (strcmp(*argv, "-serverinfo") == 0) {
+        } else if (sgx_strcmp(*argv, "-serverinfo") == 0) {
             char *c;
             int start = 0;
             int len;
@@ -1044,45 +1044,45 @@ int MAIN(int argc, char **argv)
         }
 #endif
 #ifdef FIONBIO
-        else if (strcmp(*argv, "-nbio") == 0) {
+        else if (sgx_strcmp(*argv, "-nbio") == 0) {
             c_nbio = 1;
         }
 #endif
-        else if (strcmp(*argv, "-starttls") == 0) {
+        else if (sgx_strcmp(*argv, "-starttls") == 0) {
             if (--argc < 1)
                 goto bad;
             ++argv;
-            if (strcmp(*argv, "smtp") == 0)
+            if (sgx_strcmp(*argv, "smtp") == 0)
                 starttls_proto = PROTO_SMTP;
-            else if (strcmp(*argv, "pop3") == 0)
+            else if (sgx_strcmp(*argv, "pop3") == 0)
                 starttls_proto = PROTO_POP3;
-            else if (strcmp(*argv, "imap") == 0)
+            else if (sgx_strcmp(*argv, "imap") == 0)
                 starttls_proto = PROTO_IMAP;
-            else if (strcmp(*argv, "ftp") == 0)
+            else if (sgx_strcmp(*argv, "ftp") == 0)
                 starttls_proto = PROTO_FTP;
-            else if (strcmp(*argv, "xmpp") == 0)
+            else if (sgx_strcmp(*argv, "xmpp") == 0)
                 starttls_proto = PROTO_XMPP;
             else
                 goto bad;
         }
 #ifndef OPENSSL_NO_ENGINE
-        else if (strcmp(*argv, "-engine") == 0) {
+        else if (sgx_strcmp(*argv, "-engine") == 0) {
             if (--argc < 1)
                 goto bad;
             engine_id = *(++argv);
-        } else if (strcmp(*argv, "-ssl_client_engine") == 0) {
+        } else if (sgx_strcmp(*argv, "-ssl_client_engine") == 0) {
             if (--argc < 1)
                 goto bad;
             ssl_client_engine_id = *(++argv);
         }
 #endif
-        else if (strcmp(*argv, "-rand") == 0) {
+        else if (sgx_strcmp(*argv, "-rand") == 0) {
             if (--argc < 1)
                 goto bad;
             inrand = *(++argv);
         }
 #ifndef OPENSSL_NO_TLSEXT
-        else if (strcmp(*argv, "-servername") == 0) {
+        else if (sgx_strcmp(*argv, "-servername") == 0) {
             if (--argc < 1)
                 goto bad;
             servername = *(++argv);
@@ -1090,24 +1090,24 @@ int MAIN(int argc, char **argv)
         }
 #endif
 #ifndef OPENSSL_NO_JPAKE
-        else if (strcmp(*argv, "-jpake") == 0) {
+        else if (sgx_strcmp(*argv, "-jpake") == 0) {
             if (--argc < 1)
                 goto bad;
             jpake_secret = *++argv;
         }
 #endif
 #ifndef OPENSSL_NO_SRTP
-        else if (strcmp(*argv, "-use_srtp") == 0) {
+        else if (sgx_strcmp(*argv, "-use_srtp") == 0) {
             if (--argc < 1)
                 goto bad;
             srtp_profiles = *(++argv);
         }
 #endif
-        else if (strcmp(*argv, "-keymatexport") == 0) {
+        else if (sgx_strcmp(*argv, "-keymatexport") == 0) {
             if (--argc < 1)
                 goto bad;
             keymatexportlabel = *(++argv);
-        } else if (strcmp(*argv, "-keymatexportlen") == 0) {
+        } else if (sgx_strcmp(*argv, "-keymatexportlen") == 0) {
             if (--argc < 1)
                 goto bad;
             keymatexportlen = atoi(*(++argv));

@@ -285,9 +285,9 @@ int RAND_init_fips(void)
     FIPS_drbg_set_rand_callbacks(dctx, drbg_get_adin, 0,
                                  drbg_rand_seed, drbg_rand_add);
     /* Personalisation string: a string followed by date time vector */
-    strcpy((char *)pers, "OpenSSL DRBG2.0");
+    sgx_strcpy((char *)pers, "OpenSSL DRBG2.0");
     plen = drbg_get_adin(dctx, &p);
-    memcpy(pers + 16, p, plen);
+    sgx_memcpy(pers + 16, p, plen);
 
     if (FIPS_drbg_instantiate(dctx, pers, sizeof(pers)) <= 0) {
         RANDerr(RAND_F_RAND_INIT_FIPS, RAND_R_ERROR_INSTANTIATING_DRBG);

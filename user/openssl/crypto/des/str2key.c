@@ -68,7 +68,7 @@ void DES_string_to_key(const char *str, DES_cblock *key)
     register unsigned char j;
 
     sgx_memset(key, 0, 8);
-    length = strlen(str);
+    length = sgx_strlen(str);
 #ifdef OLD_STR_TO_KEY
     for (i = 0; i < length; i++)
         (*key)[i % 8] ^= (str[i] << 1);
@@ -107,7 +107,7 @@ void DES_string_to_2keys(const char *str, DES_cblock *key1, DES_cblock *key2)
 
     sgx_memset(key1, 0, 8);
     sgx_memset(key2, 0, 8);
-    length = strlen(str);
+    length = sgx_strlen(str);
 #ifdef OLD_STR_TO_KEY
     if (length <= 8) {
         for (i = 0; i < length; i++) {
@@ -140,7 +140,7 @@ void DES_string_to_2keys(const char *str, DES_cblock *key1, DES_cblock *key2)
         }
     }
     if (length <= 8)
-        memcpy(key2, key1, 8);
+        sgx_memcpy(key2, key1, 8);
 #endif
     DES_set_odd_parity(key1);
     DES_set_odd_parity(key2);

@@ -140,14 +140,14 @@ int MD2_Update(MD2_CTX *c, const unsigned char *data, size_t len)
     p = c->data;
     if (c->num != 0) {
         if ((c->num + len) >= MD2_BLOCK) {
-            memcpy(&(p[c->num]), data, MD2_BLOCK - c->num);
+            sgx_memcpy(&(p[c->num]), data, MD2_BLOCK - c->num);
             md2_block(c, c->data);
             data += (MD2_BLOCK - c->num);
             len -= (MD2_BLOCK - c->num);
             c->num = 0;
             /* drop through and do the rest */
         } else {
-            memcpy(&(p[c->num]), data, len);
+            sgx_memcpy(&(p[c->num]), data, len);
             /* data+=len; */
             c->num += (int)len;
             return 1;
@@ -162,7 +162,7 @@ int MD2_Update(MD2_CTX *c, const unsigned char *data, size_t len)
         data += MD2_BLOCK;
         len -= MD2_BLOCK;
     }
-    memcpy(p, data, len);
+    sgx_memcpy(p, data, len);
     c->num = (int)len;
     return 1;
 }
@@ -196,7 +196,7 @@ static void md2_block(MD2_CTX *c, const unsigned char *d)
         }
         t = (t + i) & 0xff;
     }
-    memcpy(sp1, state, 16 * sizeof(MD2_INT));
+    sgx_memcpy(sp1, state, 16 * sizeof(MD2_INT));
     OPENSSL_cleanse(state, 48 * sizeof(MD2_INT));
 }
 

@@ -198,10 +198,10 @@ static int BN_from_montgomery_word(BIGNUM *ret, BIGNUM *r, BN_MONT_CTX *mont)
 
     /* clear the top words of T */
 # if 1
-    for (i = r->top; i < max; i++) /* memset? XXX */
+    for (i = r->top; i < max; i++) /* sgx_memset? XXX */
         rp[i] = 0;
 # else
-    memset(&(rp[r->top]), 0, (max - r->top) * sizeof(BN_ULONG));
+    sgx_memset(&(rp[r->top]), 0, (max - r->top) * sizeof(BN_ULONG));
 # endif
 
     r->top = max;
@@ -249,7 +249,7 @@ static int BN_from_montgomery_word(BIGNUM *ret, BIGNUM *r, BN_MONT_CTX *mont)
 
         v = bn_sub_words(rp, ap, np, nl) - carry;
         /*
-         * if subtraction result is real, then trick unconditional memcpy
+         * if subtraction result is real, then trick unconditional sgx_memcpy
          * below to perform in-place "refresh" instead of actual copy.
          */
         m = (0 - (size_t)v);
@@ -277,7 +277,7 @@ static int BN_from_montgomery_word(BIGNUM *ret, BIGNUM *r, BN_MONT_CTX *mont)
     }
 # else
     if (bn_sub_words(rp, ap, np, nl) - carry)
-        memcpy(rp, ap, nl * sizeof(BN_ULONG));
+        sgx_memcpy(rp, ap, nl * sizeof(BN_ULONG));
 # endif
     bn_correct_top(r);
     bn_correct_top(ret);
@@ -471,6 +471,7 @@ int BN_MONT_CTX_set(BN_MONT_CTX *mont, const BIGNUM *mod, BN_CTX *ctx)
         BN_zero(R);
         if (!BN_set_bit(R, mont->ri))
             goto err;           /* R = 2^ri */
+
         /* Ri = R^-1 mod N */
         if ((BN_mod_inverse(Ri, R, &mont->N, ctx)) == NULL)
             goto err;
@@ -478,6 +479,7 @@ int BN_MONT_CTX_set(BN_MONT_CTX *mont, const BIGNUM *mod, BN_CTX *ctx)
             goto err;           /* R*Ri */
         if (!BN_sub_word(Ri, 1))
             goto err;
+
         /*
          * Ni = (R*Ri-1) / N
          */

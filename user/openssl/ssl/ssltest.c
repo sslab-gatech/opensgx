@@ -188,6 +188,8 @@
 #endif
 #include <openssl/bn.h>
 
+#include "../crypto/sgx.h"
+
 /*
  * Or gethostname won't be declared properly
  * on Compaq platforms (at least with DEC C).
@@ -283,7 +285,7 @@ static int MS_CALLBACK ssl_srp_server_param_cb(SSL *s, int *ad, void *arg)
 {
     SRP_SERVER_ARG *p = (SRP_SERVER_ARG *)arg;
 
-    if (strcmp(p->expected_user, SSL_get_srp_username(s)) != 0) {
+    if (sgx_strcmp(p->expected_user, SSL_get_srp_username(s)) != 0) {
         fprintf(stderr, "User %s doesn't exist\n", SSL_get_srp_username(s));
         return SSL3_AL_FATAL;
     }
@@ -319,11 +321,11 @@ static unsigned char *next_protos_parse(unsigned short *outlen,
     unsigned char *out;
     size_t i, start = 0;
 
-    len = strlen(in);
+    len = sgx_strlen(in);
     if (len >= 65535)
         return NULL;
 
-    out = OPENSSL_malloc(strlen(in) + 1);
+    out = OPENSSL_malloc(sgx_strlen(in) + 1);
     if (!out)
         return NULL;
 
@@ -369,7 +371,7 @@ static int cb_server_alpn(SSL *s, const unsigned char **out,
      * verify_alpn.
      */
     alpn_selected = OPENSSL_malloc(*outlen);
-    memcpy(alpn_selected, *out, *outlen);
+    sgx_memcpy(alpn_selected, *out, *outlen);
     *out = alpn_selected;
 
     OPENSSL_free(protos);
@@ -389,7 +391,7 @@ static int verify_alpn(SSL *client, SSL *server)
     }
 
     if (client_proto_len != server_proto_len ||
-        memcmp(client_proto, server_proto, client_proto_len) != 0) {
+        sgx_memcmp(client_proto, server_proto, client_proto_len) != 0) {
         BIO_printf(bio_stdout, "ALPN selected protocols differ!\n");
         goto err;
     }
@@ -400,8 +402,8 @@ static int verify_alpn(SSL *client, SSL *server)
     }
 
     if (alpn_expected != NULL &&
-        (client_proto_len != strlen(alpn_expected) ||
-         memcmp(client_proto, alpn_expected, client_proto_len) != 0)) {
+        (client_proto_len != sgx_strlen(alpn_expected) ||
+         sgx_memcmp(client_proto, alpn_expected, client_proto_len) != 0)) {
         BIO_printf(bio_stdout,
                    "ALPN selected protocols not equal to expected protocol: %s\n",
                    alpn_expected);
@@ -508,7 +510,7 @@ static int custom_ext_1_cli_add_cb(SSL *s, unsigned int ext_type,
     if (ext_type != CUSTOM_EXT_TYPE_1)
         custom_ext_error = 1;
     *out = (const unsigned char *)custom_ext_cli_string;
-    *outlen = strlen(custom_ext_cli_string);
+    *outlen = sgx_strlen(custom_ext_cli_string);
     return 1;                   /* Send "abc" */
 }
 
@@ -526,7 +528,7 @@ static int custom_ext_2_cli_add_cb(SSL *s, unsigned int ext_type,
     if (ext_type != CUSTOM_EXT_TYPE_2)
         custom_ext_error = 1;
     *out = (const unsigned char *)custom_ext_cli_string;
-    *outlen = strlen(custom_ext_cli_string);
+    *outlen = sgx_strlen(custom_ext_cli_string);
     return 1;                   /* Send "abc" */
 }
 
@@ -548,7 +550,7 @@ static int custom_ext_3_cli_add_cb(SSL *s, unsigned int ext_type,
     if (ext_type != CUSTOM_EXT_TYPE_3)
         custom_ext_error = 1;
     *out = (const unsigned char *)custom_ext_cli_string;
-    *outlen = strlen(custom_ext_cli_string);
+    *outlen = sgx_strlen(custom_ext_cli_string);
     return 1;                   /* Send "abc" */
 }
 
@@ -558,9 +560,9 @@ static int custom_ext_3_cli_parse_cb(SSL *s, unsigned int ext_type,
 {
     if (ext_type != CUSTOM_EXT_TYPE_3)
         custom_ext_error = 1;
-    if (inlen != strlen(custom_ext_srv_string))
+    if (inlen != sgx_strlen(custom_ext_srv_string))
         custom_ext_error = 1;
-    if (memcmp(custom_ext_srv_string, in, inlen) != 0)
+    if (sgx_memcmp(custom_ext_srv_string, in, inlen) != 0)
         custom_ext_error = 1;   /* Check for "defg" */
     return 1;
 }
@@ -594,9 +596,9 @@ static int custom_ext_1_srv_parse_cb(SSL *s, unsigned int ext_type,
     if (ext_type != CUSTOM_EXT_TYPE_1)
         custom_ext_error = 1;
     /* Check for "abc" */
-    if (inlen != strlen(custom_ext_cli_string))
+    if (inlen != sgx_strlen(custom_ext_cli_string))
         custom_ext_error = 1;
-    if (memcmp(in, custom_ext_cli_string, inlen) != 0)
+    if (sgx_memcmp(in, custom_ext_cli_string, inlen) != 0)
         custom_ext_error = 1;
     return 1;
 }
@@ -615,9 +617,9 @@ static int custom_ext_2_srv_parse_cb(SSL *s, unsigned int ext_type,
     if (ext_type != CUSTOM_EXT_TYPE_2)
         custom_ext_error = 1;
     /* Check for "abc" */
-    if (inlen != strlen(custom_ext_cli_string))
+    if (inlen != sgx_strlen(custom_ext_cli_string))
         custom_ext_error = 1;
-    if (memcmp(in, custom_ext_cli_string, inlen) != 0)
+    if (sgx_memcmp(in, custom_ext_cli_string, inlen) != 0)
         custom_ext_error = 1;
     return 1;
 }
@@ -638,9 +640,9 @@ static int custom_ext_3_srv_parse_cb(SSL *s, unsigned int ext_type,
     if (ext_type != CUSTOM_EXT_TYPE_3)
         custom_ext_error = 1;
     /* Check for "abc" */
-    if (inlen != strlen(custom_ext_cli_string))
+    if (inlen != sgx_strlen(custom_ext_cli_string))
         custom_ext_error = 1;
-    if (memcmp(in, custom_ext_cli_string, inlen) != 0)
+    if (sgx_memcmp(in, custom_ext_cli_string, inlen) != 0)
         custom_ext_error = 1;
     return 1;
 }
@@ -650,7 +652,7 @@ static int custom_ext_3_srv_add_cb(SSL *s, unsigned int ext_type,
                                    size_t *outlen, int *al, void *arg)
 {
     *out = (const unsigned char *)custom_ext_srv_string;
-    *outlen = strlen(custom_ext_srv_string);
+    *outlen = sgx_strlen(custom_ext_srv_string);
     return 1;                   /* Send "defg" */
 }
 
@@ -934,7 +936,7 @@ int main(int argc, char *argv[])
 
     /* enable memory leak checking unless explicitly disabled */
     if (!((getenv("OPENSSL_DEBUG_MEMORY") != NULL)
-          && (0 == strcmp(getenv("OPENSSL_DEBUG_MEMORY"), "off")))) {
+          && (0 == sgx_strcmp(getenv("OPENSSL_DEBUG_MEMORY"), "off")))) {
         CRYPTO_malloc_debug_init();
         CRYPTO_set_mem_debug_options(V_CRYPTO_MDEBUG_ALL);
     } else {
@@ -951,7 +953,7 @@ int main(int argc, char *argv[])
     argv++;
 
     while (argc >= 1) {
-        if (!strcmp(*argv, "-F")) {
+        if (!sgx_strcmp(*argv, "-F")) {
 #ifdef OPENSSL_FIPS
             fips_mode = 1;
 #else
@@ -959,48 +961,48 @@ int main(int argc, char *argv[])
                     "not compiled with FIPS support, so exiting without running.\n");
             EXIT(0);
 #endif
-        } else if (strcmp(*argv, "-server_auth") == 0)
+        } else if (sgx_strcmp(*argv, "-server_auth") == 0)
             server_auth = 1;
-        else if (strcmp(*argv, "-client_auth") == 0)
+        else if (sgx_strcmp(*argv, "-client_auth") == 0)
             client_auth = 1;
-        else if (strcmp(*argv, "-proxy_auth") == 0) {
+        else if (sgx_strcmp(*argv, "-proxy_auth") == 0) {
             if (--argc < 1)
                 goto bad;
             app_verify_arg.proxy_auth = *(++argv);
-        } else if (strcmp(*argv, "-proxy_cond") == 0) {
+        } else if (sgx_strcmp(*argv, "-proxy_cond") == 0) {
             if (--argc < 1)
                 goto bad;
             app_verify_arg.proxy_cond = *(++argv);
-        } else if (strcmp(*argv, "-v") == 0)
+        } else if (sgx_strcmp(*argv, "-v") == 0)
             verbose = 1;
-        else if (strcmp(*argv, "-d") == 0)
+        else if (sgx_strcmp(*argv, "-d") == 0)
             debug = 1;
-        else if (strcmp(*argv, "-reuse") == 0)
+        else if (sgx_strcmp(*argv, "-reuse") == 0)
             reuse = 1;
-        else if (strcmp(*argv, "-dhe1024") == 0) {
+        else if (sgx_strcmp(*argv, "-dhe1024") == 0) {
 #ifndef OPENSSL_NO_DH
             dhe1024 = 1;
 #else
             fprintf(stderr,
                     "ignoring -dhe1024, since I'm compiled without DH\n");
 #endif
-        } else if (strcmp(*argv, "-dhe1024dsa") == 0) {
+        } else if (sgx_strcmp(*argv, "-dhe1024dsa") == 0) {
 #ifndef OPENSSL_NO_DH
             dhe1024dsa = 1;
 #else
             fprintf(stderr,
                     "ignoring -dhe1024, since I'm compiled without DH\n");
 #endif
-        } else if (strcmp(*argv, "-no_dhe") == 0)
+        } else if (sgx_strcmp(*argv, "-no_dhe") == 0)
             no_dhe = 1;
-        else if (strcmp(*argv, "-no_ecdhe") == 0)
+        else if (sgx_strcmp(*argv, "-no_ecdhe") == 0)
             no_ecdhe = 1;
-        else if (strcmp(*argv, "-psk") == 0) {
+        else if (sgx_strcmp(*argv, "-psk") == 0) {
             if (--argc < 1)
                 goto bad;
             psk_key = *(++argv);
 #ifndef OPENSSL_NO_PSK
-            if (strspn(psk_key, "abcdefABCDEF1234567890") != strlen(psk_key)) {
+            if (strspn(psk_key, "abcdefABCDEF1234567890") != sgx_strlen(psk_key)) {
                 BIO_printf(bio_err, "Not a hex number '%s'\n", *argv);
                 goto bad;
             }
@@ -1009,102 +1011,102 @@ int main(int argc, char *argv[])
 #endif
         }
 #ifndef OPENSSL_NO_SRP
-        else if (strcmp(*argv, "-srpuser") == 0) {
+        else if (sgx_strcmp(*argv, "-srpuser") == 0) {
             if (--argc < 1)
                 goto bad;
             srp_server_arg.expected_user = srp_client_arg.srplogin =
                 *(++argv);
             tls1 = 1;
-        } else if (strcmp(*argv, "-srppass") == 0) {
+        } else if (sgx_strcmp(*argv, "-srppass") == 0) {
             if (--argc < 1)
                 goto bad;
             srp_server_arg.pass = srp_client_arg.srppassin = *(++argv);
             tls1 = 1;
         }
 #endif
-        else if (strcmp(*argv, "-ssl2") == 0) {
+        else if (sgx_strcmp(*argv, "-ssl2") == 0) {
 #ifdef OPENSSL_NO_SSL2
             no_protocol = 1;
 #endif
             ssl2 = 1;
-        } else if (strcmp(*argv, "-tls1") == 0) {
+        } else if (sgx_strcmp(*argv, "-tls1") == 0) {
 #ifdef OPENSSL_NO_TLS1
             no_protocol = 1;
 #endif
             tls1 = 1;
-        } else if (strcmp(*argv, "-ssl3") == 0) {
+        } else if (sgx_strcmp(*argv, "-ssl3") == 0) {
 #ifdef OPENSSL_NO_SSL3_METHOD
             no_protocol = 1;
 #endif
             ssl3 = 1;
-        } else if (strncmp(*argv, "-num", 4) == 0) {
+        } else if (sgx_strncmp(*argv, "-num", 4) == 0) {
             if (--argc < 1)
                 goto bad;
             number = atoi(*(++argv));
             if (number == 0)
                 number = 1;
-        } else if (strcmp(*argv, "-bytes") == 0) {
+        } else if (sgx_strcmp(*argv, "-bytes") == 0) {
             if (--argc < 1)
                 goto bad;
             bytes = atol(*(++argv));
             if (bytes == 0L)
                 bytes = 1L;
-            i = strlen(argv[0]);
+            i = sgx_strlen(argv[0]);
             if (argv[0][i - 1] == 'k')
                 bytes *= 1024L;
             if (argv[0][i - 1] == 'm')
                 bytes *= 1024L * 1024L;
-        } else if (strcmp(*argv, "-cert") == 0) {
+        } else if (sgx_strcmp(*argv, "-cert") == 0) {
             if (--argc < 1)
                 goto bad;
             server_cert = *(++argv);
-        } else if (strcmp(*argv, "-s_cert") == 0) {
+        } else if (sgx_strcmp(*argv, "-s_cert") == 0) {
             if (--argc < 1)
                 goto bad;
             server_cert = *(++argv);
-        } else if (strcmp(*argv, "-key") == 0) {
+        } else if (sgx_strcmp(*argv, "-key") == 0) {
             if (--argc < 1)
                 goto bad;
             server_key = *(++argv);
-        } else if (strcmp(*argv, "-s_key") == 0) {
+        } else if (sgx_strcmp(*argv, "-s_key") == 0) {
             if (--argc < 1)
                 goto bad;
             server_key = *(++argv);
-        } else if (strcmp(*argv, "-c_cert") == 0) {
+        } else if (sgx_strcmp(*argv, "-c_cert") == 0) {
             if (--argc < 1)
                 goto bad;
             client_cert = *(++argv);
-        } else if (strcmp(*argv, "-c_key") == 0) {
+        } else if (sgx_strcmp(*argv, "-c_key") == 0) {
             if (--argc < 1)
                 goto bad;
             client_key = *(++argv);
-        } else if (strcmp(*argv, "-cipher") == 0) {
+        } else if (sgx_strcmp(*argv, "-cipher") == 0) {
             if (--argc < 1)
                 goto bad;
             cipher = *(++argv);
-        } else if (strcmp(*argv, "-CApath") == 0) {
+        } else if (sgx_strcmp(*argv, "-CApath") == 0) {
             if (--argc < 1)
                 goto bad;
             CApath = *(++argv);
-        } else if (strcmp(*argv, "-CAfile") == 0) {
+        } else if (sgx_strcmp(*argv, "-CAfile") == 0) {
             if (--argc < 1)
                 goto bad;
             CAfile = *(++argv);
-        } else if (strcmp(*argv, "-bio_pair") == 0) {
+        } else if (sgx_strcmp(*argv, "-bio_pair") == 0) {
             bio_pair = 1;
-        } else if (strcmp(*argv, "-f") == 0) {
+        } else if (sgx_strcmp(*argv, "-f") == 0) {
             force = 1;
-        } else if (strcmp(*argv, "-time") == 0) {
+        } else if (sgx_strcmp(*argv, "-time") == 0) {
             print_time = 1;
         }
 #ifndef OPENSSL_NO_COMP
-        else if (strcmp(*argv, "-zlib") == 0) {
+        else if (sgx_strcmp(*argv, "-zlib") == 0) {
             comp = COMP_ZLIB;
-        } else if (strcmp(*argv, "-rle") == 0) {
+        } else if (sgx_strcmp(*argv, "-rle") == 0) {
             comp = COMP_RLE;
         }
 #endif
-        else if (strcmp(*argv, "-named_curve") == 0) {
+        else if (sgx_strcmp(*argv, "-named_curve") == 0) {
             if (--argc < 1)
                 goto bad;
 #ifndef OPENSSL_NO_ECDH
@@ -1114,31 +1116,31 @@ int main(int argc, char *argv[])
                     "ignoring -named_curve, since I'm compiled without ECDH\n");
             ++argv;
 #endif
-        } else if (strcmp(*argv, "-app_verify") == 0) {
+        } else if (sgx_strcmp(*argv, "-app_verify") == 0) {
             app_verify_arg.app_verify = 1;
-        } else if (strcmp(*argv, "-proxy") == 0) {
+        } else if (sgx_strcmp(*argv, "-proxy") == 0) {
             app_verify_arg.allow_proxy_certs = 1;
-        } else if (strcmp(*argv, "-test_cipherlist") == 0) {
+        } else if (sgx_strcmp(*argv, "-test_cipherlist") == 0) {
             test_cipherlist = 1;
-        } else if (strcmp(*argv, "-serverinfo_sct") == 0) {
+        } else if (sgx_strcmp(*argv, "-serverinfo_sct") == 0) {
             serverinfo_sct = 1;
-        } else if (strcmp(*argv, "-serverinfo_tack") == 0) {
+        } else if (sgx_strcmp(*argv, "-serverinfo_tack") == 0) {
             serverinfo_tack = 1;
-        } else if (strcmp(*argv, "-serverinfo_file") == 0) {
+        } else if (sgx_strcmp(*argv, "-serverinfo_file") == 0) {
             if (--argc < 1)
                 goto bad;
             serverinfo_file = *(++argv);
-        } else if (strcmp(*argv, "-custom_ext") == 0) {
+        } else if (sgx_strcmp(*argv, "-custom_ext") == 0) {
             custom_ext = 1;
-        } else if (strcmp(*argv, "-alpn_client") == 0) {
+        } else if (sgx_strcmp(*argv, "-alpn_client") == 0) {
             if (--argc < 1)
                 goto bad;
             alpn_client = *(++argv);
-        } else if (strcmp(*argv, "-alpn_server") == 0) {
+        } else if (sgx_strcmp(*argv, "-alpn_server") == 0) {
             if (--argc < 1)
                 goto bad;
             alpn_server = *(++argv);
-        } else if (strcmp(*argv, "-alpn_expected") == 0) {
+        } else if (sgx_strcmp(*argv, "-alpn_expected") == 0) {
             if (--argc < 1)
                 goto bad;
             alpn_expected = *(++argv);
@@ -1520,7 +1522,7 @@ int main(int argc, char *argv[])
 
         if (gethostname(localhost, sizeof localhost - 1) == 0) {
             localhost[sizeof localhost - 1] = '\0';
-            if (strlen(localhost) == sizeof localhost - 1) {
+            if (sgx_strlen(localhost) == sizeof localhost - 1) {
                 BIO_printf(bio_err, "localhost name too long\n");
                 goto end;
             }
@@ -1677,7 +1679,7 @@ int doit_biopair(SSL *s_ssl, SSL *c_ssl, long count,
             int i, r;
             clock_t c_clock = clock();
 
-            memset(cbuf, 0, sizeof(cbuf));
+            sgx_memset(cbuf, 0, sizeof(cbuf));
 
             if (debug)
                 if (SSL_in_init(c_ssl))
@@ -1754,7 +1756,7 @@ int doit_biopair(SSL *s_ssl, SSL *c_ssl, long count,
             int i, r;
             clock_t s_clock = clock();
 
-            memset(sbuf, 0, sizeof(sbuf));
+            sgx_memset(sbuf, 0, sizeof(sbuf));
 
             if (debug)
                 if (SSL_in_init(s_ssl))
@@ -1914,12 +1916,12 @@ int doit_biopair(SSL *s_ssl, SSL *c_ssl, long count,
             if (!progress && !prev_progress)
                 if (cw_num > 0 || cr_num > 0 || sw_num > 0 || sr_num > 0) {
                     fprintf(stderr, "ERROR: got stuck\n");
-                    if (strcmp("SSLv2", SSL_get_version(c_ssl)) == 0) {
+                    if (sgx_strcmp("SSLv2", SSL_get_version(c_ssl)) == 0) {
                         fprintf(stderr, "This can happen for SSL2 because "
                                 "CLIENT-FINISHED and SERVER-VERIFY are written \n"
                                 "concurrently ...");
-                        if (strncmp("2SCF", SSL_state_string(c_ssl), 4) == 0
-                            && strncmp("2SSV", SSL_state_string(s_ssl),
+                        if (sgx_strncmp("2SCF", SSL_state_string(c_ssl), 4) == 0
+                            && sgx_strncmp("2SSV", SSL_state_string(s_ssl),
                                        4) == 0) {
                             fprintf(stderr, " ok.\n");
                             goto end;
@@ -2002,8 +2004,8 @@ int doit(SSL *s_ssl, SSL *c_ssl, long count)
     if ((sbuf = OPENSSL_malloc(bufsiz)) == NULL)
         goto err;
 
-    memset(cbuf, 0, bufsiz);
-    memset(sbuf, 0, bufsiz);
+    sgx_memset(cbuf, 0, bufsiz);
+    sgx_memset(sbuf, 0, bufsiz);
 
     c_to_s = BIO_new(BIO_s_mem());
     s_to_c = BIO_new(BIO_s_mem());
@@ -2429,7 +2431,7 @@ static int process_proxy_cond_val(unsigned int letters[26], const char *cond,
     int ok = 1;
     int negate = 0;
 
-    while (isspace((int)*cond)) {
+    while (sgx_isspace((int)*cond)) {
         cond++;
         (*pos)++;
     }
@@ -2444,7 +2446,7 @@ static int process_proxy_cond_val(unsigned int letters[26], const char *cond,
         negate = !negate;
         cond++;
         (*pos)++;
-        while (isspace((int)*cond)) {
+        while (sgx_isspace((int)*cond)) {
             cond++;
             (*pos)++;
         }
@@ -2459,7 +2461,7 @@ static int process_proxy_cond_val(unsigned int letters[26], const char *cond,
         cond = *cond_end;
         if (ok < 0)
             goto end;
-        while (isspace((int)*cond)) {
+        while (sgx_isspace((int)*cond)) {
             cond++;
             (*pos)++;
         }
@@ -2474,7 +2476,7 @@ static int process_proxy_cond_val(unsigned int letters[26], const char *cond,
         cond++;
         (*pos)++;
     } else if (isascii(c) && isalpha(c)) {
-        if (islower(c))
+        if (sgx_islower(c))
             c = toupper(c);
         ok = letters[c - 'A'];
         cond++;
@@ -2517,7 +2519,7 @@ static int process_proxy_cond_multipliers(unsigned int letters[26],
         goto end;
 
     while (ok >= 0) {
-        while (isspace((int)*cond)) {
+        while (sgx_isspace((int)*cond)) {
             cond++;
             (*pos)++;
         }
@@ -2956,7 +2958,7 @@ static unsigned int psk_server_callback(SSL *ssl, const char *identity,
 {
     unsigned int psk_len = 0;
 
-    if (strcmp(identity, "Client_identity") != 0) {
+    if (sgx_strcmp(identity, "Client_identity") != 0) {
         BIO_printf(bio_err, "server: PSK error: client identity not found\n");
         return 0;
     }

@@ -162,7 +162,7 @@ int RSA_verify_PKCS1_PSS_mgf1(RSA *rsa, const unsigned char *mHash,
     }
     if (!EVP_DigestFinal_ex(&ctx, H_, NULL))
         goto err;
-    if (memcmp(H_, H, hLen)) {
+    if (sgx_memcmp(H_, H, hLen)) {
         RSAerr(RSA_F_RSA_VERIFY_PKCS1_PSS_MGF1, RSA_R_BAD_SIGNATURE);
         ret = 0;
     } else

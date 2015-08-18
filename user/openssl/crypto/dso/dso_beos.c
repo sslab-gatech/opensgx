@@ -226,7 +226,7 @@ static char *beos_name_converter(DSO *dso, const char *filename)
     char *translated;
     int len, rsize, transform;
 
-    len = strlen(filename);
+    len = sgx_strlen(filename);
     rsize = len + 1;
     transform = (strstr(filename, "/") == NULL);
     if (transform) {

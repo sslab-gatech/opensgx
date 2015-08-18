@@ -189,7 +189,7 @@ int DSA_verify(int type, const unsigned char *dgst, int dgst_len,
         goto err;
     /* Ensure signature uses DER and doesn't have trailing garbage */
     derlen = i2d_DSA_SIG(s, &der);
-    if (derlen != siglen || memcmp(sigbuf, der, derlen))
+    if (derlen != siglen || sgx_memcmp(sigbuf, der, derlen))
         goto err;
     ret = DSA_do_verify(dgst, dgst_len, s, dsa);
  err:

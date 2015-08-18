@@ -19,74 +19,17 @@
 
 #pragma once
 
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-#include <malloc.h>
-#include <inttypes.h>
-#include <err.h>
-#include <assert.h>
 #include <sgx.h>
 
-//about a page
-#define STUB_ADDR       0x80800000
-#define HEAP_ADDR       0x80900000
-#define SGXLIB_MAX_ARG  512
+int cur_keid;
 
-typedef enum {
-    FUNC_UNSET,
-    FUNC_PUTS,
-    FUNC_CLOSE_SOCK,
-    FUNC_SEND,
-    FUNC_RECV,
-    FUNC_PUTCHAR,
+// user-level libs
+extern void enclu(enclu_cmd_t leaf, uint64_t rbx, uint64_t rcx, uint64_t rdx,
+                  out_regs_t* out_regs);
+tcs_t *init_enclave(void *base_addr, unsigned int entry_offset, unsigned int n_of_pages, char *conf);
 
-    FUNC_MALLOC,
-    FUNC_FREE,
+extern tcs_t *test_init_enclave(void *base_addr, unsigned int entry_offset, unsigned int n_of_code_pages);
+extern void exception_handler(void);
 
-    FUNC_SYSCALL,
-    PRINT_HEX,
-    FUNC_SOCKET,
-    FUNC_BIND,
-    FUNC_LISTEN,
-    FUNC_ACCEPT,
-    FUNC_CLOSE
-    // ...
-}fcode_t;
-
-typedef enum {
-    MALLOC_UNSET,
-    MALLOC_INIT,
-    REQUEST_EAUG,
-} mcode_t;
-
-
-typedef struct sgx_stub_info {
-    int   abi;
-    void  *trampoline;
-    tcs_t *tcs;
-
-    // in : from non-enclave to enclave
-    unsigned long heap_beg;
-    unsigned long heap_end;
-    unsigned long pending_page;
-    int  ret;
-    char in_data1[SGXLIB_MAX_ARG];
-    char in_data2[SGXLIB_MAX_ARG];
-    int  in_arg1;
-    int  in_arg2;
-
-    // out : from enclave to non-enclave
-    fcode_t fcode;
-    mcode_t mcode;
-    unsigned long addr;
-    int  out_arg1;
-    int  out_arg2;
-    char out_data1[SGXLIB_MAX_ARG];
-    char out_data2[SGXLIB_MAX_ARG];
-    char out_data3[SGXLIB_MAX_ARG];
-} sgx_stub_info;
-
-extern void execute_code(void);
-extern void sgx_trampoline(void);
-extern int sgx_init(void);
+extern void sgx_enter(tcs_t *tcs, void (*aep)());
+extern void sgx_resume(tcs_t *tcs, void (*aep)());

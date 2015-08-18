@@ -158,7 +158,7 @@ static int rsa_check_digestinfo(X509_SIG *sig, const unsigned char *dinfo,
     derlen = i2d_X509_SIG(sig, &der);
     if (derlen <= 0)
         return 0;
-    if (derlen == dinfolen && !memcmp(dinfo, der, derlen))
+    if (derlen == dinfolen && !sgx_memcmp(dinfo, der, derlen))
         ret = 1;
     OPENSSL_cleanse(der, derlen);
     OPENSSL_free(der);
@@ -215,10 +215,10 @@ int int_rsa_verify(int dtype, const unsigned char *m,
      */
     if (dtype == NID_mdc2 && i == 18 && s[0] == 0x04 && s[1] == 0x10) {
         if (rm) {
-            memcpy(rm, s + 2, 16);
+            sgx_memcpy(rm, s + 2, 16);
             *prm_len = 16;
             ret = 1;
-        } else if (memcmp(m, s + 2, 16))
+        } else if (sgx_memcmp(m, s + 2, 16))
             RSAerr(RSA_F_INT_RSA_VERIFY, RSA_R_BAD_SIGNATURE);
         else
             ret = 1;
@@ -226,7 +226,7 @@ int int_rsa_verify(int dtype, const unsigned char *m,
 
     /* Special case: SSL signature */
     if (dtype == NID_md5_sha1) {
-        if ((i != SSL_SIG_LENGTH) || memcmp(s, m, SSL_SIG_LENGTH))
+        if ((i != SSL_SIG_LENGTH) || sgx_memcmp(s, m, SSL_SIG_LENGTH))
             RSAerr(RSA_F_INT_RSA_VERIFY, RSA_R_BAD_SIGNATURE);
         else
             ret = 1;
@@ -281,12 +281,12 @@ int int_rsa_verify(int dtype, const unsigned char *m,
             if (md && (EVP_MD_size(md) != sig->digest->length))
                 RSAerr(RSA_F_INT_RSA_VERIFY, RSA_R_INVALID_DIGEST_LENGTH);
             else {
-                memcpy(rm, sig->digest->data, sig->digest->length);
+                sgx_memcpy(rm, sig->digest->data, sig->digest->length);
                 *prm_len = sig->digest->length;
                 ret = 1;
             }
         } else if (((unsigned int)sig->digest->length != m_len) ||
-                   (memcmp(m, sig->digest->data, m_len) != 0)) {
+                   (sgx_memcmp(m, sig->digest->data, m_len) != 0)) {
             RSAerr(RSA_F_INT_RSA_VERIFY, RSA_R_BAD_SIGNATURE);
         } else
             ret = 1;

@@ -62,8 +62,6 @@
 #include "cryptlib.h"
 #include <openssl/bio.h>
 
-#include "../sgx.h"
-
 #ifndef OPENSSL_NO_SOCK
 
 # ifdef OPENSSL_SYS_WIN16
@@ -479,7 +477,7 @@ static long conn_ctrl(BIO *b, int cmd, long num, void *ptr)
                 if (data->param_hostname != NULL)
                     OPENSSL_free(data->param_hostname);
                 data->param_hostname = BUF_strdup(buf);
-                memcpy(&(data->ip[0]), ptr, 4);
+                sgx_memcpy(&(data->ip[0]), ptr, 4);
             } else if (num == 3) {
                 char buf[DECIMAL_SIZE(int) + 1];
 
@@ -582,7 +580,7 @@ static int conn_puts(BIO *bp, const char *str)
 {
     int n, ret;
 
-    n = strlen(str);
+    n = sgx_strlen(str);
     ret = conn_write(bp, str, n);
     return (ret);
 }

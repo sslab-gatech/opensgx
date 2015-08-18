@@ -547,7 +547,7 @@ static int bind_capi(ENGINE *e)
 # ifndef OPENSSL_NO_DYNAMIC_ENGINE
 static int bind_helper(ENGINE *e, const char *id)
 {
-    if (id && (strcmp(id, engine_capi_id) != 0))
+    if (id && (sgx_strcmp(id, engine_capi_id) != 0))
         return 0;
     if (!bind_capi(e))
         return 0;
@@ -1384,7 +1384,7 @@ static PCCERT_CONTEXT capi_find_cert(CAPI_CTX * ctx, const char *id,
                 return NULL;
             fname = capi_cert_get_fname(ctx, cert);
             if (fname) {
-                if (strcmp(fname, id))
+                if (sgx_strcmp(fname, id))
                     match = 0;
                 else
                     match = 1;

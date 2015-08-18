@@ -142,7 +142,7 @@ static void hashlength(SHA_CTX *sha, size_t l)
 
 static void hashstring(SHA_CTX *sha, const char *string)
 {
-    size_t l = strlen(string);
+    size_t l = sgx_strlen(string);
 
     hashlength(sha, l);
     SHA1_Update(sha, string, l);
@@ -465,7 +465,7 @@ int JPAKE_STEP3A_process(JPAKE_CTX *ctx, const JPAKE_STEP3A *received)
 
     quickhashbn(hhk, ctx->key);
     SHA1(hhk, sizeof hhk, hhk);
-    if (memcmp(hhk, received->hhk, sizeof hhk)) {
+    if (sgx_memcmp(hhk, received->hhk, sizeof hhk)) {
         JPAKEerr(JPAKE_F_JPAKE_STEP3A_PROCESS,
                  JPAKE_R_HASH_OF_HASH_OF_KEY_MISMATCH);
         return 0;
@@ -493,7 +493,7 @@ int JPAKE_STEP3B_process(JPAKE_CTX *ctx, const JPAKE_STEP3B *received)
     unsigned char hk[SHA_DIGEST_LENGTH];
 
     quickhashbn(hk, ctx->key);
-    if (memcmp(hk, received->hk, sizeof hk)) {
+    if (sgx_memcmp(hk, received->hk, sizeof hk)) {
         JPAKEerr(JPAKE_F_JPAKE_STEP3B_PROCESS, JPAKE_R_HASH_OF_KEY_MISMATCH);
         return 0;
     }

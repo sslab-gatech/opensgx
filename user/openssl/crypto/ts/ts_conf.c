@@ -213,13 +213,13 @@ int TS_CONF_set_default_engine(const char *name)
     int ret = 0;
 
     /* Leave the default if builtin specified. */
-    if (strcmp(name, "builtin") == 0)
+    if (sgx_strcmp(name, "builtin") == 0)
         return 1;
 
     if (!(e = ENGINE_by_id(name)))
         goto err;
     /* Enable the use of the NCipher HSM for forked children. */
-    if (strcmp(name, "chil") == 0)
+    if (sgx_strcmp(name, "chil") == 0)
         ENGINE_ctrl(e, ENGINE_CTRL_CHIL_SET_FORKCHECK, 1, 0, 0);
     /* All the operations are going to be carried out by the engine. */
     if (!ENGINE_set_default(e, ENGINE_METHOD_ALL))
@@ -408,13 +408,13 @@ int TS_CONF_set_accuracy(CONF *conf, const char *section, TS_RESP_CTX *ctx)
     }
     for (i = 0; i < sk_CONF_VALUE_num(list); ++i) {
         CONF_VALUE *val = sk_CONF_VALUE_value(list, i);
-        if (strcmp(val->name, ENV_VALUE_SECS) == 0) {
+        if (sgx_strcmp(val->name, ENV_VALUE_SECS) == 0) {
             if (val->value)
                 secs = atoi(val->value);
-        } else if (strcmp(val->name, ENV_VALUE_MILLISECS) == 0) {
+        } else if (sgx_strcmp(val->name, ENV_VALUE_MILLISECS) == 0) {
             if (val->value)
                 millis = atoi(val->value);
-        } else if (strcmp(val->name, ENV_VALUE_MICROSECS) == 0) {
+        } else if (sgx_strcmp(val->name, ENV_VALUE_MICROSECS) == 0) {
             if (val->value)
                 micros = atoi(val->value);
         } else {
@@ -462,9 +462,9 @@ static int TS_CONF_add_flag(CONF *conf, const char *section,
     /* Default is false. */
     const char *value = NCONF_get_string(conf, section, field);
     if (value) {
-        if (strcmp(value, ENV_VALUE_YES) == 0)
+        if (sgx_strcmp(value, ENV_VALUE_YES) == 0)
             TS_RESP_CTX_add_flags(ctx, flag);
-        else if (strcmp(value, ENV_VALUE_NO) != 0) {
+        else if (sgx_strcmp(value, ENV_VALUE_NO) != 0) {
             TS_CONF_invalid(section, field);
             return 0;
         }

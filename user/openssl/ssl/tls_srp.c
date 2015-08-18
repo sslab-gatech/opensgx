@@ -412,7 +412,7 @@ int SRP_generate_client_master_secret(SSL *s, unsigned char *master_key)
     BN_clear_free(K);
     BN_clear_free(x);
     if (passwd) {
-        OPENSSL_cleanse(passwd, strlen(passwd));
+        OPENSSL_cleanse(passwd, sgx_strlen(passwd));
         OPENSSL_free(passwd);
     }
     BN_clear_free(u);

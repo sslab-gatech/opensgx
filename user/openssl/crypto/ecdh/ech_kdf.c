@@ -99,7 +99,7 @@ int ECDH_KDF_X9_62(unsigned char *out, size_t outlen,
         } else {
             if (!EVP_DigestFinal(&mctx, mtmp, NULL))
                 goto err;
-            memcpy(out, mtmp, outlen);
+            sgx_memcpy(out, mtmp, outlen);
             OPENSSL_cleanse(mtmp, mdlen);
             break;
         }

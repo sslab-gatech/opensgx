@@ -647,22 +647,22 @@ static void print_leak_doall_arg(const MEM *m, MEM_LEAK *l)
 
         BIO_snprintf(bufp, BUF_REMAIN, "[%02d:%02d:%02d] ",
                      lcl->tm_hour, lcl->tm_min, lcl->tm_sec);
-        bufp += strlen(bufp);
+        bufp += sgx_strlen(bufp);
     }
 
     BIO_snprintf(bufp, BUF_REMAIN, "%5lu file=%s, line=%d, ",
                  m->order, m->file, m->line);
-    bufp += strlen(bufp);
+    bufp += sgx_strlen(bufp);
 
     if (options & V_CRYPTO_MDEBUG_THREAD) {
         BIO_snprintf(bufp, BUF_REMAIN, "thread=%lu, ",
                      CRYPTO_THREADID_hash(&m->threadid));
-        bufp += strlen(bufp);
+        bufp += sgx_strlen(bufp);
     }
 
     BIO_snprintf(bufp, BUF_REMAIN, "number=%d, address=%08lX\n",
                  m->num, (unsigned long)m->addr);
-    bufp += strlen(bufp);
+    bufp += sgx_strlen(bufp);
 
     BIO_puts(l->bio, buf);
 
@@ -685,14 +685,14 @@ static void print_leak_doall_arg(const MEM *m, MEM_LEAK *l)
                      " thread=%lu, file=%s, line=%d, info=\"",
                      CRYPTO_THREADID_hash(&amip->threadid), amip->file,
                      amip->line);
-        buf_len = strlen(buf);
-        info_len = strlen(amip->info);
+        buf_len = sgx_strlen(buf);
+        info_len = sgx_strlen(amip->info);
         if (128 - buf_len - 3 < info_len) {
-            memcpy(buf + buf_len, amip->info, 128 - buf_len - 3);
+            sgx_memcpy(buf + buf_len, amip->info, 128 - buf_len - 3);
             buf_len = 128 - 3;
         } else {
             BUF_strlcpy(buf + buf_len, amip->info, sizeof buf - buf_len);
-            buf_len = strlen(buf);
+            buf_len = sgx_strlen(buf);
         }
         BIO_snprintf(buf + buf_len, sizeof buf - buf_len, "\"\n");
 

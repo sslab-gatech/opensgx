@@ -146,7 +146,7 @@ IMPLEMENT_ssl23_meth_func(SSLv23_client_method,
 int ssl23_connect(SSL *s)
 {
     BUF_MEM *buf = NULL;
-    unsigned long Time = (unsigned long)time(NULL);
+    unsigned long Time = (unsigned long)sgx_time(NULL);
     void (*cb) (const SSL *ssl, int type, int val) = NULL;
     int ret = -1;
     int new_state, state;
@@ -286,7 +286,7 @@ int ssl_fill_hello_random(SSL *s, int server, unsigned char *result, int len)
     else
         send_time = (s->mode & SSL_MODE_SEND_CLIENTHELLO_TIME) != 0;
     if (send_time) {
-        unsigned long Time = (unsigned long)time(NULL);
+        unsigned long Time = (unsigned long)sgx_time(NULL);
         unsigned char *p = result;
         l2n(Time, p);
         return RAND_pseudo_bytes(p, len - 4);
@@ -467,12 +467,12 @@ static int ssl23_client_hello(SSL *s)
             else
                 i = ch_len;
             s2n(i, d);
-            memset(&(s->s3->client_random[0]), 0, SSL3_RANDOM_SIZE);
+            sgx_memset(&(s->s3->client_random[0]), 0, SSL3_RANDOM_SIZE);
             if (RAND_pseudo_bytes
                 (&(s->s3->client_random[SSL3_RANDOM_SIZE - i]), i) <= 0)
                 return -1;
 
-            memcpy(p, &(s->s3->client_random[SSL3_RANDOM_SIZE - i]), i);
+            sgx_memcpy(p, &(s->s3->client_random[SSL3_RANDOM_SIZE - i]), i);
             p += i;
 
             i = p - &(buf[2]);
@@ -497,7 +497,7 @@ static int ssl23_client_hello(SSL *s)
             *(p++) = version_minor;
 
             /* Random stuff */
-            memcpy(p, s->s3->client_random, SSL3_RANDOM_SIZE);
+            sgx_memcpy(p, s->s3->client_random, SSL3_RANDOM_SIZE);
             p += SSL3_RANDOM_SIZE;
 
             /* Session ID (zero since there is no reuse) */
@@ -629,7 +629,7 @@ static int ssl23_get_server_hello(SSL *s)
         return (n);
     p = s->packet;
 
-    memcpy(buf, p, n);
+    sgx_memcpy(buf, p, n);
 
     if ((p[0] & 0x80) && (p[2] == SSL2_MT_SERVER_HELLO) &&
         (p[5] == 0x00) && (p[6] == 0x02)) {
@@ -667,7 +667,7 @@ static int ssl23_get_server_hello(SSL *s)
         i = (SSL3_RANDOM_SIZE < ch_len)
             ? SSL3_RANDOM_SIZE : ch_len;
         s->s2->challenge_length = i;
-        memcpy(s->s2->challenge,
+        sgx_memcpy(s->s2->challenge,
                &(s->s3->client_random[SSL3_RANDOM_SIZE - i]), i);
 
         if (s->s3 != NULL)
@@ -693,7 +693,7 @@ static int ssl23_get_server_hello(SSL *s)
         s->rstate = SSL_ST_READ_HEADER;
         s->packet_length = n;
         s->packet = &(s->s2->rbuf[0]);
-        memcpy(s->packet, buf, n);
+        sgx_memcpy(s->packet, buf, n);
         s->s2->rbuf_left = n;
         s->s2->rbuf_offs = 0;
 
@@ -785,7 +785,7 @@ static int ssl23_get_server_hello(SSL *s)
             if (!ssl3_setup_read_buffer(s))
                 goto err;
         s->packet = &(s->s3->rbuf.buf[0]);
-        memcpy(s->packet, buf, n);
+        sgx_memcpy(s->packet, buf, n);
         s->s3->rbuf.left = n;
         s->s3->rbuf.offset = 0;
 

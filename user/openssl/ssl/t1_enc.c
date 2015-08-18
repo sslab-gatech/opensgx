@@ -167,7 +167,6 @@ static int tls1_P_hash(const EVP_MD *md, const unsigned char *sec,
     int ret = 0;
 
     chunk = EVP_MD_size(md);
-    OPENSSL_assert(chunk >= 0);
 
     EVP_MD_CTX_init(&ctx);
     EVP_MD_CTX_init(&ctx_tmp);
@@ -190,6 +189,7 @@ static int tls1_P_hash(const EVP_MD *md, const unsigned char *sec,
         goto err;
     if (seed5 && !EVP_DigestSignUpdate(&ctx, seed5, seed5_len))
         goto err;
+    sgx_debug("tls1_P_hash 1\n");
     if (!EVP_DigestSignFinal(&ctx, A1, &A1_len))
         goto err;
 
@@ -213,21 +213,25 @@ static int tls1_P_hash(const EVP_MD *md, const unsigned char *sec,
             goto err;
 
         if (olen > chunk) {
+            sgx_debug("tls1_P_hash 2\n");
             if (!EVP_DigestSignFinal(&ctx, out, &j))
                 goto err;
             out += j;
             olen -= j;
             /* calc the next A1 value */
+            sgx_debug("tls1_P_hash 3\n");
             if (!EVP_DigestSignFinal(&ctx_tmp, A1, &A1_len))
                 goto err;
         } else {                /* last one */
 
+            sgx_debug("tls1_P_hash 4\n");
             if (!EVP_DigestSignFinal(&ctx, A1, &A1_len))
                 goto err;
-            memcpy(out, A1, olen);
+            sgx_memcpy(out, A1, olen);
             break;
         }
     }
+    sgx_debug("tls1_P_hash 7\n");
     ret = 1;
  err:
     EVP_PKEY_free(mac_key);
@@ -254,6 +258,7 @@ static int tls1_PRF(long digest_mask,
     const EVP_MD *md;
     int ret = 0;
 
+    sgx_debug("tls1_PRF 1\n");
     /* Count number of digests and partition sec evenly */
     count = 0;
     for (idx = 0; ssl_get_handshake_digest(idx, &m, &md); idx++) {
@@ -264,18 +269,23 @@ static int tls1_PRF(long digest_mask,
     if (count == 1)
         slen = 0;
     S1 = sec;
-    memset(out1, 0, olen);
+    sgx_debug("tls1_PRF 2\n");
+    sgx_memset(out1, 0, olen);
+    sgx_debug("tls1_PRF 3\n");
     for (idx = 0; ssl_get_handshake_digest(idx, &m, &md); idx++) {
+        sgx_debug("tls1_PRF loop\n");
         if ((m << TLS1_PRF_DGST_SHIFT) & digest_mask) {
             if (!md) {
                 SSLerr(SSL_F_TLS1_PRF, SSL_R_UNSUPPORTED_DIGEST_TYPE);
                 goto err;
             }
+            sgx_debug("tls1_PRF 4\n");
             if (!tls1_P_hash(md, S1, len + (slen & 1),
                              seed1, seed1_len, seed2, seed2_len, seed3,
                              seed3_len, seed4, seed4_len, seed5, seed5_len,
                              out2, olen))
                 goto err;
+            sgx_debug("tls1_PRF 5\n");
             S1 += len;
             for (i = 0; i < olen; i++) {
                 out1[i] ^= out2[i];
@@ -402,7 +412,7 @@ int tls1_change_cipher_state(SSL *s, int which)
          * this is done by dtls1_reset_seq_numbers for DTLS1_VERSION
          */
         if (s->version != DTLS1_VERSION)
-            memset(&(s->s3->read_sequence[0]), 0, 8);
+            sgx_memset(&(s->s3->read_sequence[0]), 0, 8);
         mac_secret = &(s->s3->read_mac_secret[0]);
         mac_secret_size = &(s->s3->read_mac_secret_size);
     } else {
@@ -440,7 +450,7 @@ int tls1_change_cipher_state(SSL *s, int which)
          * this is done by dtls1_reset_seq_numbers for DTLS1_VERSION
          */
         if (s->version != DTLS1_VERSION)
-            memset(&(s->s3->write_sequence[0]), 0, 8);
+            sgx_memset(&(s->s3->write_sequence[0]), 0, 8);
         mac_secret = &(s->s3->write_mac_secret[0]);
         mac_secret_size = &(s->s3->write_mac_secret_size);
     }
@@ -489,7 +499,7 @@ int tls1_change_cipher_state(SSL *s, int which)
         goto err2;
     }
 
-    memcpy(mac_secret, ms, i);
+    sgx_memcpy(mac_secret, ms, i);
 
     if (!(EVP_CIPHER_flags(c) & EVP_CIPH_FLAG_AEAD_CIPHER)) {
         mac_key = EVP_PKEY_new_mac_key(mac_type, NULL,
@@ -781,7 +791,7 @@ int tls1_enc(SSL *s, int send)
 #endif                          /* KSSL_DEBUG */
 
     if ((s->session == NULL) || (ds == NULL) || (enc == NULL)) {
-        memmove(rec->data, rec->input, rec->length);
+        sgx_memmove(rec->data, rec->input, rec->length);
         rec->input = rec->data;
         ret = 1;
     } else {
@@ -797,10 +807,10 @@ int tls1_enc(SSL *s, int send)
                 unsigned char dtlsseq[9], *p = dtlsseq;
 
                 s2n(send ? s->d1->w_epoch : s->d1->r_epoch, p);
-                memcpy(p, &seq[2], 6);
-                memcpy(buf, dtlsseq, 8);
+                sgx_memcpy(p, &seq[2], 6);
+                sgx_memcpy(buf, dtlsseq, 8);
             } else {
-                memcpy(buf, seq, 8);
+                sgx_memcpy(buf, seq, 8);
                 for (i = 7; i >= 0; i--) { /* increment */
                     ++seq[i];
                     if (seq[i] != 0)
@@ -960,11 +970,14 @@ int tls1_final_finish_mac(SSL *s,
         }
     }
 
+    sgx_debug("tls1_final_finish_mac 1\n");
+    sgx_print_bytes(s->session->master_key, s->session->master_key_length);
     if (!tls1_PRF(ssl_get_algorithm2(s),
                   str, slen, buf, (int)(q - buf), NULL, 0, NULL, 0, NULL, 0,
                   s->session->master_key, s->session->master_key_length,
                   out, buf2, sizeof buf2))
         err = 1;
+    sgx_debug("tls1_final_finish_mac 2\n");
     EVP_MD_CTX_cleanup(&ctx);
 
     if (err)
@@ -1013,11 +1026,11 @@ int tls1_mac(SSL *ssl, unsigned char *md, int send)
         unsigned char dtlsseq[8], *p = dtlsseq;
 
         s2n(send ? ssl->d1->w_epoch : ssl->d1->r_epoch, p);
-        memcpy(p, &seq[2], 6);
+        sgx_memcpy(p, &seq[2], 6);
 
-        memcpy(header, dtlsseq, 8);
+        sgx_memcpy(header, dtlsseq, 8);
     } else
-        memcpy(header, seq, 8);
+        sgx_memcpy(header, seq, 8);
 
     /*
      * kludge: tls1_cbc_remove_padding passes padding length in rec->type
@@ -1197,11 +1210,11 @@ int tls1_export_keying_material(SSL *s, unsigned char *out, size_t olen,
     if (val == NULL)
         goto err2;
     currentvalpos = 0;
-    memcpy(val + currentvalpos, (unsigned char *)label, llen);
+    sgx_memcpy(val + currentvalpos, (unsigned char *)label, llen);
     currentvalpos += llen;
-    memcpy(val + currentvalpos, s->s3->client_random, SSL3_RANDOM_SIZE);
+    sgx_memcpy(val + currentvalpos, s->s3->client_random, SSL3_RANDOM_SIZE);
     currentvalpos += SSL3_RANDOM_SIZE;
-    memcpy(val + currentvalpos, s->s3->server_random, SSL3_RANDOM_SIZE);
+    sgx_memcpy(val + currentvalpos, s->s3->server_random, SSL3_RANDOM_SIZE);
     currentvalpos += SSL3_RANDOM_SIZE;
 
     if (use_context) {
@@ -1210,7 +1223,7 @@ int tls1_export_keying_material(SSL *s, unsigned char *out, size_t olen,
         val[currentvalpos] = contextlen & 0xff;
         currentvalpos++;
         if ((contextlen > 0) || (context != NULL)) {
-            memcpy(val + currentvalpos, context, contextlen);
+            sgx_memcpy(val + currentvalpos, context, contextlen);
         }
     }
 
@@ -1219,16 +1232,16 @@ int tls1_export_keying_material(SSL *s, unsigned char *out, size_t olen,
      * label len) = 15, so size of val > max(prohibited label len) = 15 and
      * the comparisons won't have buffer overflow
      */
-    if (memcmp(val, TLS_MD_CLIENT_FINISH_CONST,
+    if (sgx_memcmp(val, TLS_MD_CLIENT_FINISH_CONST,
                TLS_MD_CLIENT_FINISH_CONST_SIZE) == 0)
         goto err1;
-    if (memcmp(val, TLS_MD_SERVER_FINISH_CONST,
+    if (sgx_memcmp(val, TLS_MD_SERVER_FINISH_CONST,
                TLS_MD_SERVER_FINISH_CONST_SIZE) == 0)
         goto err1;
-    if (memcmp(val, TLS_MD_MASTER_SECRET_CONST,
+    if (sgx_memcmp(val, TLS_MD_MASTER_SECRET_CONST,
                TLS_MD_MASTER_SECRET_CONST_SIZE) == 0)
         goto err1;
-    if (memcmp(val, TLS_MD_KEY_EXPANSION_CONST,
+    if (sgx_memcmp(val, TLS_MD_KEY_EXPANSION_CONST,
                TLS_MD_KEY_EXPANSION_CONST_SIZE) == 0)
         goto err1;
 

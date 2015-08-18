@@ -108,6 +108,8 @@ static inline char *realpath(const char *path, char *resolved_path)
 void configure_icount(const char *option);
 extern int use_icount;
 
+extern int guest_ins_count;
+
 #include "qemu/osdep.h"
 #include "qemu/bswap.h"
 
@@ -269,6 +271,10 @@ int cpu_load(QEMUFile *f, void *opaque, int version_id);
 
 /* Unblock cpu */
 void qemu_cpu_kick_self(void);
+
+/* Number of fetched instructions per second.  */
+extern uint64_t clock_ifetch;
+uint64_t convert_string_to_frequency(const char *string);
 
 /* work queue */
 struct qemu_work_item {

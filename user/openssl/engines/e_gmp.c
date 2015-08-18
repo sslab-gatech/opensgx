@@ -470,7 +470,7 @@ IMPLEMENT_DYNAMIC_CHECK_FN()
 #  ifndef OPENSSL_NO_GMP
 static int bind_fn(ENGINE *e, const char *id)
 {
-    if (id && (strcmp(id, engine_e_gmp_id) != 0))
+    if (id && (sgx_strcmp(id, engine_e_gmp_id) != 0))
         return 0;
     if (!bind_helper(e))
         return 0;

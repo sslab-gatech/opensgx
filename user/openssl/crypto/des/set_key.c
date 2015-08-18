@@ -67,6 +67,8 @@
 #include <openssl/crypto.h>
 #include "des_locl.h"
 
+#include "../sgx.h"
+
 OPENSSL_IMPLEMENT_GLOBAL(int, DES_check_key, 0)
                                                     /*
                                                      * defaults to false
@@ -162,7 +164,7 @@ int DES_is_weak_key(const_DES_cblock *key)
          * 93/06/29 Another problem, I was comparing only the first 4 bytes,
          * 97/03/18
          */
-        if (memcmp(weak_keys[i], key, sizeof(DES_cblock)) == 0)
+        if (sgx_memcmp(weak_keys[i], key, sizeof(DES_cblock)) == 0)
             return (1);
     return (0);
 }
@@ -377,7 +379,7 @@ void private_DES_set_key_unchecked(const_DES_cblock *key,
     register int i;
 
 #ifdef OPENBSD_DEV_CRYPTO
-    memcpy(schedule->key, key, sizeof schedule->key);
+    sgx_memcpy(schedule->key, key, sizeof schedule->key);
     schedule->session = NULL;
 #endif
     k = &schedule->ks->deslong[0];

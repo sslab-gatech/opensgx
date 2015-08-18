@@ -67,8 +67,6 @@
 #include "cryptlib.h"
 #include "bn_lcl.h"
 
-#include "../sgx.h"
-
 const char BN_version[] = "Big Number" OPENSSL_VERSION_PTEXT;
 
 /* This stuff appears to be completely unused, so is deprecated */
@@ -362,8 +360,8 @@ static BN_ULONG *bn_expand_internal(const BIGNUM *b, int words)
         }
     }
 #else
-    memset(A, 0, sizeof(BN_ULONG) * words);
-    memcpy(A, b->d, sizeof(b->d[0]) * b->top);
+    sgx_memset(A, 0, sizeof(BN_ULONG) * words);
+    sgx_memcpy(A, b->d, sizeof(b->d[0]) * b->top);
 #endif
 
     return (a);
@@ -467,6 +465,7 @@ BIGNUM *bn_expand2(BIGNUM *b, int words)
     }
 #endif
     bn_check_top(b);
+
     return b;
 }
 
@@ -527,7 +526,7 @@ BIGNUM *BN_copy(BIGNUM *a, const BIGNUM *b)
     case 0:;
     }
 #else
-    memcpy(a->d, b->d, sizeof(b->d[0]) * b->top);
+    sgx_memcpy(a->d, b->d, sizeof(b->d[0]) * b->top);
 #endif
 
     a->top = b->top;
@@ -575,7 +574,7 @@ void BN_clear(BIGNUM *a)
 {
     bn_check_top(a);
     if (a->d != NULL)
-        memset(a->d, 0, a->dmax * sizeof(a->d[0]));
+        sgx_memset(a->d, 0, a->dmax * sizeof(a->d[0]));
     a->top = 0;
     a->neg = 0;
 }
@@ -738,16 +737,21 @@ int BN_set_bit(BIGNUM *a, int n)
 
     i = n / BN_BITS2;
     j = n % BN_BITS2;
+
     if (a->top <= i) {
-        if (bn_wexpand(a, i + 1) == NULL)
+        if (bn_wexpand(a, i + 1) == NULL) {
             return (0);
+        }
+
         for (k = a->top; k < i + 1; k++)
             a->d[k] = 0;
         a->top = i + 1;
+
     }
 
     a->d[i] |= (((BN_ULONG)1) << j);
     bn_check_top(a);
+
     return (1);
 }
 

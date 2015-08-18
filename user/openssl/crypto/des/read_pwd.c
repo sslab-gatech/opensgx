@@ -259,7 +259,7 @@ static void read_till_nl(FILE *in)
 
     do {
         fgets(buf, SIZE, in);
-    } while (strchr(buf, '\n') == NULL);
+    } while (sgx_strchr(buf, '\n') == NULL);
 }
 
 /* return 0 if ok, 1 (or -1) otherwise */
@@ -328,7 +328,7 @@ int des_read_pw(char *buf, char *buff, int size, const char *prompt,
 #  endif
             return (-1);
     }
-    memcpy(&(tty_new), &(tty_orig), sizeof(tty_orig));
+    sgx_memcpy(&(tty_new), &(tty_orig), sizeof(tty_orig));
 # endif
 # ifdef OPENSSL_SYS_VMS
     status = sys$assign(&terminal, &channel, 0, 0);
@@ -378,7 +378,7 @@ int des_read_pw(char *buf, char *buff, int size, const char *prompt,
             goto error;
         if (ferror(tty))
             goto error;
-        if ((p = (char *)strchr(buf, '\n')) != NULL)
+        if ((p = (char *)sgx_strchr(buf, '\n')) != NULL)
             *p = '\0';
         else
             read_till_nl(tty);
@@ -389,12 +389,12 @@ int des_read_pw(char *buf, char *buff, int size, const char *prompt,
             fgets(buff, size, tty);
             if (feof(tty))
                 goto error;
-            if ((p = (char *)strchr(buff, '\n')) != NULL)
+            if ((p = (char *)sgx_strchr(buff, '\n')) != NULL)
                 *p = '\0';
             else
                 read_till_nl(tty);
 
-            if (strcmp(buf, buff) != 0) {
+            if (sgx_strcmp(buf, buff) != 0) {
                 fprintf(stderr, "\nVerify failure");
                 fflush(stderr);
                 break;

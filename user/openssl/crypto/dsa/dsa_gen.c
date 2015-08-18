@@ -91,8 +91,6 @@
 #  include <openssl/fips.h>
 # endif
 
-#include "../sgx.h"
-
 int DSA_generate_parameters_ex(DSA *ret, int bits,
                                const unsigned char *seed_in, int seed_len,
                                int *counter_ret, unsigned long *h_ret,
@@ -176,7 +174,7 @@ int dsa_builtin_paramgen(DSA *ret, size_t bits, size_t qbits,
                                  * SEED, but our internal buffers are
                                  * restricted to 160 bits */
     if (seed_in != NULL)
-        memcpy(seed, seed_in, seed_len);
+        sgx_memcpy(seed, seed_in, seed_len);
 
     if ((ctx = BN_CTX_new()) == NULL)
         goto err;
@@ -213,8 +211,8 @@ int dsa_builtin_paramgen(DSA *ret, size_t bits, size_t qbits,
                 seed_len = 0;   /* use random seed if 'seed_in' turns out to
                                  * be bad */
             }
-            memcpy(buf, seed, qsize);
-            memcpy(buf2, seed, qsize);
+            sgx_memcpy(buf, seed, qsize);
+            sgx_memcpy(buf2, seed, qsize);
             /* precompute "SEED + 1" for step 7: */
             for (i = qsize - 1; i >= 0; i--) {
                 buf[i]++;
@@ -376,7 +374,7 @@ int dsa_builtin_paramgen(DSA *ret, size_t bits, size_t qbits,
         if (h_ret != NULL)
             *h_ret = h;
         if (seed_out)
-            memcpy(seed_out, seed, qsize);
+            sgx_memcpy(seed_out, seed, qsize);
     }
     if (ctx) {
         BN_CTX_end(ctx);
@@ -459,7 +457,7 @@ int dsa_builtin_paramgen2(DSA *ret, size_t L, size_t N,
             goto err;
 
         if (seed_in)
-            memcpy(seed, seed_in, seed_len);
+            sgx_memcpy(seed, seed_in, seed_len);
 
     }
 
@@ -482,7 +480,7 @@ int dsa_builtin_paramgen2(DSA *ret, size_t L, size_t N,
         p = ret->p;
         q = ret->q;
         if (idx >= 0)
-            memcpy(seed_tmp, seed, seed_len);
+            sgx_memcpy(seed_tmp, seed, seed_len);
         goto g_only;
     } else {
         p = BN_CTX_get(ctx);
@@ -539,7 +537,7 @@ int dsa_builtin_paramgen2(DSA *ret, size_t L, size_t N,
         }
         /* Copy seed to seed_out before we mess with it */
         if (seed_out)
-            memcpy(seed_out, seed, seed_len);
+            sgx_memcpy(seed_out, seed, seed_len);
 
         if (!BN_GENCB_call(cb, 2, 0))
             goto err;

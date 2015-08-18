@@ -7,7 +7,29 @@
 #include <inttypes.h>
 #include <err.h>
 #include <assert.h>
+#include <time.h>
 #include <sgx.h>
+/*
+#include "sgx-tor-trampoline.h"
+#include <string.h>
+#include <sgx-kern.h>
+#include <sgx-user.h>
+#include <sgx-utils.h>
+#include <sgx-crypto.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <unistd.h>
+#include <sgx-malloc.h>
+#include <errno.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <time.h>
+#include <ctype.h>
+
+#include <openssl/objects.h>
+#include <openssl/ssl.h>
+*/
 
 //about a page
 #define STUB_ADDR_TOR   0x80700000
@@ -20,11 +42,19 @@ typedef enum {
     FUNC_OPEN,
     FUNC_MKDIR,
     FUNC_MKNOD,
-    FUNC_WRITE,
-    FUNC_READ,
     FUNC_SNPRINTF,
-    FUNC_TIME,
-    FUNC_MEMCHR
+    FUNC_QSORT,
+    FUNC_STRNCASECMP,
+    FUNC_STRNCMP,
+    FUNC_ISSPACE,
+    FUNC_TOLOWER,
+    FUNC_ISDIGIT,
+    FUNC_DEBUG,
+    FUNC_LOCALTIME,
+    FUNC_GMTIME,
+    FUNC_STRFTIME,
+    FUNC_MKTIME,
+    FUNC_PRINT_BYTES // To be added
 }fcode_t_tor;
 
 typedef struct sgx_stub_info_tor {
@@ -37,11 +67,16 @@ typedef struct sgx_stub_info_tor {
     char in_data2[SGXLIB_MAX_ARG];
     int  in_arg1;
     int  in_arg2;
+    size_t in_arg3;
+    struct tm in_tm;
 
     // out : from enclave to non-enclave
     fcode_t_tor fcode;
     int  out_arg1;
     int  out_arg2;
+    int  out_arg3;
+    time_t out_arg4;
+    struct tm out_tm;
     char out_data1[SGXLIB_MAX_ARG];
     char out_data2[SGXLIB_MAX_ARG];
     char out_data3[SGXLIB_MAX_ARG];

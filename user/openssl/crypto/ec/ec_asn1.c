@@ -62,6 +62,8 @@
 #include <openssl/asn1t.h>
 #include <openssl/objects.h>
 
+#include "../sgx.h"
+
 int EC_GROUP_get_basis_type(const EC_GROUP *group)
 {
     int i = 0;
@@ -855,7 +857,7 @@ static EC_GROUP *ec_asn1_parameters2group(const ECPARAMETERS *params)
             ECerr(EC_F_EC_ASN1_PARAMETERS2GROUP, ERR_R_MALLOC_FAILURE);
             goto err;
         }
-        memcpy(ret->seed, params->curve->seed->data,
+        sgx_memcpy(ret->seed, params->curve->seed->data,
                params->curve->seed->length);
         ret->seed_len = params->curve->seed->length;
     }

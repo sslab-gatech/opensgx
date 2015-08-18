@@ -132,7 +132,7 @@
 # include <openssl/ossl_typ.h>
 # include <openssl/crypto.h>
 
-#include "../../crypto/sgx.h"
+#include "../sgx.h"
 
 #ifdef  __cplusplus
 extern "C" {

@@ -158,7 +158,7 @@ $sp=&DWP(28,"esp");
 	&mov	("ecx","ebp");
 	&lea	("edi",&DWP(64+$pad,"esp","ecx",4));# pointer to ap copy
 	&mov	($A,"edi");
-	&data_byte(0xf3,0xa5);		# rep movsl, memcpy
+	&data_byte(0xf3,0xa5);		# rep movsl, sgx_memcpy
 	&mov	("ecx",$pad/4);
 	&data_byte(0xf3,0xab);		# rep stosl, bzero pad
 	# edi points at the end of padded ap copy...
@@ -166,7 +166,7 @@ $sp=&DWP(28,"esp");
 	&mov	("ecx","ebp");
 	&mov	("esi","ebx");
 	&mov	($B,"edi");
-	&data_byte(0xf3,0xa5);		# rep movsl, memcpy
+	&data_byte(0xf3,0xa5);		# rep movsl, sgx_memcpy
 	&mov	("ecx",$pad/4);
 	&data_byte(0xf3,0xab);		# rep stosl, bzero pad
 	# edi points at the end of padded bp copy...
@@ -174,7 +174,7 @@ $sp=&DWP(28,"esp");
 	&mov	("ecx","ebp");
 	&mov	("esi","edx");
 	&mov	($M,"edi");
-	&data_byte(0xf3,0xa5);		# rep movsl, memcpy
+	&data_byte(0xf3,0xa5);		# rep movsl, sgx_memcpy
 	&mov	("ecx",$pad/4);
 	&data_byte(0xf3,0xab);		# rep stosl, bzero pad
 	# edi points at the end of padded np copy...

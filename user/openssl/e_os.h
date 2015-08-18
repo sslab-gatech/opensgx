@@ -147,8 +147,8 @@ extern "C" {
 #   define WIN_CONSOLE_BUG
 #  endif
 # else
-#  define get_last_sys_error()    errno
-#  define clear_sys_error()       errno=0
+#  define get_last_sys_error()    sgx_errno
+#  define clear_sys_error()       sgx_errno=0
 # endif
 
 # if defined(WINDOWS)
@@ -158,64 +158,64 @@ extern "C" {
 #  define writesocket(s,b,n)      send((s),(b),(n),0)
 # elif defined(__DJGPP__)
 #  define WATT32
-#  define get_last_socket_error() errno
-#  define clear_socket_error()    errno=0
+#  define get_last_socket_error() sgx_errno
+#  define clear_socket_error()    sgx_errno=0
 #  define closesocket(s)          close_s(s)
 #  define readsocket(s,b,n)       read_s(s,b,n)
 #  define writesocket(s,b,n)      send(s,b,n,0)
 # elif defined(MAC_OS_pre_X)
-#  define get_last_socket_error() errno
-#  define clear_socket_error()    errno=0
+#  define get_last_socket_error() sgx_errno
+#  define clear_socket_error()    sgx_errno=0
 #  define closesocket(s)          MacSocket_close(s)
 #  define readsocket(s,b,n)       MacSocket_recv((s),(b),(n),true)
 #  define writesocket(s,b,n)      MacSocket_send((s),(b),(n))
 # elif defined(OPENSSL_SYS_VMS)
-#  define get_last_socket_error() errno
-#  define clear_socket_error()    errno=0
+#  define get_last_socket_error() sgx_errno
+#  define clear_socket_error()    sgx_errno=0
 #  define ioctlsocket(a,b,c)      ioctl(a,b,c)
-#  define closesocket(s)          close(s)
-#  define readsocket(s,b,n)       recv((s),(b),(n),0)
-#  define writesocket(s,b,n)      send((s),(b),(n),0)
+#  define closesocket(s)          sgx_close(s)
+#  define readsocket(s,b,n)       sgx_recv((s),(b),(n),0)
+#  define writesocket(s,b,n)      sgx_send((s),(b),(n),0)
 # elif defined(OPENSSL_SYS_VXWORKS)
-#  define get_last_socket_error() errno
-#  define clear_socket_error()    errno=0
+#  define get_last_socket_error() sgx_errno
+#  define clear_socket_error()    sgx_errno=0
 #  define ioctlsocket(a,b,c)          ioctl((a),(b),(int)(c))
-#  define closesocket(s)              close(s)
-#  define readsocket(s,b,n)           read((s),(b),(n))
-#  define writesocket(s,b,n)          write((s),(char *)(b),(n))
+#  define closesocket(s)              sgx_close(s)
+#  define readsocket(s,b,n)           sgx_read((s),(b),(n))
+#  define writesocket(s,b,n)          sgx_write((s),(char *)(b),(n))
 # elif defined(OPENSSL_SYS_BEOS_R5)
-#  define get_last_socket_error() errno
-#  define clear_socket_error()    errno=0
+#  define get_last_socket_error() sgx_errno
+#  define clear_socket_error()    sgx_errno=0
 #  define FIONBIO SO_NONBLOCK
 #  define ioctlsocket(a,b,c)                setsockopt((a),SOL_SOCKET,(b),(c),sizeof(*(c)))
-#  define readsocket(s,b,n)       recv((s),(b),(n),0)
-#  define writesocket(s,b,n)      send((s),(b),(n),0)
+#  define readsocket(s,b,n)       sgx_recv((s),(b),(n),0)
+#  define writesocket(s,b,n)      sgx_send((s),(b),(n),0)
 # elif defined(OPENSSL_SYS_NETWARE)
 #  if defined(NETWARE_BSDSOCK)
-#   define get_last_socket_error() errno
-#   define clear_socket_error()    errno=0
-#   define closesocket(s)          close(s)
+#   define get_last_socket_error() sgx_errno
+#   define clear_socket_error()    sgx_errno=0
+#   define closesocket(s)          sgx_close(s)
 #   define ioctlsocket(a,b,c)      ioctl(a,b,c)
 #   if defined(NETWARE_LIBC)
-#    define readsocket(s,b,n)       recv((s),(b),(n),0)
-#    define writesocket(s,b,n)      send((s),(b),(n),0)
+#    define readsocket(s,b,n)       sgx_recv((s),(b),(n),0)
+#    define writesocket(s,b,n)      sgx_send((s),(b),(n),0)
 #   else
-#    define readsocket(s,b,n)       recv((s),(char*)(b),(n),0)
-#    define writesocket(s,b,n)      send((s),(char*)(b),(n),0)
+#    define readsocket(s,b,n)       sgx_recv((s),(char*)(b),(n),0)
+#    define writesocket(s,b,n)      sgx_send((s),(char*)(b),(n),0)
 #   endif
 #  else
 #   define get_last_socket_error() WSAGetLastError()
 #   define clear_socket_error()    WSASetLastError(0)
-#   define readsocket(s,b,n)               recv((s),(b),(n),0)
-#   define writesocket(s,b,n)              send((s),(b),(n),0)
+#   define readsocket(s,b,n)               sgx_recv((s),(b),(n),0)
+#   define writesocket(s,b,n)              sgx_send((s),(b),(n),0)
 #  endif
 # else
-#  define get_last_socket_error() errno
-#  define clear_socket_error()    errno=0
+#  define get_last_socket_error() sgx_errno
+#  define clear_socket_error()    sgx_errno=0
 #  define ioctlsocket(a,b,c)      ioctl(a,b,c)
-#  define closesocket(s)          close(s)
-#  define readsocket(s,b,n)       read((s),(b),(n))
-#  define writesocket(s,b,n)      write((s),(b),(n))
+#  define closesocket(s)          sgx_close(s)
+#  define readsocket(s,b,n)       sgx_read((s),(b),(n))
+#  define writesocket(s,b,n)      sgx_write((s),(b),(n))
 # endif
 
 # ifdef WIN16                   /* never the case */
@@ -674,7 +674,7 @@ extern int sys_nerr;
         (((errnum)<0 || (errnum)>=sys_nerr) ? NULL : sys_errlist[errnum])
   /* Being signed SunOS 4.x memcpy breaks ASN1_OBJECT table lookup */
 #  include "crypto/o_str.h"
-#  define memcmp OPENSSL_memcmp
+#  define sgx_memcmp OPENSSL_memcmp
 # endif
 
 # ifndef OPENSSL_EXIT

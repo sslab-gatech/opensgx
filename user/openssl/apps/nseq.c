@@ -82,15 +82,15 @@ int MAIN(int argc, char **argv)
     ERR_load_crypto_strings();
     args = argv + 1;
     while (!badarg && *args && *args[0] == '-') {
-        if (!strcmp(*args, "-toseq"))
+        if (!sgx_strcmp(*args, "-toseq"))
             toseq = 1;
-        else if (!strcmp(*args, "-in")) {
+        else if (!sgx_strcmp(*args, "-in")) {
             if (args[1]) {
                 args++;
                 infile = *args;
             } else
                 badarg = 1;
-        } else if (!strcmp(*args, "-out")) {
+        } else if (!sgx_strcmp(*args, "-out")) {
             if (args[1]) {
                 args++;
                 outfile = *args;

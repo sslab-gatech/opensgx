@@ -88,10 +88,10 @@ static int t_fromb64(unsigned char *a, const char *src)
 
     while (*src && (*src == ' ' || *src == '\t' || *src == '\n'))
         ++src;
-    size = strlen(src);
+    size = sgx_strlen(src);
     i = 0;
     while (i < size) {
-        loc = strchr(b64table, src[i]);
+        loc = sgx_strchr(b64table, src[i]);
         if (loc == (char *)0)
             break;
         else
@@ -231,7 +231,7 @@ static int SRP_user_pwd_set_sv(SRP_user_pwd *vinfo, const char *s,
     unsigned char tmp[MAX_LEN];
     int len;
 
-    if (strlen(s) > MAX_LEN || strlen(v) > MAX_LEN)
+    if (strlen(s) > MAX_LEN || sgx_strlen(v) > MAX_LEN)
         return 0;
     len = t_fromb64(tmp, v);
     if (NULL == (vinfo->v = BN_bin2bn(tmp, len, NULL)))
@@ -319,7 +319,7 @@ static SRP_gN *SRP_get_gN_by_id(const char *id, STACK_OF(SRP_gN) *gN_tab)
     if (gN_tab != NULL)
         for (i = 0; i < sk_SRP_gN_num(gN_tab); i++) {
             gN = sk_SRP_gN_value(gN_tab, i);
-            if (gN && (id == NULL || strcmp(gN->id, id) == 0))
+            if (gN && (id == NULL || sgx_strcmp(gN->id, id) == 0))
                 return gN;
         }
 
@@ -335,7 +335,7 @@ static BIGNUM *SRP_gN_place_bn(STACK_OF(SRP_gN_cache) *gN_cache, char *ch)
     /* search if we have already one... */
     for (i = 0; i < sk_SRP_gN_cache_num(gN_cache); i++) {
         SRP_gN_cache *cache = sk_SRP_gN_cache_value(gN_cache, i);
-        if (strcmp(cache->b64_bn, ch) == 0)
+        if (sgx_strcmp(cache->b64_bn, ch) == 0)
             return cache->bn;
     }
     {                           /* it is the first time that we find it */
@@ -480,7 +480,7 @@ SRP_user_pwd *SRP_VBASE_get_by_user(SRP_VBASE *vb, char *username)
         return NULL;
     for (i = 0; i < sk_SRP_user_pwd_num(vb->users_pwd); i++) {
         user = sk_SRP_user_pwd_value(vb->users_pwd, i);
-        if (strcmp(user->id, username) == 0)
+        if (sgx_strcmp(user->id, username) == 0)
             return user;
     }
     if ((vb->seed_key == NULL) ||
@@ -500,8 +500,8 @@ SRP_user_pwd *SRP_VBASE_get_by_user(SRP_VBASE *vb, char *username)
     RAND_pseudo_bytes(digv, SHA_DIGEST_LENGTH);
     EVP_MD_CTX_init(&ctxt);
     EVP_DigestInit_ex(&ctxt, EVP_sha1(), NULL);
-    EVP_DigestUpdate(&ctxt, vb->seed_key, strlen(vb->seed_key));
-    EVP_DigestUpdate(&ctxt, username, strlen(username));
+    EVP_DigestUpdate(&ctxt, vb->seed_key, sgx_strlen(vb->seed_key));
+    EVP_DigestUpdate(&ctxt, username, sgx_strlen(username));
     EVP_DigestFinal_ex(&ctxt, digs, NULL);
     EVP_MD_CTX_cleanup(&ctxt);
     if (SRP_user_pwd_set_sv_BN

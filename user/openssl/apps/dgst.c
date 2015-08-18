@@ -88,7 +88,7 @@ static void list_md_fn(const EVP_MD *m,
         return;
     mname = OBJ_nid2ln(EVP_MD_type(m));
     /* Skip shortnames */
-    if (strcmp(from, mname))
+    if (sgx_strcmp(from, mname))
         return;
     /* Skip clones */
     if (EVP_MD_flags(m) & EVP_MD_FLAG_PKEY_DIGEST)
@@ -154,81 +154,81 @@ int MAIN(int argc, char **argv)
     while (argc > 0) {
         if ((*argv)[0] != '-')
             break;
-        if (strcmp(*argv, "-c") == 0)
+        if (sgx_strcmp(*argv, "-c") == 0)
             separator = 1;
-        else if (strcmp(*argv, "-r") == 0)
+        else if (sgx_strcmp(*argv, "-r") == 0)
             separator = 2;
-        else if (strcmp(*argv, "-rand") == 0) {
+        else if (sgx_strcmp(*argv, "-rand") == 0) {
             if (--argc < 1)
                 break;
             randfile = *(++argv);
-        } else if (strcmp(*argv, "-out") == 0) {
+        } else if (sgx_strcmp(*argv, "-out") == 0) {
             if (--argc < 1)
                 break;
             outfile = *(++argv);
-        } else if (strcmp(*argv, "-sign") == 0) {
+        } else if (sgx_strcmp(*argv, "-sign") == 0) {
             if (--argc < 1)
                 break;
             keyfile = *(++argv);
-        } else if (!strcmp(*argv, "-passin")) {
+        } else if (!sgx_strcmp(*argv, "-passin")) {
             if (--argc < 1)
                 break;
             passargin = *++argv;
-        } else if (strcmp(*argv, "-verify") == 0) {
+        } else if (sgx_strcmp(*argv, "-verify") == 0) {
             if (--argc < 1)
                 break;
             keyfile = *(++argv);
             want_pub = 1;
             do_verify = 1;
-        } else if (strcmp(*argv, "-prverify") == 0) {
+        } else if (sgx_strcmp(*argv, "-prverify") == 0) {
             if (--argc < 1)
                 break;
             keyfile = *(++argv);
             do_verify = 1;
-        } else if (strcmp(*argv, "-signature") == 0) {
+        } else if (sgx_strcmp(*argv, "-signature") == 0) {
             if (--argc < 1)
                 break;
             sigfile = *(++argv);
-        } else if (strcmp(*argv, "-keyform") == 0) {
+        } else if (sgx_strcmp(*argv, "-keyform") == 0) {
             if (--argc < 1)
                 break;
             keyform = str2fmt(*(++argv));
         }
 #ifndef OPENSSL_NO_ENGINE
-        else if (strcmp(*argv, "-engine") == 0) {
+        else if (sgx_strcmp(*argv, "-engine") == 0) {
             if (--argc < 1)
                 break;
             engine = *(++argv);
             e = setup_engine(bio_err, engine, 0);
-        } else if (strcmp(*argv, "-engine_impl") == 0)
+        } else if (sgx_strcmp(*argv, "-engine_impl") == 0)
             engine_impl = 1;
 #endif
-        else if (strcmp(*argv, "-hex") == 0)
+        else if (sgx_strcmp(*argv, "-hex") == 0)
             out_bin = 0;
-        else if (strcmp(*argv, "-binary") == 0)
+        else if (sgx_strcmp(*argv, "-binary") == 0)
             out_bin = 1;
-        else if (strcmp(*argv, "-d") == 0)
+        else if (sgx_strcmp(*argv, "-d") == 0)
             debug = 1;
-        else if (!strcmp(*argv, "-fips-fingerprint"))
+        else if (!sgx_strcmp(*argv, "-fips-fingerprint"))
             hmac_key = "etaonrishdlcupfm";
-        else if (strcmp(*argv, "-non-fips-allow") == 0)
+        else if (sgx_strcmp(*argv, "-non-fips-allow") == 0)
             non_fips_allow = 1;
-        else if (!strcmp(*argv, "-hmac")) {
+        else if (!sgx_strcmp(*argv, "-hmac")) {
             if (--argc < 1)
                 break;
             hmac_key = *++argv;
-        } else if (!strcmp(*argv, "-mac")) {
+        } else if (!sgx_strcmp(*argv, "-mac")) {
             if (--argc < 1)
                 break;
             mac_name = *++argv;
-        } else if (strcmp(*argv, "-sigopt") == 0) {
+        } else if (sgx_strcmp(*argv, "-sigopt") == 0) {
             if (--argc < 1)
                 break;
             if (!sigopts)
                 sigopts = sk_OPENSSL_STRING_new_null();
             if (!sigopts || !sk_OPENSSL_STRING_push(sigopts, *(++argv)))
                 break;
-        } else if (strcmp(*argv, "-macopt") == 0) {
+        } else if (sgx_strcmp(*argv, "-macopt") == 0) {
             if (--argc < 1)
                 break;
             if (!macopts)

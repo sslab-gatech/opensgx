@@ -92,11 +92,11 @@ struct tm *OPENSSL_gmtime(const time_t *timer, struct tm *result)
     gmtime_r(timer, result);
     ts = result;
 #elif !defined(OPENSSL_SYS_VMS) || defined(VMS_GMTIME_OK)
-    ts = gmtime(timer);
+    ts = sgx_gmtime(timer);
     if (ts == NULL)
         return NULL;
 
-    memcpy(result, ts, sizeof(struct tm));
+    sgx_memcpy(result, ts, sizeof(struct tm));
     ts = result;
 #endif
 #if defined( OPENSSL_SYS_VMS) && !defined( VMS_GMTIME_OK)

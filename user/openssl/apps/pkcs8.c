@@ -104,7 +104,7 @@ int MAIN(int argc, char **argv)
     OpenSSL_add_all_algorithms();
     args = argv + 1;
     while (!badarg && *args && *args[0] == '-') {
-        if (!strcmp(*args, "-v2")) {
+        if (!sgx_strcmp(*args, "-v2")) {
             if (args[1]) {
                 args++;
                 cipher = EVP_get_cipherbyname(*args);
@@ -114,7 +114,7 @@ int MAIN(int argc, char **argv)
                 }
             } else
                 badarg = 1;
-        } else if (!strcmp(*args, "-v1")) {
+        } else if (!sgx_strcmp(*args, "-v1")) {
             if (args[1]) {
                 args++;
                 pbe_nid = OBJ_txt2nid(*args);
@@ -124,7 +124,7 @@ int MAIN(int argc, char **argv)
                 }
             } else
                 badarg = 1;
-        } else if (!strcmp(*args, "-v2prf")) {
+        } else if (!sgx_strcmp(*args, "-v2prf")) {
             if (args[1]) {
                 args++;
                 pbe_nid = OBJ_txt2nid(*args);
@@ -134,53 +134,53 @@ int MAIN(int argc, char **argv)
                 }
             } else
                 badarg = 1;
-        } else if (!strcmp(*args, "-inform")) {
+        } else if (!sgx_strcmp(*args, "-inform")) {
             if (args[1]) {
                 args++;
                 informat = str2fmt(*args);
             } else
                 badarg = 1;
-        } else if (!strcmp(*args, "-outform")) {
+        } else if (!sgx_strcmp(*args, "-outform")) {
             if (args[1]) {
                 args++;
                 outformat = str2fmt(*args);
             } else
                 badarg = 1;
-        } else if (!strcmp(*args, "-topk8"))
+        } else if (!sgx_strcmp(*args, "-topk8"))
             topk8 = 1;
-        else if (!strcmp(*args, "-noiter"))
+        else if (!sgx_strcmp(*args, "-noiter"))
             iter = 1;
-        else if (!strcmp(*args, "-nocrypt"))
+        else if (!sgx_strcmp(*args, "-nocrypt"))
             nocrypt = 1;
-        else if (!strcmp(*args, "-nooct"))
+        else if (!sgx_strcmp(*args, "-nooct"))
             p8_broken = PKCS8_NO_OCTET;
-        else if (!strcmp(*args, "-nsdb"))
+        else if (!sgx_strcmp(*args, "-nsdb"))
             p8_broken = PKCS8_NS_DB;
-        else if (!strcmp(*args, "-embed"))
+        else if (!sgx_strcmp(*args, "-embed"))
             p8_broken = PKCS8_EMBEDDED_PARAM;
-        else if (!strcmp(*args, "-passin")) {
+        else if (!sgx_strcmp(*args, "-passin")) {
             if (!args[1])
                 goto bad;
             passargin = *(++args);
-        } else if (!strcmp(*args, "-passout")) {
+        } else if (!sgx_strcmp(*args, "-passout")) {
             if (!args[1])
                 goto bad;
             passargout = *(++args);
         }
 #ifndef OPENSSL_NO_ENGINE
-        else if (strcmp(*args, "-engine") == 0) {
+        else if (sgx_strcmp(*args, "-engine") == 0) {
             if (!args[1])
                 goto bad;
             engine = *(++args);
         }
 #endif
-        else if (!strcmp(*args, "-in")) {
+        else if (!sgx_strcmp(*args, "-in")) {
             if (args[1]) {
                 args++;
                 infile = *args;
             } else
                 badarg = 1;
-        } else if (!strcmp(*args, "-out")) {
+        } else if (!sgx_strcmp(*args, "-out")) {
             if (args[1]) {
                 args++;
                 outfile = *args;

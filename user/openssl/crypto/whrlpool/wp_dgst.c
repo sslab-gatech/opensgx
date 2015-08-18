@@ -119,12 +119,12 @@ void WHIRLPOOL_BitUpdate(WHIRLPOOL_CTX *c, const void *_inp, size_t bits)
                 if (bits >= bitrem) {
                     bits -= bitrem;
                     bitrem /= 8;
-                    memcpy(c->data + byteoff, inp, bitrem);
+                    sgx_memcpy(c->data + byteoff, inp, bitrem);
                     inp += bitrem;
                     whirlpool_block(c, c->data, 1);
                     bitoff = 0;
                 } else {
-                    memcpy(c->data + byteoff, inp, bits / 8);
+                    sgx_memcpy(c->data + byteoff, inp, bits / 8);
                     bitoff += (unsigned int)bits;
                     bits = 0;
                 }
@@ -238,7 +238,7 @@ int WHIRLPOOL_Final(unsigned char *md, WHIRLPOOL_CTX *c)
     whirlpool_block(c, c->data, 1);
 
     if (md) {
-        memcpy(md, c->H.c, WHIRLPOOL_DIGEST_LENGTH);
+        sgx_memcpy(md, c->H.c, WHIRLPOOL_DIGEST_LENGTH);
         sgx_memset(c, 0, sizeof(*c));
         return (1);
     }

@@ -848,7 +848,7 @@ int CMS_SignerInfo_verify_content(CMS_SignerInfo *si, BIO *chain)
             goto err;
         }
 
-        if (memcmp(mval, os->data, mlen)) {
+        if (sgx_memcmp(mval, os->data, mlen)) {
             CMSerr(CMS_F_CMS_SIGNERINFO_VERIFY_CONTENT,
                    CMS_R_VERIFICATION_FAILURE);
             r = 0;

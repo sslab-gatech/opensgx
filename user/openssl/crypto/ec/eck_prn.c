@@ -67,8 +67,6 @@
 #include <openssl/ec.h>
 #include <openssl/bn.h>
 
-#include "../sgx.h"
-
 #ifndef OPENSSL_NO_FP_API
 int ECPKParameters_print_fp(FILE *fp, const EC_GROUP *x, int off)
 {

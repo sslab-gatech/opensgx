@@ -87,7 +87,7 @@ int X509_NAME_get_text_by_OBJ(X509_NAME *name, ASN1_OBJECT *obj, char *buf,
     i = (data->length > (len - 1)) ? (len - 1) : data->length;
     if (buf == NULL)
         return (data->length);
-    memcpy(buf, data->data, i);
+    sgx_memcpy(buf, data->data, i);
     buf[i] = '\0';
     return (i);
 }
@@ -369,7 +369,7 @@ int X509_NAME_ENTRY_set_data(X509_NAME_ENTRY *ne, int type,
                                       len, type,
                                       OBJ_obj2nid(ne->object)) ? 1 : 0;
     if (len < 0)
-        len = strlen((const char *)bytes);
+        len = sgx_strlen((const char *)bytes);
     i = ASN1_STRING_set(ne->value, bytes, len);
     if (!i)
         return (0);

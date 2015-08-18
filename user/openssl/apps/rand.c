@@ -102,31 +102,31 @@ int MAIN(int argc, char **argv)
     badopt = 0;
     i = 0;
     while (!badopt && argv[++i] != NULL) {
-        if (strcmp(argv[i], "-out") == 0) {
+        if (sgx_strcmp(argv[i], "-out") == 0) {
             if ((argv[i + 1] != NULL) && (outfile == NULL))
                 outfile = argv[++i];
             else
                 badopt = 1;
         }
 #ifndef OPENSSL_NO_ENGINE
-        else if (strcmp(argv[i], "-engine") == 0) {
+        else if (sgx_strcmp(argv[i], "-engine") == 0) {
             if ((argv[i + 1] != NULL) && (engine == NULL))
                 engine = argv[++i];
             else
                 badopt = 1;
         }
 #endif
-        else if (strcmp(argv[i], "-rand") == 0) {
+        else if (sgx_strcmp(argv[i], "-rand") == 0) {
             if ((argv[i + 1] != NULL) && (inrand == NULL))
                 inrand = argv[++i];
             else
                 badopt = 1;
-        } else if (strcmp(argv[i], "-base64") == 0) {
+        } else if (sgx_strcmp(argv[i], "-base64") == 0) {
             if (!base64)
                 base64 = 1;
             else
                 badopt = 1;
-        } else if (strcmp(argv[i], "-hex") == 0) {
+        } else if (sgx_strcmp(argv[i], "-hex") == 0) {
             if (!hex)
                 hex = 1;
             else

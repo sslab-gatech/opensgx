@@ -99,7 +99,7 @@ int ECDSA_verify(int type, const unsigned char *dgst, int dgst_len,
         goto err;
     /* Ensure signature uses DER and doesn't have trailing garbage */
     derlen = i2d_ECDSA_SIG(s, &der);
-    if (derlen != sig_len || memcmp(sigbuf, der, derlen))
+    if (derlen != sig_len || sgx_memcmp(sigbuf, der, derlen))
         goto err;
     ret = ECDSA_do_verify(dgst, dgst_len, s, eckey);
  err:

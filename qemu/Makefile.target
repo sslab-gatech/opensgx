@@ -77,6 +77,7 @@ all: $(PROGS) stap
 # cpu emulator library
 obj-y = exec.o translate-all.o cpu-exec.o
 obj-y += tcg/tcg.o tcg/optimize.o
+obj-y += tcg/tcg-plugin.o
 obj-$(CONFIG_TCG_INTERPRETER) += tci.o
 obj-$(CONFIG_TCG_INTERPRETER) += disas/tci.o
 obj-y += fpu/softfloat.o

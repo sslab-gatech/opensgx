@@ -143,7 +143,7 @@ IMPLEMENT_ssl2_meth_func(SSLv2_server_method,
 
 int ssl2_accept(SSL *s)
 {
-    unsigned long l = (unsigned long)time(NULL);
+    unsigned long l = (unsigned long)sgx_time(NULL);
     BUF_MEM *buf = NULL;
     int ret = -1;
     long num1;
@@ -446,7 +446,7 @@ static int get_client_master_key(SSL *s)
     }
     p += 10;
 
-    memcpy(s->session->key_arg, &(p[s->s2->tmp.clear + s->s2->tmp.enc]),
+    sgx_memcpy(s->session->key_arg, &(p[s->s2->tmp.clear + s->s2->tmp.enc]),
            (unsigned int)keya);
 
     if (s->cert->pkeys[SSL_PKEY_RSA_ENC].privatekey == NULL) {
@@ -521,7 +521,7 @@ static int get_client_master_key(SSL *s)
         return -1;
     }
     s->session->master_key_length = i;
-    memcpy(s->session->master_key, p, (unsigned int)i);
+    sgx_memcpy(s->session->master_key, p, (unsigned int)i);
     return (1);
 }
 
@@ -684,7 +684,7 @@ static int get_client_hello(SSL *s)
         SSLerr(SSL_F_GET_CLIENT_HELLO, ERR_R_INTERNAL_ERROR);
         return -1;
     }
-    memcpy(s->s2->challenge, p, (unsigned int)s->s2->challenge_length);
+    sgx_memcpy(s->s2->challenge, p, (unsigned int)s->s2->challenge_length);
     return (1);
  mem_err:
     SSLerr(SSL_F_GET_CLIENT_HELLO, ERR_R_MALLOC_FAILURE);
@@ -777,7 +777,7 @@ static int server_hello(SSL *s)
         if (RAND_pseudo_bytes(s->s2->conn_id, (int)s->s2->conn_id_length) <=
             0)
             return -1;
-        memcpy(d, s->s2->conn_id, SSL2_CONNECTION_ID_LENGTH);
+        sgx_memcpy(d, s->s2->conn_id, SSL2_CONNECTION_ID_LENGTH);
         d += SSL2_CONNECTION_ID_LENGTH;
 
         s->state = SSL2_ST_SEND_SERVER_HELLO_B;
@@ -844,7 +844,7 @@ static int get_client_finished(SSL *s)
         s->msg_callback(0, s->version, 0, p, len, s, s->msg_callback_arg);
     }
     p += 1;
-    if (memcmp(p, s->s2->conn_id, s->s2->conn_id_length) != 0) {
+    if (sgx_memcmp(p, s->s2->conn_id, s->s2->conn_id_length) != 0) {
         ssl2_return_error(s, SSL2_PE_UNDEFINED_ERROR);
         SSLerr(SSL_F_GET_CLIENT_FINISHED, SSL_R_CONNECTION_ID_IS_DIFFERENT);
         return (-1);
@@ -863,7 +863,7 @@ static int server_verify(SSL *s)
             SSLerr(SSL_F_SERVER_VERIFY, ERR_R_INTERNAL_ERROR);
             return -1;
         }
-        memcpy(p, s->s2->challenge, (unsigned int)s->s2->challenge_length);
+        sgx_memcpy(p, s->s2->challenge, (unsigned int)s->s2->challenge_length);
         /* p+=s->s2->challenge_length; */
 
         s->state = SSL2_ST_SEND_SERVER_VERIFY_B;
@@ -885,7 +885,7 @@ static int server_finish(SSL *s)
             SSLerr(SSL_F_SERVER_FINISH, ERR_R_INTERNAL_ERROR);
             return -1;
         }
-        memcpy(p, s->session->session_id,
+        sgx_memcpy(p, s->session->session_id,
                (unsigned int)s->session->session_id_length);
         /* p+=s->session->session_id_length; */
 
@@ -916,7 +916,7 @@ static int request_certificate(SSL *s)
         *(p++) = SSL2_AT_MD5_WITH_RSA_ENCRYPTION;
         if (RAND_pseudo_bytes(ccd, SSL2_MIN_CERT_CHALLENGE_LENGTH) <= 0)
             return -1;
-        memcpy(p, ccd, SSL2_MIN_CERT_CHALLENGE_LENGTH);
+        sgx_memcpy(p, ccd, SSL2_MIN_CERT_CHALLENGE_LENGTH);
 
         s->state = SSL2_ST_SEND_REQUEST_CERTIFICATE_B;
         s->init_num = SSL2_MIN_CERT_CHALLENGE_LENGTH + 2;

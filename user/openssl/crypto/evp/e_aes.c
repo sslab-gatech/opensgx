@@ -363,7 +363,7 @@ static int aesni_gcm_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key,
         if (gctx->key_set)
             CRYPTO_gcm128_setiv(&gctx->gcm, iv, gctx->ivlen);
         else
-            memcpy(gctx->iv, iv, gctx->ivlen);
+            sgx_memcpy(gctx->iv, iv, gctx->ivlen);
         gctx->iv_set = 1;
         gctx->iv_gen = 0;
     }
@@ -402,7 +402,7 @@ static int aesni_xts_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key,
 
     if (iv) {
         xctx->xts.key2 = &xctx->ks2;
-        memcpy(ctx->iv, iv, 16);
+        sgx_memcpy(ctx->iv, iv, 16);
     }
 
     return 1;
@@ -427,7 +427,7 @@ static int aesni_ccm_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key,
         cctx->key_set = 1;
     }
     if (iv) {
-        memcpy(ctx->iv, iv, 15 - cctx->L);
+        sgx_memcpy(ctx->iv, iv, 15 - cctx->L);
         cctx->iv_set = 1;
     }
     return 1;
@@ -683,7 +683,7 @@ static int aes_t4_gcm_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key,
         if (gctx->key_set)
             CRYPTO_gcm128_setiv(&gctx->gcm, iv, gctx->ivlen);
         else
-            memcpy(gctx->iv, iv, gctx->ivlen);
+            sgx_memcpy(gctx->iv, iv, gctx->ivlen);
         gctx->iv_set = 1;
         gctx->iv_gen = 0;
     }
@@ -752,7 +752,7 @@ static int aes_t4_xts_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key,
 
     if (iv) {
         xctx->xts.key2 = &xctx->ks2;
-        memcpy(ctx->iv, iv, 16);
+        sgx_memcpy(ctx->iv, iv, 16);
     }
 
     return 1;
@@ -794,7 +794,7 @@ static int aes_t4_ccm_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key,
         cctx->key_set = 1;
     }
     if (iv) {
-        memcpy(ctx->iv, iv, 15 - cctx->L);
+        sgx_memcpy(ctx->iv, iv, 15 - cctx->L);
         cctx->iv_set = 1;
     }
     return 1;
@@ -1170,20 +1170,20 @@ static int aes_gcm_ctrl(EVP_CIPHER_CTX *c, int type, int arg, void *ptr)
     case EVP_CTRL_GCM_SET_TAG:
         if (arg <= 0 || arg > 16 || c->encrypt)
             return 0;
-        memcpy(c->buf, ptr, arg);
+        sgx_memcpy(c->buf, ptr, arg);
         gctx->taglen = arg;
         return 1;
 
     case EVP_CTRL_GCM_GET_TAG:
         if (arg <= 0 || arg > 16 || !c->encrypt || gctx->taglen < 0)
             return 0;
-        memcpy(ptr, c->buf, arg);
+        sgx_memcpy(ptr, c->buf, arg);
         return 1;
 
     case EVP_CTRL_GCM_SET_IV_FIXED:
         /* Special case: -1 length restores whole IV */
         if (arg == -1) {
-            memcpy(gctx->iv, ptr, gctx->ivlen);
+            sgx_memcpy(gctx->iv, ptr, gctx->ivlen);
             gctx->iv_gen = 1;
             return 1;
         }
@@ -1194,7 +1194,7 @@ static int aes_gcm_ctrl(EVP_CIPHER_CTX *c, int type, int arg, void *ptr)
         if ((arg < 4) || (gctx->ivlen - arg) < 8)
             return 0;
         if (arg)
-            memcpy(gctx->iv, ptr, arg);
+            sgx_memcpy(gctx->iv, ptr, arg);
         if (c->encrypt && RAND_bytes(gctx->iv + arg, gctx->ivlen - arg) <= 0)
             return 0;
         gctx->iv_gen = 1;
@@ -1206,7 +1206,7 @@ static int aes_gcm_ctrl(EVP_CIPHER_CTX *c, int type, int arg, void *ptr)
         CRYPTO_gcm128_setiv(&gctx->gcm, gctx->iv, gctx->ivlen);
         if (arg <= 0 || arg > gctx->ivlen)
             arg = gctx->ivlen;
-        memcpy(ptr, gctx->iv + gctx->ivlen - arg, arg);
+        sgx_memcpy(ptr, gctx->iv + gctx->ivlen - arg, arg);
         /*
          * Invocation field will be at least 8 bytes in size and so no need
          * to check wrap around or increment more than last 8 bytes.
@@ -1218,7 +1218,7 @@ static int aes_gcm_ctrl(EVP_CIPHER_CTX *c, int type, int arg, void *ptr)
     case EVP_CTRL_GCM_SET_IV_INV:
         if (gctx->iv_gen == 0 || gctx->key_set == 0 || c->encrypt)
             return 0;
-        memcpy(gctx->iv + gctx->ivlen - arg, ptr, arg);
+        sgx_memcpy(gctx->iv + gctx->ivlen - arg, ptr, arg);
         CRYPTO_gcm128_setiv(&gctx->gcm, gctx->iv, gctx->ivlen);
         gctx->iv_set = 1;
         return 1;
@@ -1227,7 +1227,7 @@ static int aes_gcm_ctrl(EVP_CIPHER_CTX *c, int type, int arg, void *ptr)
         /* Save the AAD for later use */
         if (arg != 13)
             return 0;
-        memcpy(c->buf, ptr, arg);
+        sgx_memcpy(c->buf, ptr, arg);
         gctx->tls_aad_len = arg;
         {
             unsigned int len = c->buf[arg - 2] << 8 | c->buf[arg - 1];
@@ -1257,7 +1257,7 @@ static int aes_gcm_ctrl(EVP_CIPHER_CTX *c, int type, int arg, void *ptr)
                 gctx_out->iv = OPENSSL_malloc(gctx->ivlen);
                 if (!gctx_out->iv)
                     return 0;
-                memcpy(gctx_out->iv, gctx->iv, gctx->ivlen);
+                sgx_memcpy(gctx_out->iv, gctx->iv, gctx->ivlen);
             }
             return 1;
         }
@@ -1334,7 +1334,7 @@ static int aes_gcm_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key,
         if (gctx->key_set)
             CRYPTO_gcm128_setiv(&gctx->gcm, iv, gctx->ivlen);
         else
-            memcpy(gctx->iv, iv, gctx->ivlen);
+            sgx_memcpy(gctx->iv, iv, gctx->ivlen);
         gctx->iv_set = 1;
         gctx->iv_gen = 0;
     }
@@ -1453,7 +1453,7 @@ static int aes_gcm_tls_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out,
         /* Retrieve tag */
         CRYPTO_gcm128_tag(&gctx->gcm, ctx->buf, EVP_GCM_TLS_TAG_LEN);
         /* If tag mismatch wipe buffer */
-        if (memcmp(ctx->buf, in + len, EVP_GCM_TLS_TAG_LEN)) {
+        if (sgx_memcmp(ctx->buf, in + len, EVP_GCM_TLS_TAG_LEN)) {
             OPENSSL_cleanse(out, len);
             goto err;
         }
@@ -1710,7 +1710,7 @@ static int aes_xts_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key,
 
     if (iv) {
         xctx->xts.key2 = &xctx->ks2;
-        memcpy(ctx->iv, iv, 16);
+        sgx_memcpy(ctx->iv, iv, 16);
     }
 
     return 1;
@@ -1772,7 +1772,7 @@ static int aes_ccm_ctrl(EVP_CIPHER_CTX *c, int type, int arg, void *ptr)
             return 0;
         if (ptr) {
             cctx->tag_set = 1;
-            memcpy(c->buf, ptr, arg);
+            sgx_memcpy(c->buf, ptr, arg);
         }
         cctx->M = arg;
         return 1;
@@ -1841,7 +1841,7 @@ static int aes_ccm_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key,
             cctx->key_set = 1;
         } while (0);
     if (iv) {
-        memcpy(ctx->iv, iv, 15 - cctx->L);
+        sgx_memcpy(ctx->iv, iv, 15 - cctx->L);
         cctx->iv_set = 1;
     }
     return 1;
@@ -1893,7 +1893,7 @@ static int aes_ccm_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out,
             !CRYPTO_ccm128_decrypt(ccm, in, out, len)) {
             unsigned char tag[16];
             if (CRYPTO_ccm128_tag(ccm, tag, cctx->M)) {
-                if (!memcmp(tag, ctx->buf, cctx->M))
+                if (!sgx_memcmp(tag, ctx->buf, cctx->M))
                     rv = len;
             }
         }
@@ -1940,7 +1940,7 @@ static int aes_wrap_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key,
             wctx->iv = NULL;
     }
     if (iv) {
-        memcpy(ctx->iv, iv, 8);
+        sgx_memcpy(ctx->iv, iv, 8);
         wctx->iv = ctx->iv;
     }
     return 1;

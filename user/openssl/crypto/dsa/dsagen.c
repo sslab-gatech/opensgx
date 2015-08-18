@@ -59,6 +59,8 @@
 #include <stdio.h>
 #include <openssl/dsa.h>
 
+#include "../sgx.h"
+
 #define TEST
 #define GENUINE_DSA
 
@@ -107,7 +109,7 @@ main()
     if (bio_err == NULL)
         bio_err = BIO_new_fp(stderr, BIO_NOCLOSE);
 
-    memcpy(seed_buf, seed, 20);
+    sgx_memcpy(seed_buf, seed, 20);
     dsa = DSA_generate_parameters(1024, seed, 20, &counter, &h, cb, bio_err);
 
     if (dsa == NULL)

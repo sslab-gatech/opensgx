@@ -245,7 +245,7 @@ static void test1(const EVP_CIPHER *c, const unsigned char *key, int kn,
             test1_exit(8);
         }
 
-        if (memcmp(out, ciphertext, cn)) {
+        if (sgx_memcmp(out, ciphertext, cn)) {
             fprintf(stderr, "Ciphertext mismatch\n");
             hexdump(stderr, "Got", out, cn);
             hexdump(stderr, "Expected", ciphertext, cn);
@@ -262,7 +262,7 @@ static void test1(const EVP_CIPHER *c, const unsigned char *key, int kn,
                 ERR_print_errors_fp(stderr);
                 test1_exit(14);
             }
-            if (memcmp(rtag, tag, tn)) {
+            if (sgx_memcmp(rtag, tag, tn)) {
                 fprintf(stderr, "Tag mismatch\n");
                 hexdump(stderr, "Got", rtag, tn);
                 hexdump(stderr, "Expected", tag, tn);
@@ -362,7 +362,7 @@ static void test1(const EVP_CIPHER *c, const unsigned char *key, int kn,
             test1_exit(8);
         }
 
-        if (memcmp(out, plaintext, pn)) {
+        if (sgx_memcmp(out, plaintext, pn)) {
             fprintf(stderr, "Plaintext mismatch\n");
             hexdump(stderr, "Got", out, pn);
             hexdump(stderr, "Expected", plaintext, pn);
@@ -435,7 +435,7 @@ static int test_digest(const char *digest,
         EXIT(102);
     }
 
-    if (memcmp(md, ciphertext, cn)) {
+    if (sgx_memcmp(md, ciphertext, cn)) {
         fprintf(stderr, "Digest mismatch\n");
         hexdump(stderr, "Got", md, cn);
         hexdump(stderr, "Expected", ciphertext, cn);

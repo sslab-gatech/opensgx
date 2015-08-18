@@ -53,7 +53,7 @@ int main(int argc, char **argv)
             ERR_print_errors_fp(stderr);
             goto end;
         }
-        if (!strcmp(cnf->name, "Connect")) {
+        if (!sgx_strcmp(cnf->name, "Connect")) {
             connect_str = cnf->value;
         } else {
             fprintf(stderr, "Unknown configuration option %s\n", cnf->name);

@@ -74,7 +74,7 @@ pitem *pitem_new(unsigned char *prio64be, void *data)
     if (item == NULL)
         return NULL;
 
-    memcpy(item->priority, prio64be, sizeof(item->priority));
+    sgx_memcpy(item->priority, prio64be, sizeof(item->priority));
 
     item->data = data;
     item->next = NULL;
@@ -120,9 +120,9 @@ pitem *pqueue_insert(pqueue_s *pq, pitem *item)
     for (curr = NULL, next = pq->items;
          next != NULL; curr = next, next = next->next) {
         /*
-         * we can compare 64-bit value in big-endian encoding with memcmp:-)
+         * we can compare 64-bit value in big-endian encoding with sgx_memcmp:-)
          */
-        int cmp = memcmp(next->priority, item->priority, 8);
+        int cmp = sgx_memcmp(next->priority, item->priority, 8);
         if (cmp > 0) {          /* next > item */
             item->next = next;
 
@@ -168,14 +168,14 @@ pitem *pqueue_find(pqueue_s *pq, unsigned char *prio64be)
         return NULL;
 
     for (next = pq->items; next->next != NULL; next = next->next) {
-        if (memcmp(next->priority, prio64be, 8) == 0) {
+        if (sgx_memcmp(next->priority, prio64be, 8) == 0) {
             found = next;
             break;
         }
     }
 
     /* check the one last node */
-    if (memcmp(next->priority, prio64be, 8) == 0)
+    if (sgx_memcmp(next->priority, prio64be, 8) == 0)
         found = next;
 
     if (!found)

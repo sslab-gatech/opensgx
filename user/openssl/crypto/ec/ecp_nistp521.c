@@ -1529,7 +1529,7 @@ static void batch_mul(felem x_out, felem y_out, felem z_out,
                 point_add(nq[0], nq[1], nq[2],
                           nq[0], nq[1], nq[2], 1, tmp[0], tmp[1], tmp[2]);
             } else {
-                memcpy(nq, tmp, 3 * sizeof(felem));
+                sgx_memcpy(nq, tmp, 3 * sizeof(felem));
                 skip = 0;
             }
         }
@@ -1559,7 +1559,7 @@ static void batch_mul(felem x_out, felem y_out, felem z_out,
                               nq[0], nq[1], nq[2],
                               mixed, tmp[0], tmp[1], tmp[2]);
                 } else {
-                    memcpy(nq, tmp, 3 * sizeof(felem));
+                    sgx_memcpy(nq, tmp, 3 * sizeof(felem));
                     skip = 0;
                 }
             }
@@ -1943,9 +1943,9 @@ int ec_GFp_nistp521_points_mul(const EC_GROUP *group, EC_POINT *r,
                     (!BN_to_felem(y_out, &p->Y)) ||
                     (!BN_to_felem(z_out, &p->Z)))
                     goto err;
-                memcpy(pre_comp[i][1][0], x_out, sizeof(felem));
-                memcpy(pre_comp[i][1][1], y_out, sizeof(felem));
-                memcpy(pre_comp[i][1][2], z_out, sizeof(felem));
+                sgx_memcpy(pre_comp[i][1][0], x_out, sizeof(felem));
+                sgx_memcpy(pre_comp[i][1][1], y_out, sizeof(felem));
+                sgx_memcpy(pre_comp[i][1][2], z_out, sizeof(felem));
                 for (j = 2; j <= 16; ++j) {
                     if (j & 1) {
                         point_add(pre_comp[i][j][0], pre_comp[i][j][1],
@@ -2057,7 +2057,7 @@ int ec_GFp_nistp521_precompute_mult(EC_GROUP *group, BN_CTX *ctx)
      * if the generator is the standard one, use built-in precomputation
      */
     if (0 == EC_POINT_cmp(group, generator, group->generator, ctx)) {
-        memcpy(pre->g_pre_comp, gmul, sizeof(pre->g_pre_comp));
+        sgx_memcpy(pre->g_pre_comp, gmul, sizeof(pre->g_pre_comp));
         ret = 1;
         goto err;
     }

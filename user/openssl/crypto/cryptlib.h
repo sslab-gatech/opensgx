@@ -75,6 +75,8 @@
 # include <openssl/err.h>
 # include <openssl/opensslconf.h>
 
+# include "sgx.h"
+
 #ifdef  __cplusplus
 extern "C" {
 #endif

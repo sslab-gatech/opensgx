@@ -212,7 +212,7 @@ static int dynamic_set_data_ctx(ENGINE *e, dynamic_data_ctx **ctx)
         ENGINEerr(ENGINE_F_DYNAMIC_SET_DATA_CTX, ERR_R_MALLOC_FAILURE);
         return 0;
     }
-    memset(c, 0, sizeof(dynamic_data_ctx));
+    sgx_memset(c, 0, sizeof(dynamic_data_ctx));
     c->dynamic_dso = NULL;
     c->v_check = NULL;
     c->bind_engine = NULL;
@@ -510,7 +510,7 @@ static int dynamic_load(ENGINE *e, dynamic_data_ctx *ctx)
      * First binary copy the ENGINE structure so that we can roll back if the
      * hand-over fails
      */
-    memcpy(&cpy, e, sizeof(ENGINE));
+    sgx_memcpy(&cpy, e, sizeof(ENGINE));
     /*
      * Provide the ERR, "ex_data", memory, and locking callbacks so the
      * loaded library uses our state rather than its own. FIXME: As noted in
@@ -542,7 +542,7 @@ static int dynamic_load(ENGINE *e, dynamic_data_ctx *ctx)
         ctx->dynamic_dso = NULL;
         ENGINEerr(ENGINE_F_DYNAMIC_LOAD, ENGINE_R_INIT_FAILED);
         /* Copy the original ENGINE structure back */
-        memcpy(e, &cpy, sizeof(ENGINE));
+        sgx_memcpy(e, &cpy, sizeof(ENGINE));
         return 0;
     }
     /* Do we try to add this ENGINE to the internal list too? */

@@ -254,17 +254,17 @@ static void int_thread_del_item(const ERR_STATE *);
 static int int_err_get_next_lib(void);
 /* The static ERR_FNS table using these defaults functions */
 static const ERR_FNS err_defaults = {
-    int_err_get + ENCLAVE_OFFSET,
-    int_err_del + ENCLAVE_OFFSET,
-    int_err_get_item + ENCLAVE_OFFSET,
-    int_err_set_item + ENCLAVE_OFFSET,
-    int_err_del_item + ENCLAVE_OFFSET,
-    int_thread_get + ENCLAVE_OFFSET,
-    int_thread_release + ENCLAVE_OFFSET,
-    int_thread_get_item + ENCLAVE_OFFSET,
-    int_thread_set_item + ENCLAVE_OFFSET,
-    int_thread_del_item + ENCLAVE_OFFSET,
-    int_err_get_next_lib + ENCLAVE_OFFSET
+    int_err_get,
+    int_err_del,
+    int_err_get_item,
+    int_err_set_item,
+    int_err_del_item,
+    int_thread_get,
+    int_thread_release,
+    int_thread_get_item,
+    int_thread_set_item,
+    int_thread_del_item,
+    int_err_get_next_lib
 };
 
 /* The replacable table of ERR_FNS functions we use at run-time */
@@ -603,7 +603,7 @@ static void build_SYS_str_reasons(void)
             char (*dest)[LEN_SYS_STR_REASON] = &(strerror_tab[i - 1]);
             char *src = strerror(i);
             if (src != NULL) {
-                strncpy(*dest, src, sizeof *dest);
+                sgx_strncpy(*dest, src, sizeof *dest);
                 (*dest)[sizeof *dest - 1] = '\0';
                 str->string = *dest;
             }
@@ -712,16 +712,16 @@ void ERR_put_error(int lib, int func, int reason, const char *file, int line)
      * in the form "*POSIX(/etc/passwd)". This dirty hack strips them to
      * something sensible. @@@ We shouldn't modify a const string, though.
      */
-    if (strncmp(file, "*POSIX(", sizeof("*POSIX(") - 1) == 0) {
+    if (sgx_strncmp(file, "*POSIX(", sizeof("*POSIX(") - 1) == 0) {
         char *end;
 
         /* Skip the "*POSIX(" prefix */
         file += sizeof("*POSIX(") - 1;
-        end = &file[strlen(file) - 1];
+        end = &file[sgx_strlen(file) - 1];
         if (*end == ')')
             *end = '\0';
         /* Optional: use the basename of the path only. */
-        if ((end = strrchr(file, '/')) != NULL)
+        if ((end = sgx_strrchr(file, '/')) != NULL)
             file = &end[1];
     }
 #endif
@@ -887,7 +887,7 @@ void ERR_error_string_n(unsigned long e, char *buf, size_t len)
 
     BIO_snprintf(buf, len, "error:%08lX:%s:%s:%s", e, ls ? ls : lsbuf,
                  fs ? fs : fsbuf, rs ? rs : rsbuf);
-    if (strlen(buf) == len - 1) {
+    if (sgx_strlen(buf) == len - 1) {
         /*
          * output may be truncated; make sure we always have 5
          * colon-separated fields, i.e. 4 colons ...
@@ -898,7 +898,7 @@ void ERR_error_string_n(unsigned long e, char *buf, size_t len)
             char *s = buf;
 
             for (i = 0; i < NUM_COLONS; i++) {
-                char *colon = strchr(s, ':');
+                char *colon = sgx_strchr(s, ':');
                 if (colon == NULL || colon > &buf[len - 1] - NUM_COLONS + i) {
                     /*
                      * set colon no. i at last possible position (buf[len-1]

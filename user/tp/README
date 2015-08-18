@@ -1,0 +1,16 @@
+1. Compile sgx/user/openssl (sgx/user/openssl)
+   $./config no-comp no-asm no-shared no-hw no-engines no-threads no-dso no-err
+   $ make depend
+   $ ln -s /absoute/path/to/sgx/user/openssl/crypto/sgx.h include/sgx.h
+   $ make
+
+2. In the repo (sgx/user/tp)
+   $mkdir ssl
+   $mkdir crypto
+(if repo doesn't exist)
+
+  $. ./update.sh
+3. Back to sgx/
+   $make
+4. Run
+   $./loader.sh sgx-xxx

@@ -62,8 +62,6 @@
 #include "cryptlib.h"
 #include <openssl/dso.h>
 
-#include "../sgx.h"
-
 static DSO_METHOD *default_DSO_meth = NULL;
 
 DSO *DSO_new(void)
@@ -360,7 +358,7 @@ int DSO_set_filename(DSO *dso, const char *filename)
         DSOerr(DSO_F_DSO_SET_FILENAME, ERR_R_MALLOC_FAILURE);
         return (0);
     }
-    BUF_strlcpy(copied, filename, strlen(filename) + 1);
+    BUF_strlcpy(copied, filename, sgx_strlen(filename) + 1);
     if (dso->filename)
         OPENSSL_free(dso->filename);
     dso->filename = copied;
@@ -410,7 +408,7 @@ char *DSO_convert_filename(DSO *dso, const char *filename)
             DSOerr(DSO_F_DSO_CONVERT_FILENAME, ERR_R_MALLOC_FAILURE);
             return (NULL);
         }
-        BUF_strlcpy(result, filename, strlen(filename) + 1);
+        BUF_strlcpy(result, filename, sgx_strlen(filename) + 1);
     }
     return (result);
 }

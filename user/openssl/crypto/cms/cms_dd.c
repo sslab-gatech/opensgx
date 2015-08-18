@@ -126,7 +126,7 @@ int cms_DigestedData_do_final(CMS_ContentInfo *cms, BIO *chain, int verify)
             goto err;
         }
 
-        if (memcmp(md, dd->digest->data, mdlen))
+        if (sgx_memcmp(md, dd->digest->data, mdlen))
             CMSerr(CMS_F_CMS_DIGESTEDDATA_DO_FINAL,
                    CMS_R_VERIFICATION_FAILURE);
         else

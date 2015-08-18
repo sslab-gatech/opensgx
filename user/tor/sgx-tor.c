@@ -1,24 +1,13 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
-#include <err.h>
-
-#include <sys/shm.h>
-#include <sys/ipc.h>
-#include <sys/types.h>
-#include <unistd.h>
-
 #include <openssl/rsa.h>
 #include <openssl/evp.h>
 #include <openssl/pem.h>
-//#include <openssl/sha.h>
+#include <openssl/sha.h>
 
 #include "protocol.h"
-#include "sgx-tor-trampoline.h"
 #include "tor-lib.h"
 
 #include <sgx-lib.h>
+#include <sgx.h>
 
 #define IDENTITY_KEY_BITS 3072
 #define SIGNING_KEY_BITS 2048
@@ -184,10 +173,13 @@ struct tm *tor_gmtime_r(const time_t *timep, struct tm *result)
 {
   struct tm *r;
 //  assert(result);
-  r = gmtime(timep);
+
+  r = sgx_gmtime(timep);
   if (r)
     sgx_memcpy(result, r, sizeof(struct tm));
-  return correct_tm(0, timep, result, r);
+
+  return result;
+//  return correct_tm(0, timep, result, r);
 }
 
 // From util.h
@@ -198,9 +190,13 @@ struct tm *tor_gmtime_r(const time_t *timep, struct tm *result)
  */
 void format_iso_time(char *buf, time_t t)
 {
-  struct tm tm;
-  //TODO
-  strftime(buf, ISO_TIME_LEN+1, "%Y-%m-%d %H:%M:%S", tor_gmtime_r(&t, &tm));
+  struct tm tm_ori;
+  struct tm *tm;
+
+  tor_gmtime_r(&t, &tm_ori);
+  sgx_strftime(buf, ISO_TIME_LEN+1, "%Y-%m-%d %H:%M:%S", &tm_ori);
+
+//  sgx_strftime(buf, ISO_TIME_LEN+1, "%Y-%m-%d %H:%M:%S", tor_gmtime_r(&t, &tm_ori));
 }
 
 // From crypto.h
@@ -253,11 +249,8 @@ crypto_pk_t *crypto_pk_new(void)
  */
 int crypto_pk_generate_key_with_bits(crypto_pk_t *env, int bits)
 {
-/*
     if (env->key)
         RSA_free(env->key);
-*/
-    env->key = NULL;
 
     {
         BIGNUM *e = BN_new();
@@ -278,14 +271,10 @@ int crypto_pk_generate_key_with_bits(crypto_pk_t *env, int bits)
         env->key = r;
         r = NULL;
 done:
-        if(e)   e = NULL;
-        if(r)   r = NULL;
-/*
         if (e)
             BN_clear_free(e);
         if (r)
             RSA_free(r);
-*/
     }
 
     if (!env->key) {
@@ -315,10 +304,10 @@ void crypto_pk_free(crypto_pk_t *env)
         return;
 //    assert(env->refs == 0);
 
-//    if (env->key)
-//        RSA_free(env->key);
+    if (env->key)
+        RSA_free(env->key);
 
-//    free(env);
+    sgx_free(env);
 }
 
 /** Return the size of the public key modulus in <b>env</b>, in bytes. */
@@ -415,10 +404,10 @@ int crypto_pk_get_digest(crypto_pk_t *pk, char *digest_out)
     if (len < 0 || buf == NULL)
         return -1;
     if (crypto_digest(digest_out, (char*)buf, len) < 0) {
-//        OPENSSL_free(buf);
+        OPENSSL_free(buf);
         return -1;
     }
-//    OPENSSL_free(buf);
+    OPENSSL_free(buf);
     return 0;
 }
 
@@ -484,8 +473,7 @@ int crypto_pk_get_fingerprint(crypto_pk_t *pk, char *fp_out, int add_space)
     if (add_space) {
         crypto_add_spaces_to_fp(fp_out, FINGERPRINT_LEN+1, hexdigest);
     } else {
-        sgx_memcpy(fp_out, hexdigest, HEX_DIGEST_LEN+1);
-//        strncpy(fp_out, hexdigest, HEX_DIGEST_LEN+1);
+        sgx_strncpy(fp_out, hexdigest, HEX_DIGEST_LEN+1);
     }
     return 0;
 }
@@ -530,12 +518,12 @@ int crypto_pk_read_private_key_from_string(crypto_pk_t *env,
     if (!b)
         return -1;
 
-//    if (env->key)
-//        RSA_free(env->key);
+    if (env->key)
+        RSA_free(env->key);
 
     env->key = PEM_read_bio_RSAPrivateKey(b,NULL,NULL,NULL);
 
-//    BIO_free(b);
+    BIO_free(b);
 
     if (!env->key) {
         err(1, "Error parsing private key");
@@ -553,7 +541,8 @@ int crypto_pk_check_key(crypto_pk_t *env)
 
     r = RSA_check_key(env->key);
     if (r <= 0)
-        err(1,"checking RSA key");
+        sgx_puts("Error in checking RSA key");
+//        err(1,"checking RSA key");
     return r;
 }
 
@@ -588,10 +577,10 @@ int crypto_pk_read_public_key_from_string(crypto_pk_t *env, const char *src,
 
     BIO_write(b, src, (int)len);
 
-//    if (env->key)
-//        RSA_free(env->key);
+    if (env->key)
+        RSA_free(env->key);
     env->key = PEM_read_bio_RSAPublicKey(b, NULL, NULL, NULL);
-//    BIO_free(b);
+    BIO_free(b);
     if (!env->key) {
         err(1, "reading public key from string");
         return -1;
@@ -626,19 +615,19 @@ int crypto_pk_write_key_to_string_impl(crypto_pk_t *env, char **dest,
 
     if (!r) {
         err(1, "writing RSA key to string");
-//        BIO_free(b);
+        BIO_free(b);
         return -1;
     }
 
     BIO_get_mem_ptr(b, &buf);
     (void)BIO_set_close(b, BIO_NOCLOSE); /* so BIO_free doesn't free buf */
-//    BIO_free(b);
+    BIO_free(b);
 
     *dest = sgx_malloc(buf->length+1);
     sgx_memcpy(*dest, buf->data, buf->length);
     (*dest)[buf->length] = 0; /* nul terminate it */
     *len = buf->length;
-//    BUF_MEM_free(buf);
+    BUF_MEM_free(buf);
 
     return 0;
 }
@@ -675,10 +664,10 @@ EVP_PKEY *crypto_pk_get_evp_pkey_(crypto_pk_t *env, int private)
         goto error;
     return pkey;
 error:
-//    if (pkey)
-//        EVP_PKEY_free(pkey);
-//    if (key)
-//        RSA_free(key);
+    if (pkey)
+        EVP_PKEY_free(pkey);
+    if (key)
+        RSA_free(key);
     return NULL;
 }
 
@@ -707,6 +696,11 @@ char address[INET_NTOA_BUF_LEN+32];
 int addr_success;
 int months_lifetime;
 
+char *vote_sig = NULL;
+char *consensus_sig = NULL;
+char *consensus_sig2 = NULL;
+int consensus_sig_count = 0;
+
 /* For exit node */
 int exit_node_num;
 crypto_pk_t *secret_id_key = NULL;
@@ -729,12 +723,10 @@ static RSA * generate_key(int bits)
 	    goto done;
 
 	rsa = crypto_pk_get_rsa_(env);
-
-//TODO
  	rsa = RSAPrivateKey_dup(rsa);
 
  done:
-//  	crypto_pk_free(env);
+  	crypto_pk_free(env);
   	return rsa;
 }
 
@@ -752,7 +744,7 @@ tor_x509_name_new(const char *cname)
 		goto error;
 	return name;
 error:
-//	X509_NAME_free(name);
+	X509_NAME_free(name);
 	return NULL;
 }
 
@@ -781,7 +773,7 @@ router_get_dirobj_signature(const char *digest,
     siglen = crypto_pk_private_sign(private_key, signature, keysize,
             digest, digest_len);
     if (siglen < 0) {
-        printf("Couldn't sign digest!\n");
+        sgx_puts("Couldn't sign digest!\n");
         goto err;
     }
 
@@ -794,21 +786,21 @@ router_get_dirobj_signature(const char *digest,
 
     i = sgx_strlen(buf);
     if (base64_encode(buf+i, buf_len-i, signature, siglen) < 0) {
-        printf("Couldn't base64-encode signature\n");
+        sgx_puts("Couldn't base64-encode signature\n");
         goto err;
     }
 
     if (strlcat(buf, "-----END SIGNATURE-----\n", buf_len) >= buf_len)
         goto truncated;
 
-//    sgx_free(signature);
+    sgx_free(signature);
     return buf;
 
 truncated:
-    printf("tried to exceed string length.\n");
+    sgx_puts("tried to exceed string length.\n");
 err:
-//    sgx_free(signature);
-//    sgx_free(buf);
+    sgx_free(signature);
+    sgx_free(buf);
     return NULL;
 
 }
@@ -820,18 +812,18 @@ router_append_dirobj_signature(char *buf, size_t buf_len, const char *digest,
   size_t sig_len, s_len;
   char *sig = router_get_dirobj_signature(digest, digest_len, private_key);
   if (!sig) {
-    printf("No signature generated\n");
+    sgx_puts("No signature generated\n");
     return -1;
   }
   sig_len = sgx_strlen(sig);
   s_len = sgx_strlen(buf);
   if (sig_len + s_len + 1 > buf_len) {
-    printf("Not enough room for signature\n");
-//    sgx_free(sig);
+    sgx_puts("Not enough room for signature\n");
+    sgx_free(sig);
     return -1;
   }
   sgx_memcpy(buf+s_len, sig, sig_len+1);
-//  sgx_free(sig);
+  sgx_free(sig);
   return 0;
 }
 
@@ -855,11 +847,11 @@ static char *key_to_string_priv(EVP_PKEY *key)
 
 	BIO_get_mem_ptr(b, &buf);
 	(void) BIO_set_close(b, BIO_NOCLOSE);
-//	BIO_free(b);
+	BIO_free(b);
 	result = (char *)sgx_malloc(buf->length + 1);
 	sgx_memcpy(result, buf->data, buf->length);
 	result[buf->length] = 0;
-//	BUF_MEM_free(buf);
+	BUF_MEM_free(buf);
 
 	return result;
 }
@@ -878,8 +870,7 @@ static int create_identity_key()
 		sgx_puts("Couldn't generate identity key.\n");
 		return 1;
 	}
-//TODO
-/*
+
 	identity_key = EVP_PKEY_new();
 
 	if(!(EVP_PKEY_assign_RSA(identity_key, key))) {
@@ -889,7 +880,7 @@ static int create_identity_key()
 
 	sgx_memcpy(&identity_key_set, identity_key, sizeof(EVP_PKEY));
 	identity_key_flag = 1;
-*/
+
 	return 0;
 }
 
@@ -935,7 +926,7 @@ static int create_signing_key()
 static int load_signing_key()
 {
 	if(signing_key_flag == 0) {
-		printf("No signing key found.\n");
+		sgx_printf("No signing key found.\n");
 		return 1;
 	}
 
@@ -959,11 +950,11 @@ static char *key_to_string(EVP_PKEY *key)
 
 	BIO_get_mem_ptr(b, &buf);
 	(void) BIO_set_close(b, BIO_NOCLOSE);
-//	BIO_free(b);
+	BIO_free(b);
 	result = (char *)sgx_malloc(buf->length + 1);
 	sgx_memcpy(result, buf->data, buf->length);
 	result[buf->length] = 0;
-//	BUF_MEM_free(buf);
+	BUF_MEM_free(buf);
 
 	return result;
 }
@@ -977,7 +968,7 @@ get_fingerprint(EVP_PKEY *pkey, char *out)
   crypto_pk_t *pk = crypto_new_pk_from_rsa_(EVP_PKEY_get1_RSA(pkey));
   if (pk) {
     r = crypto_pk_get_fingerprint(pk, out, 0);
-//    crypto_pk_free(pk);
+    crypto_pk_free(pk);
   }
   return r;
 }
@@ -990,7 +981,7 @@ get_digest(EVP_PKEY *pkey, char *out)
   crypto_pk_t *pk = crypto_new_pk_from_rsa_(EVP_PKEY_get1_RSA(pkey));
   if (pk) {
     r = crypto_pk_get_digest(pk, out);
-//    crypto_pk_free(pk);
+    crypto_pk_free(pk);
   }
   return r;
 }
@@ -999,7 +990,8 @@ get_digest(EVP_PKEY *pkey, char *out)
 /* create a new certificate */
 static int generate_certificate()
 {
-	time_t now = time(NULL);
+	time_t now = sgx_time(NULL);
+
 	struct tm tm;
 	char published[ISO_TIME_LEN+1];
 	char expires[ISO_TIME_LEN+1];
@@ -1007,6 +999,7 @@ static int generate_certificate()
 	char fingerprint[FINGERPRINT_LEN+1];
 	char *ident = key_to_string(identity_key);
 	char *signing = key_to_string(signing_key);
+
 	size_t signed_len;
 	char digest[DIGEST_LEN];
 	char signature[1024];
@@ -1015,28 +1008,33 @@ static int generate_certificate()
 	get_fingerprint(identity_key, fingerprint);
 	get_digest(identity_key, id_digest);
 
-	localtime_r(&now, &tm);
-	tm.tm_mon += months_lifetime;
-
+	sgx_localtime_r(&now, &tm);
 	format_iso_time(published, now);
-	format_iso_time(expires, mktime(&tm));
 
-	snprintf(certificate, sizeof(certificate),
-			"dir-key-certificate-version 3"
-			"%s%s"
-			"\nfingerprint %s\n"
-			"dir-key-published %s\n"
-			"dir-key-expires %s\n"
-			"dir-identity-key\n%s"
-			"dir-signing-key\n%s"
-			"dir-key-crosscert\n"
-			"-----BEGIN ID SIGNATURE-----\n",
-			addr_success?"\ndir-address ":"", addr_success?address:"",
-			fingerprint, published, expires, ident, signing
-			);
+	tm.tm_mon += months_lifetime;
+    time_t expire = sgx_mktime(&tm);
+	format_iso_time(expires, expire);
 
-//	sgx_free(ident);
-//	sgx_free(signing);
+    strlcat(certificate, "dir-key-certificate-version 3", sizeof(certificate));
+    if(addr_success) {
+        strlcat(certificate, "\ndir-address ", sizeof(certificate));
+        strlcat(certificate, address, sizeof(certificate));
+    }
+    strlcat(certificate, "\nfingerprint ", sizeof(certificate));
+    strlcat(certificate, fingerprint, sizeof(certificate));
+    strlcat(certificate, "\ndir-key-published ", sizeof(certificate));
+    strlcat(certificate, published, sizeof(certificate));
+    strlcat(certificate, "\ndir-key-expires ", sizeof(certificate));
+    strlcat(certificate, expires, sizeof(certificate));
+    strlcat(certificate, "\ndir-identity-key\n", sizeof(certificate));
+    strlcat(certificate, ident, sizeof(certificate));
+    strlcat(certificate, "dir-signing-key\n", sizeof(certificate));
+    strlcat(certificate, signing, sizeof(certificate));
+    strlcat(certificate, "dir-key-crosscert\n", sizeof(certificate));
+    strlcat(certificate, "-----BEGIN ID SIGNATURE-----\n", sizeof(certificate));
+
+	sgx_free(ident);
+	sgx_free(signing);
 
 	/* Append a cross-certification */
 	r = RSA_private_encrypt(DIGEST_LEN, (unsigned char*)id_digest,
@@ -1064,14 +1062,16 @@ static int generate_certificate()
 
 	strlcat(certificate, "-----END SIGNATURE-----\n", sizeof(certificate));
 
+    sgx_puts(certificate);
+
 	return 0;
 }
 
 int directory_configure(int fd_te, int fd_et)
 {
 	/* routine for directory authority */
-	addr_success = 0;
-	months_lifetime = 0;
+//	addr_success = 0;
+//	months_lifetime = 0;
 
 	int buf_len;
 	char *tmp_buf;
@@ -1083,7 +1083,7 @@ int directory_configure(int fd_te, int fd_et)
 	tmp_buf = (char *)sgx_malloc(buf_len+1);
 	sgx_read(fd_te, tmp_buf, buf_len+1);
 
-	if(!sgx_strcmp(tmp_buf, "CR_IDENTITY_KEY")) {
+	if(!sgx_strncmp(tmp_buf, "CR_IDENTITY_KEY", buf_len)) {
 		sgx_puts("Creating identity key.\n");
 
 		if(create_identity_key()) {
@@ -1098,7 +1098,7 @@ int directory_configure(int fd_te, int fd_et)
 		sgx_write(fd_et, &buf_len, sizeof(int));
 		sgx_write(fd_et, "CR_IDENTITY_KEY_DONE", buf_len+1);
 	}
-	else if(!sgx_strcmp(tmp_buf, "LD_IDENTITY_KEY")) {
+	else if(!sgx_strncmp(tmp_buf, "LD_IDENTITY_KEY", buf_len)) {
 		sgx_puts("Load identity key.\n");
 
 		if(load_identity_key()) {
@@ -1114,17 +1114,14 @@ int directory_configure(int fd_te, int fd_et)
 		sgx_write(fd_et, "LD_IDENTITY_KEY_DONE", buf_len+1);
 	}
 
-//	sgx_free(tmp_buf);
-    tmp_buf = NULL;
+	sgx_free(tmp_buf);
 
-//TODO
-/*
 	// signing key process
 	sgx_read(fd_te, &buf_len, sizeof(int));
 	tmp_buf = (char *)sgx_malloc(buf_len+1);
 	sgx_read(fd_te, tmp_buf, buf_len+1);
 
-	if(!sgx_strcmp(tmp_buf, "CR_SIGNING_KEY")) {
+	if(!sgx_strncmp(tmp_buf, "CR_SIGNING_KEY", buf_len)) {
 //		printf("Creating signing key of %d.\n", authority_num);
 		sgx_puts("Creating signing key.\n");
 
@@ -1139,7 +1136,7 @@ int directory_configure(int fd_te, int fd_et)
 		sgx_write(fd_et, &buf_len, sizeof(int));
 		sgx_write(fd_et, "CR_SIGNING_KEY_DONE", buf_len+1);
 	}
-	else if(!sgx_strcmp(tmp_buf, "LD_SIGNING_KEY")) {
+	else if(!sgx_strncmp(tmp_buf, "LD_SIGNING_KEY", buf_len)) {
 //		printf("Load signing key of %d.\n", authority_num);
 		sgx_puts("Load signing key.\n");
 
@@ -1155,8 +1152,7 @@ int directory_configure(int fd_te, int fd_et)
 		sgx_write(fd_et, "LD_SIGNING_KEY_DONE", buf_len+1);
 	}
 
-//	sgx_free(tmp_buf);
-    tmp_buf = NULL;
+	sgx_free(tmp_buf);
 
 	// recv data related to certificate
 //	printf("Receiving global variables for certificate.\n");
@@ -1164,11 +1160,12 @@ int directory_configure(int fd_te, int fd_et)
 	sgx_read(fd_te, &buf_len, sizeof(int));
 	sgx_read(fd_te, address, buf_len+1);
 	addr_success = 1;
-	sgx_read(fd_te, &months_lifetime, sizeof(int));
+    int temp_var;
+	sgx_read(fd_te, &temp_var, sizeof(int));
+    months_lifetime = temp_var;
 
 //	printf("Creating certificate of %d.\n", authority_num);
     sgx_puts("Creating certificate.\n");
-
 	if(generate_certificate()) {
 		buf_len = sgx_strlen("CR_CERTIFICATE_ERROR");
 		sgx_write(fd_et, &buf_len, sizeof(int));
@@ -1180,10 +1177,12 @@ int directory_configure(int fd_te, int fd_et)
 	sgx_write(fd_et, &buf_len, sizeof(int));
 	sgx_write(fd_et, "CR_CERTIFICATE_DONE", buf_len+1);
 
-	sgx_write(fd_et, certificate, CERTIFICATE_BUF_SIZE);
-//	printf("Send successfully!\n");
+//    sgx_printf("cert len = %d\n", sgx_strlen(certificate));
+
+    for(int i=0;i<8;i++)
+        sgx_write(fd_et, certificate+i*512, 512);
     sgx_puts("Send successfully!\n");
-*/
+
 	return 1;
 }
 
@@ -1198,8 +1197,8 @@ int directory_request(int fd_et, int fd_te)
 		sgx_read(fd_te, tmp_buf, buf_len+1);
 
 		// CERTIFICATE VERIFICATION. 
-		if(!sgx_strcmp(tmp_buf, "CERTIFICATE_VERIFY")) {
-			printf("\nCertificate verification for directory authority %d\n", 
+		if(!sgx_strncmp(tmp_buf, "CERTIFICATE_VERIFY", buf_len)) {
+			sgx_printf("Certificate verification for directory authority %d\n", 
 					authority_num);
 			size_t len;
 			char *tmp_signing_key_str = NULL;
@@ -1207,10 +1206,11 @@ int directory_request(int fd_et, int fd_te)
 			tmp_signing_key_str = (char *)sgx_malloc(len+1);
 			sgx_read(fd_te, tmp_signing_key_str, len+1);
 
-			char *tmp_ori_str = key_to_string_priv(&signing_key_set);
+//			char *tmp_ori_str = key_to_string_priv(&signing_key_set);
+			char *tmp_ori_str = key_to_string_priv(signing_key);
 
-			if(!memcmp(tmp_signing_key_str, tmp_ori_str, len)) {
-				printf("Verification Failed!\n");
+			if(!sgx_memcmp(tmp_signing_key_str, tmp_ori_str, len)) {
+				sgx_printf("Verification Failed!\n");
 				buf_len = sgx_strlen("CERTFICATE_VERIFY_ERROR");
 				sgx_write(fd_et, &buf_len, sizeof(int));
 				sgx_write(fd_et, "CERIFICATE_VERIFY_ERROR", buf_len+1);
@@ -1221,26 +1221,27 @@ int directory_request(int fd_et, int fd_te)
 			sgx_write(fd_et, &buf_len, sizeof(int));
 			sgx_write(fd_et, "CERIFICATE_VERIFY_DONE", buf_len+1);
 
-			free(tmp_signing_key_str);
-			free(tmp_ori_str);
+			sgx_free(tmp_signing_key_str);
+			sgx_free(tmp_ori_str);
 		
-			free(tmp_buf);
+			sgx_free(tmp_buf);
 			continue;
 		}
 
 		// Voting
-		if(!sgx_strcmp(tmp_buf, "VOTING_START")) {
-			printf("Voting of %d is started!\n", authority_num);
+		if(!sgx_strncmp(tmp_buf, "VOTING_START", buf_len)) {
+			sgx_printf("Voting of %d is started!\n", authority_num);
 
             // DIGEST COMPUTING
-            char *tmp_ori_str = key_to_string_priv(&signing_key_set);
+//            char *tmp_ori_str = key_to_string_priv(&signing_key_set);
+            char *tmp_ori_str = key_to_string_priv(signing_key);
             crypto_pk_t *tmp_signing_key = crypto_pk_new();
             crypto_pk_read_private_key_from_string(tmp_signing_key, 
 													tmp_ori_str, -1);
             char signing_key_digest[DIGEST_LEN];
 
             if(crypto_pk_get_digest(tmp_signing_key, signing_key_digest) < 0) {
-                printf("Error computing signing key digest\n");
+                sgx_puts("Error computing signing key digest\n");
 				buf_len = sgx_strlen("GET_DIGEST_ERROR");
 				sgx_write(fd_et, &buf_len, sizeof(int));
                 sgx_write(fd_et, "GET_DIGEST_ERROR", buf_len+1);
@@ -1255,7 +1256,7 @@ int directory_request(int fd_et, int fd_te)
             char fingerprint[FINGERPRINT_LEN+1];
 
             if(crypto_pk_get_fingerprint(tmp_signing_key, fingerprint, 0) < 0) {
-                printf("Error getting fingerprint for signing key\n");
+                sgx_puts("Error getting fingerprint for signing key\n");
 				buf_len = sgx_strlen("GET_FINGERPRINT_ERROR");
 				sgx_write(fd_et, &buf_len, sizeof(int));
                 sgx_write(fd_et, "GET_FINGERPRINT_ERROR", buf_len+1);
@@ -1273,12 +1274,12 @@ int directory_request(int fd_et, int fd_te)
 			char digest[DIGEST_LEN];
 
 			sgx_read(fd_te, digest, DIGEST_LEN);
-
+            
             sig = router_get_dirobj_signature(digest, DIGEST_LEN, 
                                                 tmp_signing_key);
 
 			if(!sig) {
-                printf("Unable to sign networkstatus vote!\n");
+                sgx_puts("Unable to sign networkstatus vote!\n");
 				buf_len = sgx_strlen("VOTE_SIGN_ERROR");
 				sgx_write(fd_et, &buf_len, sizeof(int));
                 sgx_write(fd_et, "VOTE_SIGN_ERROR", buf_len+1);
@@ -1289,37 +1290,37 @@ int directory_request(int fd_et, int fd_te)
 			sgx_write(fd_et, &buf_len, sizeof(int));
 			sgx_write(fd_et, "VOTE_SIGN_DONE", buf_len+1);
 
-			int sig_len = sgx_strlen(sig);
-			sgx_write(fd_et, &sig_len, sizeof(int));
-			sgx_write(fd_et, sig, sig_len+1);
+            vote_sig = sgx_malloc(sgx_strlen(sig)+1);
+            sgx_memcpy(vote_sig, sig, sgx_strlen(sig)+1);
 
-			free(sig);
-			free(tmp_signing_key);
-			free(tmp_ori_str);
-			free(tmp_buf);
+			sgx_free(sig);
+			sgx_free(tmp_signing_key);
+			sgx_free(tmp_ori_str);
+			sgx_free(tmp_buf);
 			continue;
 		}
 
         // Concensus 
-        if(!sgx_strcmp(tmp_buf, "CONSENSUS_START")) {
-            printf("Computing consensus of %d is started!\n", authority_num);
+        if(!sgx_strncmp(tmp_buf, "CONSENSUS_START", buf_len)) {
+            sgx_printf("Computing consensus of %d is started!\n", authority_num);
 
 			// fingerprint
-            char *tmp_ori_str = key_to_string_priv(&signing_key_set);
+//            char *tmp_ori_str = key_to_string_priv(&signing_key_set);
+            char *tmp_ori_str = key_to_string_priv(signing_key);
             crypto_pk_t *tmp_signing_key = crypto_pk_new();
             crypto_pk_read_private_key_from_string(tmp_signing_key, tmp_ori_str, -1);
 
             char fingerprint[HEX_DIGEST_LEN+1];
 
             if(crypto_pk_get_fingerprint(tmp_signing_key, fingerprint, 0) < 0) {
-                printf("Error getting fingerprint for signing key\n");
+                sgx_puts("Error getting fingerprint for signing key\n");
 				buf_len = sgx_strlen("GET_FINGERPRINT_ERROR");
 				sgx_write(fd_et, &buf_len, sizeof(int));
                 sgx_write(fd_et, "GET_FINGERPRINT_ERROR", buf_len+1);
                 return 0;
             }
 
-            printf("Consensus - Getting fingerprint finished!\n");
+            sgx_puts("Consensus - Getting fingerprint finished!\n");
 			buf_len = sgx_strlen("GET_FINGERPRINT_DONE");
 			sgx_write(fd_et, &buf_len, sizeof(int));
 			sgx_write(fd_et, "GET_FINGERPRINT_DONE", buf_len+1);
@@ -1337,14 +1338,14 @@ int directory_request(int fd_et, int fd_te)
                                             digest_len, tmp_signing_key);
 
             if(!sig) {
-                printf("Couldn't sign consensus networkstatus\n");
+                sgx_puts("Couldn't sign consensus networkstatus\n");
 				buf_len = sgx_strlen("CONSENSUS_SIGN_ERROR");
 				sgx_write(fd_et, &buf_len, sizeof(int));
                 sgx_write(fd_et, "CONSENSUS_SIGN_ERROR", buf_len+1);
                 return 0;
             }
 
-            printf("Consensus signing finished!\n");
+            sgx_puts("Consensus signing finished!\n");
 			buf_len = sgx_strlen("CONSENSUS_SIGN_DONE");
 			sgx_write(fd_et, &buf_len, sizeof(int));
 			sgx_write(fd_et, "CONSENSUS_SIGN_DONE", buf_len+1);
@@ -1353,828 +1354,67 @@ int directory_request(int fd_et, int fd_te)
 			sgx_write(fd_et, &sig_len, sizeof(int));
 			sgx_write(fd_et, sig, sig_len+1);
 
-			free(sig);
-			free(tmp_ori_str);
-			free(tmp_signing_key);
-			free(tmp_buf);
-			continue;
-		}
-	}
-
-	return 1;
-}
-
-int exit_node_handling(int fd_te, int fd_et, int flags)
-{
-	int buf_len;
-	char *tmp_buf = NULL;
-
-	while(1) {
-		sgx_read(fd_te, &buf_len, sizeof(int));
-		tmp_buf = (char *)sgx_malloc(buf_len+1);
-		sgx_read(fd_te, tmp_buf, buf_len+1);
-
-		// Creation or loading check for identity key
-		if(!sgx_strcmp(tmp_buf, "EXIT_NODE_ID_KEY_INIT")) {
-			printf("\nInitializeing exit node secrets.\n");
-			if(secret_id_key == NULL) {
-				buf_len = sgx_strlen("CREATION");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "CREATION", buf_len+1);
-			} else {
-				buf_len = sgx_strlen("LOADING");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "LOADING", buf_len+1);
-			}
-
-			free(tmp_buf);
-			continue;
-		}
-
-		// IDENITY_KEY CREATION
-		if(!sgx_strcmp(tmp_buf, "EXIT_NODE_ID_KEY_CR")) {
-			printf("Exit Node %d secret_id_key creation.\n", exit_node_num);
-
-			if(!(secret_id_key = crypto_pk_new())) {
-				buf_len = sgx_strlen("EXIT_NODE_ID_KEY_CR_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_ID_KEY_CR_ERROR", buf_len+1);
-				free(tmp_buf);
-				return 0;
-			}
-
-			if(crypto_pk_generate_key(secret_id_key)) {
-				buf_len = sgx_strlen("EXIT_NODE_ID_KEY_CR_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_ID_KEY_CR_ERROR", buf_len+1);
-				free(tmp_buf);
-				return 0;
-			}
-
-			if(crypto_pk_check_key(secret_id_key) <= 0) {
-				buf_len = sgx_strlen("EXIT_NODE_ID_KEY_CR_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_ID_KEY_CR_ERROR", buf_len+1);
-				free(tmp_buf);
-				return 0;
-			}
-
-			buf_len = sgx_strlen("EXIT_NODE_ID_KEY_CR_DONE");
-			sgx_write(fd_et, &buf_len, sizeof(int));
-			sgx_write(fd_et, "EXIT_NODE_ID_KEY_CR_DONE", buf_len+1);
-
-            char server_identitykey_digest[DIGEST_LEN];
-            crypto_pk_get_digest(secret_id_key, server_identitykey_digest);
-            sgx_write(fd_et, server_identitykey_digest, DIGEST_LEN);
-
-			free(tmp_buf);
-			continue;
-		}
-
-		// IDENTITY_KEY LOADING
-		if(!sgx_strcmp(tmp_buf, "EXIT_NODE_ID_KEY_LD")) {
-			printf("Exit Node %d secret_id_key loading.\n", exit_node_num);
-
-            char server_identitykey_digest[DIGEST_LEN];
-            crypto_pk_get_digest(secret_id_key, server_identitykey_digest);
-            sgx_write(fd_et, server_identitykey_digest, DIGEST_LEN);
-
-			free(tmp_buf);
-			continue;
-		}
-
-		// CLIENT_KEY INIT
-		if(!sgx_strcmp(tmp_buf, "EXIT_NODE_CLIENT_KEY_INIT")) {
-			printf("Exit Node %d client_key initialization.\n", exit_node_num);
-
-			crypto_pk_free(client_id_key);
-			client_id_key = crypto_pk_dup_key(secret_id_key);
-
-			free(tmp_buf);
-			continue;
-		}
-
-		// IDENTITY KEY NULL CHECK
-		if(!sgx_strcmp(tmp_buf, "EXIT_NODE_IDENTITY_KEY_NULL")) {
-			printf("Check server_identity of %d is null.\n", exit_node_num);
-
-			if(secret_id_key == NULL) {
-				printf("Error: secret_id_key is null\n");
-				buf_len = sgx_strlen("EXIT_NODE_IDENTITY_KEY_NULL_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_IDENTITY_KEY_NULL_ERROR", buf_len+1);
-				free(tmp_buf);
-				return 0;
-			}
-
-			buf_len = sgx_strlen("EXIT_NODE_IDENTITY_KEY_NULL_DONE");
-			sgx_write(fd_et, &buf_len, sizeof(int));
-			sgx_write(fd_et, "EXIT_NODE_IDENTITY_KEY_NULL_DONE", buf_len+1);
-
-			free(tmp_buf);
-			continue;
-		}
-
-		// EXIT_NODE_TLS_CERTIFICATE CREATION
-		if(!sgx_strcmp(tmp_buf, "EXIT_NODE_TLS_CERTIFICATE")) {
-			printf("Exit Node %d certificate creation.\n", exit_node_num);
-			assert(secret_id_key);
-
-			X509 *x509 = NULL;
-
-			unsigned char serial_tmp[SERIAL_NUMBER_SIZE];
-			BIGNUM *serial_number = NULL;
-			X509_NAME *name = NULL, *name_issuer = NULL;
-			char *cname = NULL;
-			char *cname_sign = NULL;
-			int cname_len, cname_sign_len;
-			time_t start_time, end_time;
-
-			sgx_read(fd_te, serial_tmp, sizeof(serial_tmp)+1);
-			sgx_read(fd_te, &start_time, sizeof(time_t));
-			sgx_read(fd_te, &end_time, sizeof(time_t));
-			sgx_read(fd_te, &cname_len, sizeof(int));
-			sgx_read(fd_te, &cname_sign_len, sizeof(int));
-
-			cname = (char *)sgx_malloc(cname_len+1);
-			cname_sign = (char *)sgx_malloc(cname_sign_len+1);
-	
-			sgx_read(fd_te, cname, cname_len+1);
-			sgx_read(fd_te, cname_sign, cname_sign_len+1);
-
-			// Recv rsa as a string
-			char *rsa_str;
-			size_t rsa_len;
-			sgx_read(fd_te, &rsa_len, sizeof(size_t));
-			rsa_str = (char *)sgx_malloc(rsa_len+1);
-			sgx_read(fd_te, rsa_str, rsa_len+1);
-			crypto_pk_t *rsa = crypto_pk_new();
-			crypto_pk_read_public_key_from_string(rsa, rsa_str, rsa_len);
-
-			EVP_PKEY *sign_pkey = NULL;
-			if(!(sign_pkey = crypto_pk_get_evp_pkey_(secret_id_key, 1))) {
-				printf("TLS Certificate creation error\n");
-				buf_len = sgx_strlen("EXIT_NODE_TLS_CERTIFICATE_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_ERROR", buf_len+1);
-				free(tmp_buf);
-				return 0;
-			}
-
-			EVP_PKEY *pkey = NULL;
-			if(!(pkey = crypto_pk_get_evp_pkey_(rsa, 0))) {
-				printf("TLS Certificate creation error\n");
-				buf_len = sgx_strlen("EXIT_NODE_TLS_CERTIFICATE_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_ERROR", buf_len+1);
-				free(tmp_buf);
-				return 0;
-			}
-
-			if (!(x509 = X509_new())) {
-				printf("TLS Certificate creation error\n");
-				buf_len = sgx_strlen("EXIT_NODE_TLS_CERTIFICATE_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_ERROR", buf_len+1);
-				free(tmp_buf);
-				return 0;
-			}
-
-			if (!(X509_set_version(x509, 2))) {
-				printf("TLS Certificate creation error\n");
-				buf_len = sgx_strlen("EXIT_NODE_TLS_CERTIFICATE_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_ERROR", buf_len+1);
-				free(tmp_buf);
-				return 0;
-			}
-
-			if (!(serial_number = BN_bin2bn(serial_tmp, sizeof(serial_tmp), NULL))) {
-				printf("TLS Certificate creation error\n");
-				buf_len = sgx_strlen("EXIT_NODE_TLS_CERTIFICATE_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_ERROR", buf_len+1);
-				free(tmp_buf);
-				return 0;
-			}
-
-			if (!(BN_to_ASN1_INTEGER(serial_number, X509_get_serialNumber(x509)))) {
-				printf("TLS Certificate creation error\n");
-				buf_len = sgx_strlen("EXIT_NODE_TLS_CERTIFICATE_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_ERROR", buf_len+1);
-				free(tmp_buf);
-				return 0;
-			}
-
-			if (!(name = tor_x509_name_new(cname))) {
-				printf("TLS Certificate creation error\n");
-				buf_len = sgx_strlen("EXIT_NODE_TLS_CERTIFICATE_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_ERROR", buf_len+1);
-				free(tmp_buf);
-				return 0;
-			}
-
-			if (!(X509_set_subject_name(x509, name))) {
-				printf("TLS Certificate creation error\n");
-				buf_len = sgx_strlen("EXIT_NODE_TLS_CERTIFICATE_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_ERROR", buf_len+1);
-				free(tmp_buf);
-				return 0;
-			}
-
-			if (!(name_issuer = tor_x509_name_new(cname_sign))) {
-				printf("TLS Certificate creation error\n");
-				buf_len = sgx_strlen("EXIT_NODE_TLS_CERTIFICATE_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_ERROR", buf_len+1);
-				free(tmp_buf);
-				return 0;
-			}
-
-			if (!(X509_set_issuer_name(x509, name_issuer))) {
-				printf("TLS Certificate creation error\n");
-				buf_len = sgx_strlen("EXIT_NODE_TLS_CERTIFICATE_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_ERROR", buf_len+1);
-				free(tmp_buf);
-				return 0;
-			}
-
-			if (!X509_time_adj(X509_get_notBefore(x509),0,&start_time)) {
-				printf("TLS Certificate creation error\n");
-				buf_len = sgx_strlen("EXIT_NODE_TLS_CERTIFICATE_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_ERROR", buf_len+1);
-				free(tmp_buf);
-				return 0;
-			}
-
-			if (!X509_time_adj(X509_get_notAfter(x509),0,&end_time)) {
-				printf("TLS Certificate creation error\n");
-				buf_len = sgx_strlen("EXIT_NODE_TLS_CERTIFICATE_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_ERROR", buf_len+1);
-				free(tmp_buf);
-				return 0;
-			}
-
-			if(!X509_set_pubkey(x509, pkey)) {
-				printf("TLS Certificate creation error\n");
-				buf_len = sgx_strlen("EXIT_NODE_TLS_CERTIFICATE_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_ERROR", buf_len+1);
-				free(tmp_buf);
-				return 0;
-			}
-
-			if(!X509_sign(x509, sign_pkey, EVP_sha1())) {
-				printf("TLS Certificate creation error\n");
-				buf_len = sgx_strlen("EXIT_NODE_TLS_CERTIFICATE_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_ERROR", buf_len+1);
-				free(tmp_buf);
-				return 0;
-			}
-    
-            BIO *bio = NULL;
-            BUF_MEM *bio_pointer = NULL;
-            char *bio_buffer = NULL;
-            int bio_length;
-
-            if(!(bio = BIO_new(BIO_s_mem()))) {
-				printf("TLS Certificate creation error\n");
-				buf_len = sgx_strlen("EXIT_NODE_TLS_CERTIFICATE_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_ERROR", buf_len+1);
-				free(tmp_buf);
-				return 0;
+            if(consensus_sig_count == 0) {
+                if(consensus_sig != NULL)
+                    sgx_free(consensus_sig2);
+                consensus_sig2 = sgx_malloc(sgx_strlen(sig)+1);
+                sgx_memcpy(consensus_sig2, sig, sgx_strlen(sig)+1);
+                consensus_sig_count++;
+            }
+            else {
+                if(consensus_sig != NULL)
+                    sgx_free(consensus_sig);
+                consensus_sig = sgx_malloc(sgx_strlen(sig)+1);
+                sgx_memcpy(consensus_sig, sig, sgx_strlen(sig)+1);
+                consensus_sig_count = 0;
             }
 
-            if(!PEM_write_bio_X509(bio, x509)) {
-				printf("TLS Certificate creation error\n");
-				buf_len = sgx_strlen("EXIT_NODE_TLS_CERTIFICATE_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_ERROR", buf_len+1);
-				free(tmp_buf);
-				return 0;
+			sgx_free(sig);
+			sgx_free(tmp_ori_str);
+			sgx_free(tmp_signing_key);
+			sgx_free(tmp_buf);
+
+			continue;
+		}
+
+        // Concensus sig verify
+        if(!sgx_strncmp(tmp_buf, "CONSENSUS_SIG_VERIFY", buf_len)) {
+            sgx_puts("Consensus verification\n");
+
+            int sig_len;
+            char signature[1536];
+
+            sgx_read(fd_te, &sig_len, sizeof(int));
+
+            int i;
+            for(i=0;i<3;i++)
+                sgx_read(fd_te, signature+i*512, 512);
+
+            char *tmp_str1 = sgx_memchr(signature+280, '-', 500);
+            sgx_printf("%s\n", tmp_str1);
+
+            char *tmp_str2 = sgx_memchr(signature+800, '-', 500);
+            sgx_printf("%s\n", tmp_str2);
+
+            if(sgx_strncmp(tmp_str1, consensus_sig, sgx_strlen(consensus_sig))) {
+                buf_len = sgx_strlen("CONSENSUS_SIG_VERIFY_ERROR");
+                sgx_write(fd_et, &buf_len, sizeof(int));
+                sgx_write(fd_et, "CONSENSUS_SIG_VERIFY_ERROR", buf_len+1);
             }
 
-			buf_len = sgx_strlen("EXIT_NODE_TLS_CERTIFICATE_DONE");
-			sgx_write(fd_et, &buf_len, sizeof(int));
-			sgx_write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_DONE", buf_len+1);
-
-            BIO_get_mem_ptr(bio, &bio_pointer);
-            bio_length = bio_pointer->length;
-            bio_buffer = (char *)sgx_malloc(bio_length+1);
-            BIO_read(bio, bio_buffer, bio_length+1);
-
-            sgx_write(fd_et, &bio_length, sizeof(int));
-            sgx_write(fd_et, bio_buffer, bio_length+1);
-
-			free(sign_pkey);
-			free(pkey);
-			free(cname);
-			free(cname_sign);
-			free(serial_number);
-			free(name);
-			free(name_issuer);
-			free(x509);
-            free(bio);
-            free(bio_buffer);
-            free(bio_pointer);
-			free(tmp_buf);
-			continue;
-		}
-
-		// EXIT_NODE_TLS_CERTIFICATE CREATION
-		if(!sgx_strcmp(tmp_buf, "EXIT_NODE_TLS_CERTIFICATE_SELF")) {
-			printf("Exit Node %d certificate self creation.\n", exit_node_num);
-			assert(secret_id_key);
-
-			X509 *x509 = NULL;
-
-			unsigned char serial_tmp[SERIAL_NUMBER_SIZE];
-			BIGNUM *serial_number = NULL;
-			X509_NAME *name = NULL, *name_issuer = NULL;
-			char *cname = NULL;
-			char *cname_sign = NULL;
-			int cname_len, cname_sign_len;
-			time_t start_time, end_time;
-
-			sgx_read(fd_te, serial_tmp, sizeof(serial_tmp)+1);
-			sgx_read(fd_te, &start_time, sizeof(time_t));
-			sgx_read(fd_te, &end_time, sizeof(time_t));
-			sgx_read(fd_te, &cname_len, sizeof(int));
-			sgx_read(fd_te, &cname_sign_len, sizeof(int));
-
-			cname = (char *)sgx_malloc(cname_len+1);
-			cname_sign = (char *)sgx_malloc(cname_sign_len+1);
-	
-			sgx_read(fd_te, cname, cname_len+1);
-			sgx_read(fd_te, cname_sign, cname_sign_len+1);
-
-			EVP_PKEY *sign_pkey = NULL;
-			EVP_PKEY *pkey = NULL;
-
-			if(!(sign_pkey = crypto_pk_get_evp_pkey_(secret_id_key, 1))) {
-				printf("TLS Certificate creation self error\n");
-				buf_len = sgx_strlen("EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR", buf_len+1);
-				free(tmp_buf);
-				return 0;
-			}
-
-			if(!(pkey = crypto_pk_get_evp_pkey_(secret_id_key, 0))) {
-				printf("TLS Certificate creation self error\n");
-				buf_len = sgx_strlen("EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR", buf_len+1);
-				free(tmp_buf);
-				return 0;
-			}
-
-			if (!(x509 = X509_new())) {
-				printf("TLS Certificate creation self error\n");
-				buf_len = sgx_strlen("EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR", buf_len+1);
-				free(tmp_buf);
-				return 0;
-			}
-
-			if (!(X509_set_version(x509, 2))) {
-				printf("TLS Certificate creation self error\n");
-				buf_len = sgx_strlen("EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR", buf_len+1);
-				free(tmp_buf);
-				return 0;
-			}
-
-			if (!(serial_number = BN_bin2bn(serial_tmp, sizeof(serial_tmp), NULL))) {
-				printf("TLS Certificate creation self error\n");
-				buf_len = sgx_strlen("EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR", buf_len+1);
-				free(tmp_buf);
-				return 0;
-			}
-
-			if (!(BN_to_ASN1_INTEGER(serial_number, X509_get_serialNumber(x509)))) {
-				printf("TLS Certificate creation self error\n");
-				buf_len = sgx_strlen("EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR", buf_len+1);
-				free(tmp_buf);
-				return 0;
-			}
-
-			if (!(name = tor_x509_name_new(cname))) {
-				printf("TLS Certificate creation self error\n");
-				buf_len = sgx_strlen("EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR", buf_len+1);
-				free(tmp_buf);
-				return 0;
-			}
-
-			if (!(X509_set_subject_name(x509, name))) {
-				printf("TLS Certificate creation self error\n");
-				buf_len = sgx_strlen("EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR", buf_len+1);
-				free(tmp_buf);
-				return 0;
-			}
-
-			if (!(name_issuer = tor_x509_name_new(cname_sign))) {
-				printf("TLS Certificate creation self error\n");
-				buf_len = sgx_strlen("EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR", buf_len+1);
-				free(tmp_buf);
-				return 0;
-			}
-
-			if (!(X509_set_issuer_name(x509, name_issuer))) {
-				printf("TLS Certificate creation self error\n");
-				buf_len = sgx_strlen("EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR", buf_len+1);
-				free(tmp_buf);
-				return 0;
-			}
-
-			if (!X509_time_adj(X509_get_notBefore(x509),0,&start_time)) {
-				printf("TLS Certificate creation self error\n");
-				buf_len = sgx_strlen("EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR", buf_len+1);
-				free(tmp_buf);
-				return 0;
-			}
-
-			if (!X509_time_adj(X509_get_notAfter(x509),0,&end_time)) {
-				printf("TLS Certificate creation self error\n");
-				buf_len = sgx_strlen("EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR", buf_len+1);
-				free(tmp_buf);
-				return 0;
-			}
-
-			if(!X509_set_pubkey(x509, pkey)) {
-				printf("TLS Certificate creation self error\n");
-				buf_len = sgx_strlen("EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR", buf_len+1);
-				free(tmp_buf);
-				return 0;
-			}
-
-			if(!X509_sign(x509, sign_pkey, EVP_sha1())) {
-				printf("TLS Certificate creation self error\n");
-				buf_len = sgx_strlen("EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR", buf_len+1);
-				free(tmp_buf);
-				return 0;
-			}
-    
-            BIO *bio = NULL;
-            BUF_MEM *bio_pointer = NULL;
-            char *bio_buffer = NULL;
-            int bio_length;
-
-            if(!(bio = BIO_new(BIO_s_mem()))) {
-				printf("TLS Certificate creation error\n");
-				buf_len = sgx_strlen("EXIT_NODE_TLS_CERTIFICATE_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_ERROR", buf_len+1);
-				free(tmp_buf);
-				return 0;
+            if(sgx_strncmp(tmp_str2, consensus_sig2, sgx_strlen(consensus_sig2))) {
+                buf_len = sgx_strlen("CONSENSUS_SIG_VERIFY_ERROR");
+                sgx_write(fd_et, &buf_len, sizeof(int));
+                sgx_write(fd_et, "CONSENSUS_SIG_VERIFY_ERROR", buf_len+1);
             }
 
-            if(!PEM_write_bio_X509(bio, x509)) {
-				printf("TLS Certificate creation error\n");
-				buf_len = sgx_strlen("EXIT_NODE_TLS_CERTIFICATE_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_ERROR", buf_len+1);
-				free(tmp_buf);
-				return 0;
-            }
-
-			buf_len = sgx_strlen("EXIT_NODE_TLS_CERTIFICATE_DONE");
-			sgx_write(fd_et, &buf_len, sizeof(int));
-			sgx_write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_DONE", buf_len+1);
-
-            BIO_get_mem_ptr(bio, &bio_pointer);
-            bio_length = bio_pointer->length;
-            bio_buffer = (char *)sgx_malloc(bio_length+1);
-            BIO_read(bio, bio_buffer, bio_length+1);
-
-            sgx_write(fd_et, &bio_length, sizeof(int));
-            sgx_write(fd_et, bio_buffer, bio_length+1);
-
-			free(tmp_buf);
-			continue;
-		}
-
-		// GET EXIT_NODE_FINGERPRINT
-		if(!sgx_strcmp(tmp_buf, "EXIT_NODE_FINGERPRINT")) {
-			printf("Giving Exit Node %d fingerprint.\n", exit_node_num);
-
-            char fingerprint[FINGERPRINT_LEN+1];
-
-			if(crypto_pk_get_fingerprint(secret_id_key, fingerprint, 0) < 0) {
-				printf("Error computing fingerprint for secret_id_key\n");
-				buf_len = sgx_strlen("EXIT_NODE_FINGERPRINT_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_FINGERPRINT_ERROR", buf_len+1);
-				free(tmp_buf);
-				return 0;
-			}
-
-			buf_len = sgx_strlen("EXIT_NODE_FINGERPRINT_DONE");
-			sgx_write(fd_et, &buf_len, sizeof(int));
-			sgx_write(fd_et, "EXIT_NODE_FINGERPRINT_DONE", buf_len+1);
-			sgx_write(fd_et, fingerprint, FINGERPRINT_LEN+1);
-
-			free(tmp_buf);
-			continue;
-		}
-
-		// GET EXIT_NODE_FINGERPRINT_HASH
-		if(!sgx_strcmp(tmp_buf, "EXIT_NODE_FINGERPRINT_HASH")) {
-			printf("Giving Exit Node %d hash fingerprint.\n", exit_node_num);
-
-            char fingerprint[FINGERPRINT_LEN+1];
-
-			if(crypto_pk_get_hashed_fingerprint(secret_id_key, fingerprint) < 0) {
-				printf("Error computing hashed fingerprint for secret_id_key\n");
-				buf_len = sgx_strlen("EXIT_NODE_FINGERPRINT_HASH_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_FINGERPRINT_HASH_ERROR", buf_len+1);
-				free(tmp_buf);
-				return 0;
-			}
-
-			buf_len = sgx_strlen("EXIT_NODE_FINGERPRINT_HASH_DONE");
-			sgx_write(fd_et, &buf_len, sizeof(int));
-			sgx_write(fd_et, "EXIT_NODE_FINGERPRINT_HASH_DONE", buf_len+1);
-
-			sgx_write(fd_et, fingerprint, FINGERPRINT_LEN+1);
-
-			free(tmp_buf);
-			continue;
-		}
-
-		// GET EXIT_NODE_FINGERPRINT
-		if(!sgx_strcmp(tmp_buf, "EXIT_NODE_FINGERPRINT_MAIN")) {
-			printf("Giving Exit Node %d fingerprint for main.\n", exit_node_num);
-
-            char fingerprint[FINGERPRINT_LEN+1];
-
-			if(crypto_pk_get_fingerprint(secret_id_key, fingerprint, 1) < 0) {
-				printf("Error computing fingerprint for secret_id_key\n");
-				buf_len = sgx_strlen("EXIT_NODE_FINGERPRINT_MAIN_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_FINGERPRINT_MAIN_ERROR", buf_len+1);
-				free(tmp_buf);
-				return 0;
-			}
-
-			buf_len = sgx_strlen("EXIT_NODE_FINGERPRINT_MAIN_DONE");
-			sgx_write(fd_et, &buf_len, sizeof(int));
-			sgx_write(fd_et, "EXIT_NODE_FINGERPRINT_MAIN_DONE", buf_len+1);
-			sgx_write(fd_et, fingerprint, FINGERPRINT_LEN+1);
-
-			free(tmp_buf);
-			// For finishing up configuration
-			if(flags == 0)
-				break;
-			else
-				continue;
-		}
-
-		if(!sgx_strcmp(tmp_buf, "EXIT_NODE_CLIENT_ID_KEY_SET")) {
-			printf("\nCheck Exit Node %d client key exists.\n", exit_node_num);
-
-			if(client_id_key == NULL) {
-				printf("Loading key is needed for tor process\n");
-				buf_len = sgx_strlen("EXIT_NODE_CLIENT_ID_KEY_SET_NO");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_CLIENT_ID_KEY_SET_NO", buf_len+1);
-				free(tmp_buf);
-				continue;
-			}
-
-			buf_len = sgx_strlen("EXIT_NODE_CLIENT_ID_KEY_SET_YES");
-			sgx_write(fd_et, &buf_len, sizeof(int));
-			sgx_write(fd_et, "EXIT_NODE_CLIENT_ID_KEY_SET_YES", buf_len+1);
-
-			free(tmp_buf);
-			continue;
-		}
-
-		if(!sgx_strcmp(tmp_buf, "EXIT_NODE_DIGEST")) {
-			printf("Giving Exit Node %d digest.\n", exit_node_num);
-
-            char digest[DIGEST_LEN];
-			if(crypto_pk_get_digest(secret_id_key, digest) < 0) {
-				printf("Error getting digest for secret_id_key\n");
-				buf_len = sgx_strlen("EXIT_NODE_DIGEST_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_DIGEST_ERROR", buf_len+1);
-				return 0;
-			}
-
-			buf_len = sgx_strlen("EXIT_NODE_DIGEST_DONE");
-			sgx_write(fd_et, &buf_len, sizeof(int));
-			sgx_write(fd_et, "EXIT_NODE_DIGEST_DONE", buf_len+1);
-			sgx_write(fd_et, digest, DIGEST_LEN);
-
-			free(tmp_buf);
-			continue;
-		}
-
-		if(!sgx_strcmp(tmp_buf, "EXIT_NODE_APPEND_DIROBJ")) {
-			printf("Giving Exit Node %d append dirobj.\n", exit_node_num);
-
-			char sig[DIROBJ_MAX_SIG_LEN+1];
-			memset(sig, 0, sizeof(sig));
-
-			char digest[DIGEST_LEN];
-			sgx_read(fd_te, digest, DIGEST_LEN);
-
-			if(router_append_dirobj_signature(sig, sizeof(sig), digest, DIGEST_LEN,
-												secret_id_key) < 0) {
-				printf("Error append dirobj for secret_id_key\n");
-				buf_len = sgx_strlen("EXIT_NODE_APPEND_DIROBJ_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_APPEND_DIROBJ_ERROR", buf_len+1);
-				return 0;
-			}
-
-			buf_len = sgx_strlen("EXIT_NODE_APPEND_DIROBJ_DONE");
-			sgx_write(fd_et, &buf_len, sizeof(int));
-			sgx_write(fd_et, "EXIT_NODE_APPEND_DIROBJ_DONE", buf_len+1);
-
-			sgx_write(fd_et, sig, DIROBJ_MAX_SIG_LEN+1);
-
-			free(tmp_buf);
-			continue;
-		}
-
-		if(!sgx_strcmp(tmp_buf, "EXIT_NODE_PUBKEY_STR")) {
-			printf("Giving Exit Node %d publickey string.\n", exit_node_num);
-
-			char *identity_pkey;
-			size_t identity_pkeylen;
-
-			if(crypto_pk_write_public_key_to_string(secret_id_key,
-											&identity_pkey, &identity_pkeylen) < 0) {
-				printf("write identity_pkey to string failed!\n");
-				buf_len = sgx_strlen("EXIT_NODE_PUBKEY_STR_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_PUBKEY_STR_ERROR", buf_len+1);
-				return 0;
-			}
-
-			buf_len = sgx_strlen("EXIT_NODE_PUBKEY_STR_DONE");
-			sgx_write(fd_et, &buf_len, sizeof(int));
-			sgx_write(fd_et, "EXIT_NODE_PUBKEY_STR_DONE", buf_len+1);
-
-			sgx_write(fd_et, &identity_pkeylen, sizeof(size_t));
-			sgx_write(fd_et, identity_pkey, identity_pkeylen+1);
-
-			free(identity_pkey);
-			free(tmp_buf);
-			continue;
-		}
-
-		if(!sgx_strcmp(tmp_buf, "EXIT_NODE_GET_DIROBJ")) {
-			printf("Giving Exit Node %d get dirobj.\n", exit_node_num);
-
-			char *sig;
-			char digest[DIGEST_LEN];
-
-			sgx_read(fd_te, digest, DIGEST_LEN);
-
-			if (!(sig = router_get_dirobj_signature(digest, DIGEST_LEN, 
-													secret_id_key))) {
-				printf("Couldn't sign router descriptor\n");
-
-				buf_len = sgx_strlen("EXIT_NODE_GET_DIROBJ_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_GET_DIROBJ_ERROR", buf_len+1);
-				return 0;
-			}
-
-			buf_len = sgx_strlen("EXIT_NODE_GET_DIROBJ_DONE");
-			sgx_write(fd_et, &buf_len, sizeof(int));
-			sgx_write(fd_et, "EXIT_NODE_GET_DIROBJ_DONE", buf_len+1);
-
-			int sig_len = sgx_strlen(sig);
-			sgx_write(fd_et, &sig_len, sizeof(int));
-			sgx_write(fd_et, sig, sig_len+1);
-
-			free(sig);
-			free(tmp_buf);
-			continue;
-		}
-
-		// Creation or loading check for onion key
-		if(!sgx_strcmp(tmp_buf, "EXIT_NODE_ONION_KEY_INIT")) {
-			printf("Initializeing exit node onion key.\n");
-			if(onionkey == NULL) {
-				buf_len = sgx_strlen("CREATION");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "CREATION", buf_len+1);
-			} else {
-				buf_len = sgx_strlen("LOADING");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "LOADING", buf_len+1);
-			}
-
-			free(tmp_buf);
-			continue;
-		}
-
-		// ONION_KEY CREATION
-		if(!sgx_strcmp(tmp_buf, "EXIT_NODE_ONION_KEY_CR")) {
-			printf("Exit Node %d onion_key creation.\n", exit_node_num);
-
-			if(!(onionkey = crypto_pk_new())) {
-				buf_len = sgx_strlen("EXIT_NODE_ONION_KEY_CR_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_ONION_KEY_CR_ERROR", buf_len+1);
-				free(tmp_buf);
-				return 0;
-			}
-
-			if(crypto_pk_generate_key(onionkey)) {
-				buf_len = sgx_strlen("EXIT_NODE_ONION_KEY_CR_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_ONION_KEY_CR_ERROR", buf_len+1);
-				free(tmp_buf);
-				return 0;
-			}
-
-			if(crypto_pk_check_key(onionkey) <= 0) {
-				buf_len = sgx_strlen("EXIT_NODE_ONION_KEY_CR_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_ONION_KEY_CR_ERROR", buf_len+1);
-				free(tmp_buf);
-				return 0;
-			}
-
-			buf_len = sgx_strlen("EXIT_NODE_ONION_KEY_CR_DONE");
-			sgx_write(fd_et, &buf_len, sizeof(int));
-			sgx_write(fd_et, "EXIT_NODE_ONION_KEY_CR_DONE", buf_len+1);
-
-			free(tmp_buf);
-			continue;
-		}
-
-		// IDENTITY_KEY LOADING
-		if(!sgx_strcmp(tmp_buf, "EXIT_NODE_ONION_KEY_LD")) {
-			printf("Exit Node %d onionkey loading.\n", exit_node_num);
-
-			free(tmp_buf);
-			continue;
-		}
-
-		if(!sgx_strcmp(tmp_buf, "EXIT_NODE_ONION_PUBKEY_STR")) {
-			printf("Giving Exit Node %d onion publickey string.\n", exit_node_num);
-
-			char *onion_pkey;
-			size_t onion_pkeylen;
-
-			if(crypto_pk_write_public_key_to_string(onionkey,
-											&onion_pkey, &onion_pkeylen) < 0) {
-				printf("write onion_pkey to string failed!\n");
-				buf_len = sgx_strlen("EXIT_NODE_ONION_PUBKEY_STR_ERROR");
-				sgx_write(fd_et, &buf_len, sizeof(int));
-				sgx_write(fd_et, "EXIT_NODE_ONION_PUBKEY_STR_ERROR", buf_len+1);
-				return 0;
-			}
-
-			buf_len = sgx_strlen("EXIT_NODE_ONION_PUBKEY_STR_DONE");
-			sgx_write(fd_et, &buf_len, sizeof(int));
-			sgx_write(fd_et, "EXIT_NODE_ONION_PUBKEY_STR_DONE", buf_len+1);
-
-			sgx_write(fd_et, &onion_pkeylen, sizeof(size_t));
-			sgx_write(fd_et, onion_pkey, onion_pkeylen+1);
-
-			free(onion_pkey);
-			free(tmp_buf);
-			continue;
-		}
+            buf_len = sgx_strlen("CONSENSUS_SIG_VERIFY_DONE");
+            sgx_write(fd_et, &buf_len, sizeof(int));
+            sgx_write(fd_et, "CONSENSUS_SIG_VERIFY_DONE", buf_len+1);
+
+            sgx_free(tmp_buf);
+            continue;
+        }
 	}
 
 	return 1;
@@ -2226,14 +1466,9 @@ void enclave_main()
 
 // ------------------- chutney configure ------------------- //
 
-	int retval;
+	int retval = 0;
 
-	if(exit_node_num != 3)
-		retval = directory_configure(fd_te, fd_et);
-	else {
-//TODO
-//		retval = exit_node_handling(fd_te, fd_et, 0);	
-	}
+	retval = directory_configure(fd_te, fd_et);
 
 	if(retval == 0) {
 		sgx_puts("Error occurred. Quit program\n");
@@ -2244,25 +1479,6 @@ void enclave_main()
     sgx_close(fd_te);
 
 // ------------------- chutney start ------------------- //
-//TODO
-/*
-	if(authority_num == 1) {
-		key_enc_to_tor = 1212;
-		key_tor_to_enc = 2121;
-	}
-	else if(authority_num == 2) {
-		key_enc_to_tor = 3434;
-		key_tor_to_enc = 4343;
-	}
-	else if(authority_num == 3) {
-		key_enc_to_tor = 5656;
-		key_tor_to_enc = 6565;
-	}
-
-	if(exit_node_num == 3) {
-		key_enc_to_tor = 7878;
-		key_tor_to_enc = 8787;
-	}
 
     key_enc_to_tor = 1212;
     key_tor_to_enc = 2121;
@@ -2282,24 +1498,13 @@ void enclave_main()
         exit(1);
 	}
 
-	if(exit_node_num != 3){	
-		retval = directory_request(fd_et, fd_te);
+    retval = directory_request(fd_et, fd_te);
 
-		if(retval == 0) 
-			printf("Error occurred. Quit program\n");
-
-	}
-	else if(exit_node_num == 3) {
-		client_id_key = NULL;		// for key loading
-		retval = exit_node_handling(fd_te, fd_et, 1);
-
-		if(retval == 0) 
-			printf("Error occurred, Quit program\n");
-	}
+    if(retval == 0) 
+        sgx_printf("Error occurred. Quit program\n");
 
 	sgx_close(fd_et);
 	sgx_close(fd_te);
-*/
 
     sgx_exit(NULL);
 }

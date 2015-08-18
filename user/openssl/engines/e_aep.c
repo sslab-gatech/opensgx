@@ -347,7 +347,7 @@ static int bind_aep(ENGINE *e)
 #  ifndef OPENSSL_NO_DYNAMIC_ENGINE
 static int bind_helper(ENGINE *e, const char *id)
 {
-    if (id && (strcmp(id, engine_aep_id) != 0))
+    if (id && (sgx_strcmp(id, engine_aep_id) != 0))
         return 0;
     if (!bind_aep(e))
         return 0;

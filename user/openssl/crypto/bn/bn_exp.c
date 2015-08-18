@@ -112,8 +112,6 @@
 #include "cryptlib.h"
 #include "bn_lcl.h"
 
-#include "../sgx.h"
-
 #include <stdlib.h>
 #ifdef _WIN32
 # include <malloc.h>

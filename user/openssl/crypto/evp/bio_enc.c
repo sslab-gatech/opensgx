@@ -162,7 +162,7 @@ static int enc_read(BIO *b, char *out, int outl)
         i = ctx->buf_len - ctx->buf_off;
         if (i > outl)
             i = outl;
-        memcpy(out, &(ctx->buf[ctx->buf_off]), i);
+        sgx_memcpy(out, &(ctx->buf[ctx->buf_off]), i);
         ret = i;
         out += i;
         outl -= i;
@@ -221,7 +221,7 @@ static int enc_read(BIO *b, char *out, int outl)
             i = outl;
         if (i <= 0)
             break;
-        memcpy(out, ctx->buf, i);
+        sgx_memcpy(out, ctx->buf, i);
         ret += i;
         ctx->buf_off = i;
         outl -= i;
@@ -399,7 +399,7 @@ EVP_CIPHER_ctx *c;
 
         b->init=1;
         ctx=(BIO_ENC_CTX *)b->ptr;
-        memcpy(ctx->cipher,c,sizeof(EVP_CIPHER_CTX));
+        sgx_memcpy(ctx->cipher,c,sizeof(EVP_CIPHER_CTX));
 
         if (b->callback != NULL)
                 b->callback(b,BIO_CB_CTRL,(char *)c,BIO_CTRL_SET,e,1L);

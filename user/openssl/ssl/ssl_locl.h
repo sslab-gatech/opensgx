@@ -148,6 +148,7 @@
 # include <errno.h>
 
 # include "e_os.h"
+# include "../crypto/sgx.h"
 
 # include <openssl/buffer.h>
 # ifndef OPENSSL_NO_COMP

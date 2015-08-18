@@ -139,7 +139,7 @@ int main(int argc, char *argv[])
     fprintf(stdout, "Testing Whirlpool ");
 
     WHIRLPOOL("", 0, md);
-    if (memcmp(md, iso_test_1, sizeof(iso_test_1))) {
+    if (sgx_memcmp(md, iso_test_1, sizeof(iso_test_1))) {
         fflush(stdout);
         fprintf(stderr, "\nTEST 1 of 9 failed.\n");
         return 1;
@@ -148,7 +148,7 @@ int main(int argc, char *argv[])
     fflush(stdout);
 
     WHIRLPOOL("a", 1, md);
-    if (memcmp(md, iso_test_2, sizeof(iso_test_2))) {
+    if (sgx_memcmp(md, iso_test_2, sizeof(iso_test_2))) {
         fflush(stdout);
         fprintf(stderr, "\nTEST 2 of 9 failed.\n");
         return 1;
@@ -157,7 +157,7 @@ int main(int argc, char *argv[])
     fflush(stdout);
 
     WHIRLPOOL("abc", 3, md);
-    if (memcmp(md, iso_test_3, sizeof(iso_test_3))) {
+    if (sgx_memcmp(md, iso_test_3, sizeof(iso_test_3))) {
         fflush(stdout);
         fprintf(stderr, "\nTEST 3 of 9 failed.\n");
         return 1;
@@ -166,7 +166,7 @@ int main(int argc, char *argv[])
     fflush(stdout);
 
     WHIRLPOOL("message digest", 14, md);
-    if (memcmp(md, iso_test_4, sizeof(iso_test_4))) {
+    if (sgx_memcmp(md, iso_test_4, sizeof(iso_test_4))) {
         fflush(stdout);
         fprintf(stderr, "\nTEST 4 of 9 failed.\n");
         return 1;
@@ -175,7 +175,7 @@ int main(int argc, char *argv[])
     fflush(stdout);
 
     WHIRLPOOL("abcdefghijklmnopqrstuvwxyz", 26, md);
-    if (memcmp(md, iso_test_5, sizeof(iso_test_5))) {
+    if (sgx_memcmp(md, iso_test_5, sizeof(iso_test_5))) {
         fflush(stdout);
         fprintf(stderr, "\nTEST 5 of 9 failed.\n");
         return 1;
@@ -185,7 +185,7 @@ int main(int argc, char *argv[])
 
     WHIRLPOOL("ABCDEFGHIJKLMNOPQRSTUVWXYZ"
               "abcdefghijklmnopqrstuvwxyz" "0123456789", 62, md);
-    if (memcmp(md, iso_test_6, sizeof(iso_test_6))) {
+    if (sgx_memcmp(md, iso_test_6, sizeof(iso_test_6))) {
         fflush(stdout);
         fprintf(stderr, "\nTEST 6 of 9 failed.\n");
         return 1;
@@ -195,7 +195,7 @@ int main(int argc, char *argv[])
 
     WHIRLPOOL("1234567890" "1234567890" "1234567890" "1234567890"
               "1234567890" "1234567890" "1234567890" "1234567890", 80, md);
-    if (memcmp(md, iso_test_7, sizeof(iso_test_7))) {
+    if (sgx_memcmp(md, iso_test_7, sizeof(iso_test_7))) {
         fflush(stdout);
         fprintf(stderr, "\nTEST 7 of 9 failed.\n");
         return 1;
@@ -204,7 +204,7 @@ int main(int argc, char *argv[])
     fflush(stdout);
 
     WHIRLPOOL("abcdbcdecdefdefgefghfghighijhijk", 32, md);
-    if (memcmp(md, iso_test_8, sizeof(iso_test_8))) {
+    if (sgx_memcmp(md, iso_test_8, sizeof(iso_test_8))) {
         fflush(stdout);
         fprintf(stderr, "\nTEST 8 of 9 failed.\n");
         return 1;
@@ -225,7 +225,7 @@ int main(int argc, char *argv[])
                          "aaaaaaaa" "aaaaaaaa" "aaaaaaaa" "aaaaaaaa",
                          (1000000 - i) < 288 ? 1000000 - i : 288);
     WHIRLPOOL_Final(md, &ctx);
-    if (memcmp(md, iso_test_9, sizeof(iso_test_9))) {
+    if (sgx_memcmp(md, iso_test_9, sizeof(iso_test_9))) {
         fflush(stdout);
         fprintf(stderr, "\nTEST 9 of 9 failed.\n");
         return 1;

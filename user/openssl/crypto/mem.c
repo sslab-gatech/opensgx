@@ -75,7 +75,7 @@ static int allow_customize_debug = 1; /* exchanging memory-related functions
  * the following pointers may be changed as long as 'allow_customize' is set
  */
 
-static void *(*malloc_func) (size_t) = sgx_malloc + ENCLAVE_OFFSET;
+static void *(*malloc_func) (size_t) = sgx_malloc;
 
 static void *default_malloc_ex(size_t num, const char *file, int line)
 {
@@ -83,9 +83,9 @@ static void *default_malloc_ex(size_t num, const char *file, int line)
 }
 
 static void *(*malloc_ex_func) (size_t, const char *file, int line)
-    = default_malloc_ex + ENCLAVE_OFFSET;
+    = default_malloc_ex;
 
-static void *(*realloc_func) (void *, size_t) = sgx_realloc + ENCLAVE_OFFSET;
+static void *(*realloc_func) (void *, size_t) = sgx_realloc;
 static void *default_realloc_ex(void *str, size_t num,
                                 const char *file, int line)
 {
@@ -93,20 +93,20 @@ static void *default_realloc_ex(void *str, size_t num,
 }
 
 static void *(*realloc_ex_func) (void *, size_t, const char *file, int line)
-    = default_realloc_ex + ENCLAVE_OFFSET;
+    = default_realloc_ex;
 
-static void (*free_func) (void *) = sgx_free + ENCLAVE_OFFSET;
+static void (*free_func) (void *) = sgx_free;
 
-static void *(*malloc_locked_func) (size_t) = sgx_malloc + ENCLAVE_OFFSET;
+static void *(*malloc_locked_func) (size_t) = sgx_malloc;
 static void *default_malloc_locked_ex(size_t num, const char *file, int line)
 {
     return malloc_locked_func(num);
 }
 
 static void *(*malloc_locked_ex_func) (size_t, const char *file, int line)
-    = default_malloc_locked_ex + ENCLAVE_OFFSET;
+    = default_malloc_locked_ex;
 
-static void (*free_locked_func) (void *) = sgx_free + ENCLAVE_OFFSET;
+static void (*free_locked_func) (void *) = sgx_free;
 
 /* may be changed as long as 'allow_customize_debug' is set */
 /* XXX use correct function pointer types */
@@ -369,7 +369,7 @@ char *CRYPTO_strdup(const char *str, const char *file, int line)
 {
     char *ret = CRYPTO_malloc(strlen(str) + 1, file, line);
 
-    strcpy(ret, str);
+    sgx_strcpy(ret, str);
     return ret;
 }
 
@@ -408,7 +408,7 @@ void *CRYPTO_realloc_clean(void *str, int old_len, int num, const char *file,
         return NULL;
 
     /*
-     * We don't support shrinking the buffer. Note the memcpy that copies
+     * We don't support shrinking the buffer. Note the sgx_memcpy that copies
      * |old_len| bytes to the new buffer, below.
      */
     if (num < old_len)

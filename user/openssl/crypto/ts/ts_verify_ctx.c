@@ -145,7 +145,7 @@ TS_VERIFY_CTX *TS_REQ_to_TS_VERIFY_CTX(TS_REQ *req, TS_VERIFY_CTX *ctx)
     ret->imprint_len = ASN1_STRING_length(msg);
     if (!(ret->imprint = OPENSSL_malloc(ret->imprint_len)))
         goto err;
-    memcpy(ret->imprint, ASN1_STRING_data(msg), ret->imprint_len);
+    sgx_memcpy(ret->imprint, ASN1_STRING_data(msg), ret->imprint_len);
 
     /* Setting nonce. */
     if ((nonce = TS_REQ_get_nonce(req)) != NULL) {

@@ -67,6 +67,8 @@
 
 #include "ec_lcl.h"
 
+#include "../sgx.h"
+
 /*
  * This file implements the wNAF-based interleaving multi-exponentation method
  * (<URL:http://www.informatik.tu-darmstadt.de/TI/Mitarbeiter/moeller.html#multiexp>);
@@ -553,7 +555,7 @@ int ec_wNAF_mul(const EC_GROUP *group, EC_POINT *r, const BIGNUM *scalar,
                         OPENSSL_free(tmp_wNAF);
                         goto err;
                     }
-                    memcpy(wNAF[i], pp, wNAF_len[i]);
+                    sgx_memcpy(wNAF[i], pp, wNAF_len[i]);
                     if (wNAF_len[i] > max_len)
                         max_len = wNAF_len[i];
 

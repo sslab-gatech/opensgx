@@ -35,6 +35,7 @@
 #include "cpu.h"
 #include "disas/disas.h"
 #include "tcg.h"
+#include "tcg-plugin.h"
 #if defined(CONFIG_USER_ONLY)
 #include "qemu.h"
 #if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
@@ -156,7 +157,14 @@ int cpu_gen_code(CPUArchState *env, TranslationBlock *tb, int *gen_code_size_ptr
 #endif
     tcg_func_start(s);
 
+
+    if(guest_ins_count == 1) 
+        tcg_plugin_before_gen_tb(ENV_GET_CPU(env), tb);
+
     gen_intermediate_code(env, tb);
+
+    if(guest_ins_count == 1) 
+        tcg_plugin_after_gen_tb(ENV_GET_CPU(env), tb);
 
     /* generate machine code */
     gen_code_buf = tb->tc_ptr;

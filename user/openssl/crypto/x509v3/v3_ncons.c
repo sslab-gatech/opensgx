@@ -120,10 +120,10 @@ static void *v2i_NAME_CONSTRAINTS(const X509V3_EXT_METHOD *method,
         goto memerr;
     for (i = 0; i < sk_CONF_VALUE_num(nval); i++) {
         val = sk_CONF_VALUE_value(nval, i);
-        if (!strncmp(val->name, "permitted", 9) && val->name[9]) {
+        if (!sgx_strncmp(val->name, "permitted", 9) && val->name[9]) {
             ptree = &ncons->permittedSubtrees;
             tval.name = val->name + 10;
-        } else if (!strncmp(val->name, "excluded", 8) && val->name[8]) {
+        } else if (!sgx_strncmp(val->name, "excluded", 8) && val->name[8]) {
             ptree = &ncons->excludedSubtrees;
             tval.name = val->name + 9;
         } else {
@@ -360,7 +360,7 @@ static int nc_dn(X509_NAME *nm, X509_NAME *base)
         return X509_V_ERR_OUT_OF_MEM;
     if (base->canon_enclen > nm->canon_enclen)
         return X509_V_ERR_PERMITTED_VIOLATION;
-    if (memcmp(base->canon_enc, nm->canon_enc, base->canon_enclen))
+    if (sgx_memcmp(base->canon_enc, nm->canon_enc, base->canon_enclen))
         return X509_V_ERR_PERMITTED_VIOLATION;
     return X509_V_OK;
 }
@@ -382,7 +382,7 @@ static int nc_dns(ASN1_IA5STRING *dns, ASN1_IA5STRING *base)
             return X509_V_ERR_PERMITTED_VIOLATION;
     }
 
-    if (strcasecmp(baseptr, dnsptr))
+    if (sgx_strcasecmp(baseptr, dnsptr))
         return X509_V_ERR_PERMITTED_VIOLATION;
 
     return X509_V_OK;
@@ -394,15 +394,15 @@ static int nc_email(ASN1_IA5STRING *eml, ASN1_IA5STRING *base)
     const char *baseptr = (char *)base->data;
     const char *emlptr = (char *)eml->data;
 
-    const char *baseat = strchr(baseptr, '@');
-    const char *emlat = strchr(emlptr, '@');
+    const char *baseat = sgx_strchr(baseptr, '@');
+    const char *emlat = sgx_strchr(emlptr, '@');
     if (!emlat)
         return X509_V_ERR_UNSUPPORTED_NAME_SYNTAX;
     /* Special case: inital '.' is RHS match */
     if (!baseat && (*baseptr == '.')) {
         if (eml->length > base->length) {
             emlptr += eml->length - base->length;
-            if (!strcasecmp(baseptr, emlptr))
+            if (!sgx_strcasecmp(baseptr, emlptr))
                 return X509_V_OK;
         }
         return X509_V_ERR_PERMITTED_VIOLATION;
@@ -415,7 +415,7 @@ static int nc_email(ASN1_IA5STRING *eml, ASN1_IA5STRING *base)
             if ((baseat - baseptr) != (emlat - emlptr))
                 return X509_V_ERR_PERMITTED_VIOLATION;
             /* Case sensitive match of local part */
-            if (strncmp(baseptr, emlptr, emlat - emlptr))
+            if (sgx_strncmp(baseptr, emlptr, emlat - emlptr))
                 return X509_V_ERR_PERMITTED_VIOLATION;
         }
         /* Position base after '@' */
@@ -423,7 +423,7 @@ static int nc_email(ASN1_IA5STRING *eml, ASN1_IA5STRING *base)
     }
     emlptr = emlat + 1;
     /* Just have hostname left to match: case insensitive */
-    if (strcasecmp(baseptr, emlptr))
+    if (sgx_strcasecmp(baseptr, emlptr))
         return X509_V_ERR_PERMITTED_VIOLATION;
 
     return X509_V_OK;
@@ -434,7 +434,7 @@ static int nc_uri(ASN1_IA5STRING *uri, ASN1_IA5STRING *base)
 {
     const char *baseptr = (char *)base->data;
     const char *hostptr = (char *)uri->data;
-    const char *p = strchr(hostptr, ':');
+    const char *p = sgx_strchr(hostptr, ':');
     int hostlen;
     /* Check for foo:// and skip past it */
     if (!p || (p[1] != '/') || (p[2] != '/'))
@@ -445,13 +445,13 @@ static int nc_uri(ASN1_IA5STRING *uri, ASN1_IA5STRING *base)
 
     /* Look for a port indicator as end of hostname first */
 
-    p = strchr(hostptr, ':');
+    p = sgx_strchr(hostptr, ':');
     /* Otherwise look for trailing slash */
     if (!p)
-        p = strchr(hostptr, '/');
+        p = sgx_strchr(hostptr, '/');
 
     if (!p)
-        hostlen = strlen(hostptr);
+        hostlen = sgx_strlen(hostptr);
     else
         hostlen = p - hostptr;
 
@@ -462,14 +462,14 @@ static int nc_uri(ASN1_IA5STRING *uri, ASN1_IA5STRING *base)
     if (*baseptr == '.') {
         if (hostlen > base->length) {
             p = hostptr + hostlen - base->length;
-            if (!strncasecmp(p, baseptr, base->length))
+            if (!sgx_strncasecmp(p, baseptr, base->length))
                 return X509_V_OK;
         }
         return X509_V_ERR_PERMITTED_VIOLATION;
     }
 
     if ((base->length != (int)hostlen)
-        || strncasecmp(hostptr, baseptr, hostlen))
+        || sgx_strncasecmp(hostptr, baseptr, hostlen))
         return X509_V_ERR_PERMITTED_VIOLATION;
 
     return X509_V_OK;

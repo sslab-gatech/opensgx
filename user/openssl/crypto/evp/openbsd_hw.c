@@ -138,7 +138,7 @@ static int dev_crypto_init_key(EVP_CIPHER_CTX *ctx, int cipher,
 
     assert(ctx->cipher->iv_len <= MAX_HW_IV);
 
-    memcpy(CDATA(ctx)->key, key, klen);
+    sgx_memcpy(CDATA(ctx)->key, key, klen);
 
     CDATA(ctx)->cipher = cipher;
     CDATA(ctx)->keylen = klen;
@@ -175,7 +175,7 @@ static int dev_crypto_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out,
         cryp.iv = (caddr_t) ctx->iv;
 
     if (!ctx->encrypt)
-        memcpy(lb, &in[cryp.len - ctx->cipher->iv_len], ctx->cipher->iv_len);
+        sgx_memcpy(lb, &in[cryp.len - ctx->cipher->iv_len], ctx->cipher->iv_len);
 
     if (ioctl(fd, CIOCCRYPT, &cryp) == -1) {
         if (errno == EINVAL) {  /* buffers are misaligned */
@@ -188,7 +188,7 @@ static int dev_crypto_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out,
 
             if (((unsigned long)in & 3) || cinl != inl) {
                 cin = OPENSSL_malloc(cinl);
-                memcpy(cin, in, inl);
+                sgx_memcpy(cin, in, inl);
                 cryp.src = cin;
             }
 
@@ -207,7 +207,7 @@ static int dev_crypto_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out,
             }
 
             if (cout) {
-                memcpy(out, cout, inl);
+                sgx_memcpy(out, cout, inl);
                 OPENSSL_free(cout);
             }
             if (cin)
@@ -220,10 +220,10 @@ static int dev_crypto_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out,
     }
 
     if (ctx->encrypt)
-        memcpy(ctx->iv, &out[cryp.len - ctx->cipher->iv_len],
+        sgx_memcpy(ctx->iv, &out[cryp.len - ctx->cipher->iv_len],
                ctx->cipher->iv_len);
     else
-        memcpy(ctx->iv, lb, ctx->cipher->iv_len);
+        sgx_memcpy(ctx->iv, lb, ctx->cipher->iv_len);
 
     return 1;
 }
@@ -318,7 +318,7 @@ static int do_digest(int ses, unsigned char *md, const void *data, int len)
 
     /* some cards can't do zero length */
     if (!len) {
-        memcpy(md, md5zero, 16);
+        sgx_memcpy(md, md5zero, 16);
         return 1;
     }
 
@@ -336,7 +336,7 @@ static int do_digest(int ses, unsigned char *md, const void *data, int len)
             char *dcopy;
 
             dcopy = OPENSSL_malloc(len);
-            memcpy(dcopy, data, len);
+            sgx_memcpy(dcopy, data, len);
             cryp.src = dcopy;
             cryp.dst = cryp.src; // FIXME!!!
 
@@ -366,7 +366,7 @@ static int dev_crypto_md5_update(EVP_MD_CTX *ctx, const void *data,
         return do_digest(md_data->sess.ses, md_data->md, data, len);
 
     md_data->data = OPENSSL_realloc(md_data->data, md_data->len + len);
-    memcpy(md_data->data + md_data->len, data, len);
+    sgx_memcpy(md_data->data + md_data->len, data, len);
     md_data->len += len;
 
     return 1;
@@ -378,7 +378,7 @@ static int dev_crypto_md5_final(EVP_MD_CTX *ctx, unsigned char *md)
     MD_DATA *md_data = ctx->md_data;
 
     if (ctx->flags & EVP_MD_CTX_FLAG_ONESHOT) {
-        memcpy(md, md_data->md, MD5_DIGEST_LENGTH);
+        sgx_memcpy(md, md_data->md, MD5_DIGEST_LENGTH);
         ret = 1;
     } else {
         ret = do_digest(md_data->sess.ses, md, md_data->data, md_data->len);
@@ -399,7 +399,7 @@ static int dev_crypto_md5_copy(EVP_MD_CTX *to, const EVP_MD_CTX *from)
     assert(from->digest->flags & EVP_MD_FLAG_ONESHOT);
 
     to_md->data = OPENSSL_malloc(from_md->len);
-    memcpy(to_md->data, from_md->data, from_md->len);
+    sgx_memcpy(to_md->data, from_md->data, from_md->len);
 
     return 1;
 }

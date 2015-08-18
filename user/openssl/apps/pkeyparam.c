@@ -89,13 +89,13 @@ int MAIN(int argc, char **argv)
     OpenSSL_add_all_algorithms();
     args = argv + 1;
     while (!badarg && *args && *args[0] == '-') {
-        if (!strcmp(*args, "-in")) {
+        if (!sgx_strcmp(*args, "-in")) {
             if (args[1]) {
                 args++;
                 infile = *args;
             } else
                 badarg = 1;
-        } else if (!strcmp(*args, "-out")) {
+        } else if (!sgx_strcmp(*args, "-out")) {
             if (args[1]) {
                 args++;
                 outfile = *args;
@@ -103,16 +103,16 @@ int MAIN(int argc, char **argv)
                 badarg = 1;
         }
 #ifndef OPENSSL_NO_ENGINE
-        else if (strcmp(*args, "-engine") == 0) {
+        else if (sgx_strcmp(*args, "-engine") == 0) {
             if (!args[1])
                 goto bad;
             engine = *(++args);
         }
 #endif
 
-        else if (strcmp(*args, "-text") == 0)
+        else if (sgx_strcmp(*args, "-text") == 0)
             text = 1;
-        else if (strcmp(*args, "-noout") == 0)
+        else if (sgx_strcmp(*args, "-noout") == 0)
             noout = 1;
         args++;
     }

@@ -116,24 +116,24 @@ int MAIN(int argc, char **argv)
     for (;;) {
         if (argc <= 0)
             break;
-        if (strcmp(*argv, "-out") == 0) {
+        if (sgx_strcmp(*argv, "-out") == 0) {
             if (--argc < 1)
                 goto bad;
             outfile = *(++argv);
-        } else if (strcmp(*argv, "-2") == 0)
+        } else if (sgx_strcmp(*argv, "-2") == 0)
             g = 2;
-/*-     else if (strcmp(*argv,"-3") == 0)
+/*-     else if (sgx_strcmp(*argv,"-3") == 0)
                 g=3; */
-        else if (strcmp(*argv, "-5") == 0)
+        else if (sgx_strcmp(*argv, "-5") == 0)
             g = 5;
 # ifndef OPENSSL_NO_ENGINE
-        else if (strcmp(*argv, "-engine") == 0) {
+        else if (sgx_strcmp(*argv, "-engine") == 0) {
             if (--argc < 1)
                 goto bad;
             engine = *(++argv);
         }
 # endif
-        else if (strcmp(*argv, "-rand") == 0) {
+        else if (sgx_strcmp(*argv, "-rand") == 0) {
             if (--argc < 1)
                 goto bad;
             inrand = *(++argv);

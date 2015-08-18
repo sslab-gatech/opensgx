@@ -2,6 +2,8 @@
 #include <stddef.h>
 #include "aes.h"
 
+#ifndef __aes_cmac128_context_struct__
+#define __aes_cmac128_context_struct__
 typedef struct aes_cmac_128_context {
     aes_context aes_key;
 
@@ -14,6 +16,7 @@ typedef struct aes_cmac_128_context {
     size_t last_len;
 }
 aes_cmac128_context;
+#endif
 
 /*
  * \brief AES-CMAC-128 context setup

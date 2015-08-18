@@ -239,15 +239,15 @@ int EVP_CipherInit_ex(EVP_CIPHER_CTX *ctx, const EVP_CIPHER *cipher,
             OPENSSL_assert(EVP_CIPHER_CTX_iv_length(ctx) <=
                            (int)sizeof(ctx->iv));
             if (iv)
-                memcpy(ctx->oiv, iv, EVP_CIPHER_CTX_iv_length(ctx));
-            memcpy(ctx->iv, ctx->oiv, EVP_CIPHER_CTX_iv_length(ctx));
+                sgx_memcpy(ctx->oiv, iv, EVP_CIPHER_CTX_iv_length(ctx));
+            sgx_memcpy(ctx->iv, ctx->oiv, EVP_CIPHER_CTX_iv_length(ctx));
             break;
 
         case EVP_CIPH_CTR_MODE:
             ctx->num = 0;
             /* Don't reuse IV for CTR mode */
             if (iv)
-                memcpy(ctx->iv, iv, EVP_CIPHER_CTX_iv_length(ctx));
+                sgx_memcpy(ctx->iv, iv, EVP_CIPHER_CTX_iv_length(ctx));
             break;
 
         default:
@@ -350,13 +350,13 @@ int EVP_EncryptUpdate(EVP_CIPHER_CTX *ctx, unsigned char *out, int *outl,
     OPENSSL_assert(bl <= (int)sizeof(ctx->buf));
     if (i != 0) {
         if (i + inl < bl) {
-            memcpy(&(ctx->buf[i]), in, inl);
+            sgx_memcpy(&(ctx->buf[i]), in, inl);
             ctx->buf_len += inl;
             *outl = 0;
             return 1;
         } else {
             j = bl - i;
-            memcpy(&(ctx->buf[i]), in, j);
+            sgx_memcpy(&(ctx->buf[i]), in, j);
             if (!M_do_cipher(ctx, out, ctx->buf, bl))
                 return 0;
             inl -= j;
@@ -375,7 +375,7 @@ int EVP_EncryptUpdate(EVP_CIPHER_CTX *ctx, unsigned char *out, int *outl,
     }
 
     if (i != 0)
-        memcpy(ctx->buf, &(in[inl]), i);
+        sgx_memcpy(ctx->buf, &(in[inl]), i);
     ctx->buf_len = i;
     return 1;
 }
@@ -457,7 +457,7 @@ int EVP_DecryptUpdate(EVP_CIPHER_CTX *ctx, unsigned char *out, int *outl,
     OPENSSL_assert(b <= sizeof ctx->final);
 
     if (ctx->final_used) {
-        memcpy(out, ctx->final, b);
+        sgx_memcpy(out, ctx->final, b);
         out += b;
         fix_len = 1;
     } else
@@ -473,7 +473,7 @@ int EVP_DecryptUpdate(EVP_CIPHER_CTX *ctx, unsigned char *out, int *outl,
     if (b > 1 && !ctx->buf_len) {
         *outl -= b;
         ctx->final_used = 1;
-        memcpy(ctx->final, &out[*outl], b);
+        sgx_memcpy(ctx->final, &out[*outl], b);
     } else
         ctx->final_used = 0;
 
@@ -651,7 +651,7 @@ int EVP_CIPHER_CTX_copy(EVP_CIPHER_CTX *out, const EVP_CIPHER_CTX *in)
 #endif
 
     EVP_CIPHER_CTX_cleanup(out);
-    memcpy(out, in, sizeof *out);
+    sgx_memcpy(out, in, sizeof *out);
 
     if (in->cipher_data && in->cipher->ctx_size) {
         out->cipher_data = OPENSSL_malloc(in->cipher->ctx_size);
@@ -659,7 +659,7 @@ int EVP_CIPHER_CTX_copy(EVP_CIPHER_CTX *out, const EVP_CIPHER_CTX *in)
             EVPerr(EVP_F_EVP_CIPHER_CTX_COPY, ERR_R_MALLOC_FAILURE);
             return 0;
         }
-        memcpy(out->cipher_data, in->cipher_data, in->cipher->ctx_size);
+        sgx_memcpy(out->cipher_data, in->cipher_data, in->cipher->ctx_size);
     }
 
     if (in->cipher->flags & EVP_CIPH_CUSTOM_COPY)

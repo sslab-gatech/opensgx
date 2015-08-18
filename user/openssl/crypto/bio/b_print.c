@@ -227,7 +227,7 @@ _dopr(char **sbuffer,
             }
             break;
         case DP_S_MIN:
-            if (isdigit((unsigned char)ch)) {
+            if (sgx_isdigit((unsigned char)ch)) {
                 min = 10 * min + char_to_int(ch);
                 ch = *format++;
             } else if (ch == '*') {
@@ -245,7 +245,7 @@ _dopr(char **sbuffer,
                 state = DP_S_MOD;
             break;
         case DP_S_MAX:
-            if (isdigit((unsigned char)ch)) {
+            if (sgx_isdigit((unsigned char)ch)) {
                 if (max < 0)
                     max = 0;
                 max = 10 * max + char_to_int(ch);
@@ -503,7 +503,7 @@ fmtint(char **sbuffer,
 
     zpadlen = max - place;
     spadlen =
-        min - OSSL_MAX(max, place) - (signvalue ? 1 : 0) - strlen(prefix);
+        min - OSSL_MAX(max, place) - (signvalue ? 1 : 0) - sgx_strlen(prefix);
     if (zpadlen < 0)
         zpadlen = 0;
     if (spadlen < 0)
@@ -715,7 +715,7 @@ doapr_outch(char **sbuffer,
                 *buffer = OPENSSL_malloc(*maxlen);
                 if (*currlen > 0) {
                     assert(*sbuffer != NULL);
-                    memcpy(*buffer, *sbuffer, *currlen);
+                    sgx_memcpy(*buffer, *sbuffer, *currlen);
                 }
                 *sbuffer = NULL;
             } else {

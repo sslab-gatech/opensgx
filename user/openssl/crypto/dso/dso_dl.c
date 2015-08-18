@@ -255,7 +255,7 @@ static char *dl_merger(DSO *dso, const char *filespec1, const char *filespec2)
             DSOerr(DSO_F_DL_MERGER, ERR_R_MALLOC_FAILURE);
             return (NULL);
         }
-        strcpy(merged, filespec1);
+        sgx_strcpy(merged, filespec1);
     }
     /*
      * If the first file specification is missing, the second one rules.
@@ -266,7 +266,7 @@ static char *dl_merger(DSO *dso, const char *filespec1, const char *filespec2)
             DSOerr(DSO_F_DL_MERGER, ERR_R_MALLOC_FAILURE);
             return (NULL);
         }
-        strcpy(merged, filespec2);
+        sgx_strcpy(merged, filespec2);
     } else
         /*
          * This part isn't as trivial as it looks.  It assumes that the
@@ -278,8 +278,8 @@ static char *dl_merger(DSO *dso, const char *filespec1, const char *filespec2)
     {
         int spec2len, len;
 
-        spec2len = (filespec2 ? strlen(filespec2) : 0);
-        len = spec2len + (filespec1 ? strlen(filespec1) : 0);
+        spec2len = (filespec2 ? sgx_strlen(filespec2) : 0);
+        len = spec2len + (filespec1 ? sgx_strlen(filespec1) : 0);
 
         if (filespec2 && filespec2[spec2len - 1] == '/') {
             spec2len--;
@@ -290,9 +290,9 @@ static char *dl_merger(DSO *dso, const char *filespec1, const char *filespec2)
             DSOerr(DSO_F_DL_MERGER, ERR_R_MALLOC_FAILURE);
             return (NULL);
         }
-        strcpy(merged, filespec2);
+        sgx_strcpy(merged, filespec2);
         merged[spec2len] = '/';
-        strcpy(&merged[spec2len + 1], filespec1);
+        sgx_strcpy(&merged[spec2len + 1], filespec1);
     }
     return (merged);
 }
@@ -314,12 +314,12 @@ static char *dl_name_converter(DSO *dso, const char *filename)
     char *translated;
     int len, rsize, transform;
 
-    len = strlen(filename);
+    len = sgx_strlen(filename);
     rsize = len + 1;
     transform = (strstr(filename, "/") == NULL);
     {
         /* We will convert this to "%s.s?" or "lib%s.s?" */
-        rsize += strlen(extension); /* The length of ".s?" */
+        rsize += sgx_strlen(extension); /* The length of ".s?" */
         if ((DSO_flags(dso) & DSO_FLAG_NAME_TRANSLATION_EXT_ONLY) == 0)
             rsize += 3;         /* The length of "lib" */
     }
@@ -361,7 +361,7 @@ static int dl_pathbyaddr(void *addr, char *path, int sz)
                 return len + 1;
             if (len >= sz)
                 len = sz - 1;
-            memcpy(path, inf.filename, len);
+            sgx_memcpy(path, inf.filename, len);
             path[len++] = 0;
             return len;
         }

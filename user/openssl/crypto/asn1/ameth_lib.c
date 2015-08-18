@@ -65,8 +65,6 @@
 #endif
 #include "asn1_locl.h"
 
-#include "../sgx.h"
-
 extern const EVP_PKEY_ASN1_METHOD rsa_asn1_meths[];
 extern const EVP_PKEY_ASN1_METHOD dsa_asn1_meths[];
 extern const EVP_PKEY_ASN1_METHOD dh_asn1_meth;
@@ -226,7 +224,7 @@ const EVP_PKEY_ASN1_METHOD *EVP_PKEY_asn1_find_str(ENGINE **pe,
         if (ameth->pkey_flags & ASN1_PKEY_ALIAS)
             continue;
         if (((int)sgx_strlen(ameth->pem_str) == len) &&
-            !strncasecmp(ameth->pem_str, str, len))
+            !sgx_strncasecmp(ameth->pem_str, str, len))
             return ameth;
     }
     return NULL;
@@ -457,7 +455,7 @@ void EVP_PKEY_asn1_set_param(EVP_PKEY_ASN1_METHOD *ameth,
 void EVP_PKEY_asn1_set_free(EVP_PKEY_ASN1_METHOD *ameth,
                             void (*pkey_free) (EVP_PKEY *pkey))
 {
-//    ameth->pkey_free = pkey_free + ENCLAVE_OFFSET;
+//    ameth->pkey_free = pkey_free;
     ameth->pkey_free = pkey_free;
 }
 

@@ -48,10 +48,10 @@ void enclave_main()
         sgx_puts(UNMATCH);
 
     // sgx_memcmp test
-    if(!(sgx_memcmp(buf1, buf2, 5)))
+    /*if(!(sgx_memcmp(buf1, buf2, 5)))
         sgx_puts(MATCH);
     else 
-        sgx_puts(UNMATCH);
+        sgx_puts(UNMATCH);*/
 
     // sgx_memset test
     sgx_memset(buf1, 'A', 5);

@@ -99,15 +99,15 @@ int main(int argc, char *argv[])
     static char *text = "Now is the time for all ";
 
 # ifdef CHARSET_EBCDIC
-    ebcdic2ascii(text, text, strlen(text));
+    ebcdic2ascii(text, text, sgx_strlen(text));
 # endif
 
     EVP_MD_CTX_init(&c);
     EVP_DigestInit_ex(&c, EVP_mdc2(), NULL);
-    EVP_DigestUpdate(&c, (unsigned char *)text, strlen(text));
+    EVP_DigestUpdate(&c, (unsigned char *)text, sgx_strlen(text));
     EVP_DigestFinal_ex(&c, &(md[0]), NULL);
 
-    if (memcmp(md, pad1, MDC2_DIGEST_LENGTH) != 0) {
+    if (sgx_memcmp(md, pad1, MDC2_DIGEST_LENGTH) != 0) {
         for (i = 0; i < MDC2_DIGEST_LENGTH; i++)
             printf("%02X", md[i]);
         printf(" <- generated\n");
@@ -121,10 +121,10 @@ int main(int argc, char *argv[])
     EVP_DigestInit_ex(&c, EVP_mdc2(), NULL);
     /* FIXME: use a ctl function? */
     ((MDC2_CTX *)c.md_data)->pad_type = 2;
-    EVP_DigestUpdate(&c, (unsigned char *)text, strlen(text));
+    EVP_DigestUpdate(&c, (unsigned char *)text, sgx_strlen(text));
     EVP_DigestFinal_ex(&c, &(md[0]), NULL);
 
-    if (memcmp(md, pad2, MDC2_DIGEST_LENGTH) != 0) {
+    if (sgx_memcmp(md, pad2, MDC2_DIGEST_LENGTH) != 0) {
         for (i = 0; i < MDC2_DIGEST_LENGTH; i++)
             printf("%02X", md[i]);
         printf(" <- generated\n");

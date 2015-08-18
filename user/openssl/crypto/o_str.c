@@ -61,6 +61,8 @@
 #include <e_os.h>
 #include "o_str.h"
 
+#include "sgx.h"
+
 #if !defined(OPENSSL_IMPLEMENTS_strncasecmp) && \
     !defined(OPENSSL_SYSNAME_WIN32) && !defined(OPENSSL_SYSNAME_WINCE) && \
     !defined(NETWARE_CLIB)
@@ -71,7 +73,7 @@ int OPENSSL_strncasecmp(const char *str1, const char *str2, size_t n)
 {
 #if defined(OPENSSL_IMPLEMENTS_strncasecmp)
     while (*str1 && *str2 && n) {
-        int res = toupper(*str1) - toupper(*str2);
+        int res = sgx_toupper(*str1) - sgx_toupper(*str2);
         if (res)
             return res < 0 ? -1 : 1;
         str1++;
@@ -91,7 +93,7 @@ int OPENSSL_strncasecmp(const char *str1, const char *str2, size_t n)
      * OPENSSL_strncasecmp, OPENSSL_IMPLEMENTS_strncasecmp must be defined as
      * well.
      */
-    return strncasecmp(str1, str2, n);
+    return sgx_strncasecmp(str1, str2, n);
 #endif
 }
 
@@ -100,7 +102,7 @@ int OPENSSL_strcasecmp(const char *str1, const char *str2)
 #if defined(OPENSSL_IMPLEMENTS_strncasecmp)
     return OPENSSL_strncasecmp(str1, str2, (size_t)-1);
 #else
-    return strcasecmp(str1, str2);
+    return sgx_strcasecmp(str1, str2);
 #endif
 }
 

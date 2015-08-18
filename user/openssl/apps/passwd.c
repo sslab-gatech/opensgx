@@ -95,37 +95,37 @@ int MAIN(int argc, char **argv)
     badopt = 0, opt_done = 0;
     i = 0;
     while (!badopt && !opt_done && argv[++i] != NULL) {
-        if (strcmp(argv[i], "-crypt") == 0)
+        if (sgx_strcmp(argv[i], "-crypt") == 0)
             usecrypt = 1;
-        else if (strcmp(argv[i], "-1") == 0)
+        else if (sgx_strcmp(argv[i], "-1") == 0)
             use1 = 1;
-        else if (strcmp(argv[i], "-apr1") == 0)
+        else if (sgx_strcmp(argv[i], "-apr1") == 0)
             useapr1 = 1;
-        else if (strcmp(argv[i], "-salt") == 0) {
+        else if (sgx_strcmp(argv[i], "-salt") == 0) {
             if ((argv[i + 1] != NULL) && (salt == NULL)) {
                 passed_salt = 1;
                 salt = argv[++i];
             } else
                 badopt = 1;
-        } else if (strcmp(argv[i], "-in") == 0) {
+        } else if (sgx_strcmp(argv[i], "-in") == 0) {
             if ((argv[i + 1] != NULL) && !pw_source_defined) {
                 pw_source_defined = 1;
                 infile = argv[++i];
             } else
                 badopt = 1;
-        } else if (strcmp(argv[i], "-stdin") == 0) {
+        } else if (sgx_strcmp(argv[i], "-stdin") == 0) {
             if (!pw_source_defined) {
                 pw_source_defined = 1;
                 in_stdin = 1;
             } else
                 badopt = 1;
-        } else if (strcmp(argv[i], "-noverify") == 0)
+        } else if (sgx_strcmp(argv[i], "-noverify") == 0)
             in_noverify = 1;
-        else if (strcmp(argv[i], "-quiet") == 0)
+        else if (sgx_strcmp(argv[i], "-quiet") == 0)
             quiet = 1;
-        else if (strcmp(argv[i], "-table") == 0)
+        else if (sgx_strcmp(argv[i], "-table") == 0)
             table = 1;
-        else if (strcmp(argv[i], "-reverse") == 0)
+        else if (sgx_strcmp(argv[i], "-reverse") == 0)
             reverse = 1;
         else if (argv[i][0] == '-')
             badopt = 1;

@@ -389,7 +389,7 @@ static int read_string(UI *ui, UI_STRING *uis)
                                     UI_get_input_flags(uis) &
                                     UI_INPUT_FLAG_ECHO, 1)) <= 0)
             return ok;
-        if (strcmp(UI_get0_result_string(uis), UI_get0_test_string(uis)) != 0) {
+        if (sgx_strcmp(UI_get0_result_string(uis), UI_get0_test_string(uis)) != 0) {
             fprintf(tty_out, "Verify failure\n");
             fflush(tty_out);
             return 0;
@@ -411,7 +411,7 @@ static int read_till_nl(FILE *in)
     do {
         if (!fgets(buf, SIZE, in))
             return 0;
-    } while (strchr(buf, '\n') == NULL);
+    } while (sgx_strchr(buf, '\n') == NULL);
     return 1;
 }
 
@@ -454,7 +454,7 @@ static int read_string_inner(UI *ui, UI_STRING *uis, int echo, int strip_nl)
         goto error;
     if (ferror(tty_in))
         goto error;
-    if ((p = (char *)strchr(result, '\n')) != NULL) {
+    if ((p = (char *)sgx_strchr(result, '\n')) != NULL) {
         if (strip_nl)
             *p = '\0';
     } else if (!read_till_nl(tty_in))
@@ -536,7 +536,7 @@ static int open_console(UI *ui)
 static int noecho_console(UI *ui)
 {
 #ifdef TTY_FLAGS
-    memcpy(&(tty_new), &(tty_orig), sizeof(tty_orig));
+    sgx_memcpy(&(tty_new), &(tty_orig), sizeof(tty_orig));
     tty_new.TTY_FLAGS &= ~ECHO;
 #endif
 
@@ -560,7 +560,7 @@ static int noecho_console(UI *ui)
 static int echo_console(UI *ui)
 {
 #if defined(TTY_set) && !defined(OPENSSL_SYS_VMS)
-    memcpy(&(tty_new), &(tty_orig), sizeof(tty_orig));
+    sgx_memcpy(&(tty_new), &(tty_orig), sizeof(tty_orig));
     tty_new.TTY_FLAGS |= ECHO;
 #endif
 

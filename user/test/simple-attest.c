@@ -23,6 +23,8 @@
 
 void enclave_main()
 {
+// Disable due to using old API
+#if 0
     char ip[] = "127.0.0.1";
     char sendPort[] = "34444";
     char recvPort[] = "35555";
@@ -50,6 +52,6 @@ void enclave_main()
 
     //close all sockets
     sgx_close_sock();
-
+#endif
     sgx_exit(NULL);
 }

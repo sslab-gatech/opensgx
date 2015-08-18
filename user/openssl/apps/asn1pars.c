@@ -120,53 +120,53 @@ int MAIN(int argc, char **argv)
         goto end;
     }
     while (argc >= 1) {
-        if (strcmp(*argv, "-inform") == 0) {
+        if (sgx_strcmp(*argv, "-inform") == 0) {
             if (--argc < 1)
                 goto bad;
             informat = str2fmt(*(++argv));
-        } else if (strcmp(*argv, "-in") == 0) {
+        } else if (sgx_strcmp(*argv, "-in") == 0) {
             if (--argc < 1)
                 goto bad;
             infile = *(++argv);
-        } else if (strcmp(*argv, "-out") == 0) {
+        } else if (sgx_strcmp(*argv, "-out") == 0) {
             if (--argc < 1)
                 goto bad;
             derfile = *(++argv);
-        } else if (strcmp(*argv, "-i") == 0) {
+        } else if (sgx_strcmp(*argv, "-i") == 0) {
             indent = 1;
-        } else if (strcmp(*argv, "-noout") == 0)
+        } else if (sgx_strcmp(*argv, "-noout") == 0)
             noout = 1;
-        else if (strcmp(*argv, "-oid") == 0) {
+        else if (sgx_strcmp(*argv, "-oid") == 0) {
             if (--argc < 1)
                 goto bad;
             oidfile = *(++argv);
-        } else if (strcmp(*argv, "-offset") == 0) {
+        } else if (sgx_strcmp(*argv, "-offset") == 0) {
             if (--argc < 1)
                 goto bad;
             offset = atoi(*(++argv));
-        } else if (strcmp(*argv, "-length") == 0) {
+        } else if (sgx_strcmp(*argv, "-length") == 0) {
             if (--argc < 1)
                 goto bad;
             length = atoi(*(++argv));
             if (length == 0)
                 goto bad;
-        } else if (strcmp(*argv, "-dump") == 0) {
+        } else if (sgx_strcmp(*argv, "-dump") == 0) {
             dump = -1;
-        } else if (strcmp(*argv, "-dlimit") == 0) {
+        } else if (sgx_strcmp(*argv, "-dlimit") == 0) {
             if (--argc < 1)
                 goto bad;
             dump = atoi(*(++argv));
             if (dump <= 0)
                 goto bad;
-        } else if (strcmp(*argv, "-strparse") == 0) {
+        } else if (sgx_strcmp(*argv, "-strparse") == 0) {
             if (--argc < 1)
                 goto bad;
             sk_OPENSSL_STRING_push(osk, *(++argv));
-        } else if (strcmp(*argv, "-genstr") == 0) {
+        } else if (sgx_strcmp(*argv, "-genstr") == 0) {
             if (--argc < 1)
                 goto bad;
             genstr = *(++argv);
-        } else if (strcmp(*argv, "-genconf") == 0) {
+        } else if (sgx_strcmp(*argv, "-genconf") == 0) {
             if (--argc < 1)
                 goto bad;
             genconf = *(++argv);

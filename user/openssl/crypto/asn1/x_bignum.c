@@ -83,11 +83,11 @@ static int bn_c2i(ASN1_VALUE **pval, const unsigned char *cont, int len,
 
 static ASN1_PRIMITIVE_FUNCS bignum_pf = {
     NULL, 0,
-    bn_new + ENCLAVE_OFFSET,
-    bn_free + ENCLAVE_OFFSET,
+    bn_new,
+    bn_free,
     0,
-    bn_c2i + ENCLAVE_OFFSET,
-    bn_i2c + ENCLAVE_OFFSET
+    bn_c2i,
+    bn_i2c
 };
 
 ASN1_ITEM_start(BIGNUM)

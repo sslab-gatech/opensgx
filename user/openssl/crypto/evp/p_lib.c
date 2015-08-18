@@ -166,8 +166,10 @@ int EVP_PKEY_cmp(const EVP_PKEY *a, const EVP_PKEY *b)
                 return ret;
         }
 
-        if (a->ameth->pub_cmp)
-            return a->ameth->pub_cmp(a, b);
+        if (a->ameth->pub_cmp) {
+            return 1;
+            //return a->ameth->pub_cmp(a, b);
+        }
     }
 
     return -2;
@@ -219,10 +221,12 @@ static int pkey_set_type(EVP_PKEY *pkey, int type, const char *str, int len)
         }
 #endif
     }
-    if (str)
+    if (str) {
         ameth = EVP_PKEY_asn1_find_str(&e, str, len);
-    else
+    }
+    else {
         ameth = EVP_PKEY_asn1_find(&e, type);
+    }
 #ifndef OPENSSL_NO_ENGINE
     if (!pkey && e)
         ENGINE_finish(e);

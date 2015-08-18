@@ -67,7 +67,7 @@ main()
     char buf[256];
     int i;
 
-    conf = lh_new(lh_strhash, strcmp);
+    conf = lh_new(lh_strhash, sgx_strcmp);
     for (;;) {
         char *p;
 
@@ -75,9 +75,9 @@ main()
         fgets(buf, 256, stdin);
         if (buf[0] == '\0')
             break;
-        i = strlen(buf);
+        i = sgx_strlen(buf);
         p = OPENSSL_malloc(i + 1);
-        memcpy(p, buf, i + 1);
+        sgx_memcpy(p, buf, i + 1);
         lh_insert(conf, p);
     }
 

@@ -64,7 +64,7 @@ const char *LP_find_file(LP_DIR_CTX **ctx, const char *directory)
     if (*ctx == NULL) {
         const char *extdir = directory;
         char *extdirbuf = NULL;
-        size_t dirlen = strlen(directory);
+        size_t dirlen = sgx_strlen(directory);
 
         if (dirlen == 0) {
             errno = ENOENT;
@@ -87,15 +87,15 @@ const char *LP_find_file(LP_DIR_CTX **ctx, const char *directory)
                 return 0;
             }
             if (directory[dirlen - 1] != '/' && directory[dirlen - 1] != '\\')
-                extdir = strcat(strcpy(extdirbuf, directory), "/*");
+                extdir = sgx_strcat(sgx_strcpy(extdirbuf, directory), "/*");
             else
-                extdir = strcat(strcpy(extdirbuf, directory), "*");
+                extdir = sgx_strcat(sgx_strcpy(extdirbuf, directory), "*");
         }
 
         if (sizeof(TCHAR) != sizeof(char)) {
             TCHAR *wdir = NULL;
             /* len_0 denotes string length *with* trailing 0 */
-            size_t index = 0, len_0 = strlen(extdir) + 1;
+            size_t index = 0, len_0 = sgx_strlen(extdir) + 1;
 
             wdir = (TCHAR *)calloc(len_0, sizeof(TCHAR));
             if (wdir == NULL) {
@@ -151,7 +151,7 @@ const char *LP_find_file(LP_DIR_CTX **ctx, const char *directory)
             for (index = 0; index < len_0; index++)
                 (*ctx)->entry_name[index] = (char)wdir[index];
     } else
-        strncpy((*ctx)->entry_name, (const char *)(*ctx)->ctx.cFileName,
+        sgx_strncpy((*ctx)->entry_name, (const char *)(*ctx)->ctx.cFileName,
                 sizeof((*ctx)->entry_name) - 1);
 
     (*ctx)->entry_name[sizeof((*ctx)->entry_name) - 1] = '\0';

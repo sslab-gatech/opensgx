@@ -246,7 +246,7 @@ int main(int argc, char *argv[])
         RC5_32_set_key(&key, 16, &(RC5key[n][0]), 12);
 
         RC5_32_ecb_encrypt(&(RC5plain[n][0]), buf, &key, RC5_ENCRYPT);
-        if (memcmp(&(RC5cipher[n][0]), buf, 8) != 0) {
+        if (sgx_memcmp(&(RC5cipher[n][0]), buf, 8) != 0) {
             printf("ecb RC5 error encrypting (%d)\n", n + 1);
             printf("got     :");
             for (i = 0; i < 8; i++)
@@ -260,7 +260,7 @@ int main(int argc, char *argv[])
         }
 
         RC5_32_ecb_encrypt(buf, buf2, &key, RC5_DECRYPT);
-        if (memcmp(&(RC5plain[n][0]), buf2, 8) != 0) {
+        if (sgx_memcmp(&(RC5plain[n][0]), buf2, 8) != 0) {
             printf("ecb RC5 error decrypting (%d)\n", n + 1);
             printf("got     :");
             for (i = 0; i < 8; i++)
@@ -283,11 +283,11 @@ int main(int argc, char *argv[])
 
         RC5_32_set_key(&key, rc5_cbc_key[n][0], &(rc5_cbc_key[n][1]), i);
 
-        memcpy(ivb, &(rc5_cbc_iv[n][0]), 8);
+        sgx_memcpy(ivb, &(rc5_cbc_iv[n][0]), 8);
         RC5_32_cbc_encrypt(&(rc5_cbc_plain[n][0]), buf, 8,
                            &key, &(ivb[0]), RC5_ENCRYPT);
 
-        if (memcmp(&(rc5_cbc_cipher[n][0]), buf, 8) != 0) {
+        if (sgx_memcmp(&(rc5_cbc_cipher[n][0]), buf, 8) != 0) {
             printf("cbc RC5 error encrypting (%d)\n", n + 1);
             printf("got     :");
             for (i = 0; i < 8; i++)
@@ -300,9 +300,9 @@ int main(int argc, char *argv[])
             printf("\n");
         }
 
-        memcpy(ivb, &(rc5_cbc_iv[n][0]), 8);
+        sgx_memcpy(ivb, &(rc5_cbc_iv[n][0]), 8);
         RC5_32_cbc_encrypt(buf, buf2, 8, &key, &(ivb[0]), RC5_DECRYPT);
-        if (memcmp(&(rc5_cbc_plain[n][0]), buf2, 8) != 0) {
+        if (sgx_memcmp(&(rc5_cbc_plain[n][0]), buf2, 8) != 0) {
             printf("cbc RC5 error decrypting (%d)\n", n + 1);
             printf("got     :");
             for (i = 0; i < 8; i++)
@@ -330,27 +330,27 @@ static int cfb64_test(unsigned char *cfb_cipher)
 
     idea_set_encrypt_key(cfb_key, &eks);
     idea_set_decrypt_key(&eks, &dks);
-    memcpy(cfb_tmp, cfb_iv, 8);
+    sgx_memcpy(cfb_tmp, cfb_iv, 8);
     n = 0;
     idea_cfb64_encrypt(plain, cfb_buf1, (long)12, &eks,
                        cfb_tmp, &n, IDEA_ENCRYPT);
     idea_cfb64_encrypt(&(plain[12]), &(cfb_buf1[12]),
                        (long)CFB_TEST_SIZE - 12, &eks,
                        cfb_tmp, &n, IDEA_ENCRYPT);
-    if (memcmp(cfb_cipher, cfb_buf1, CFB_TEST_SIZE) != 0) {
+    if (sgx_memcmp(cfb_cipher, cfb_buf1, CFB_TEST_SIZE) != 0) {
         err = 1;
         printf("idea_cfb64_encrypt encrypt error\n");
         for (i = 0; i < CFB_TEST_SIZE; i += 8)
             printf("%s\n", pt(&(cfb_buf1[i])));
     }
-    memcpy(cfb_tmp, cfb_iv, 8);
+    sgx_memcpy(cfb_tmp, cfb_iv, 8);
     n = 0;
     idea_cfb64_encrypt(cfb_buf1, cfb_buf2, (long)17, &eks,
                        cfb_tmp, &n, IDEA_DECRYPT);
     idea_cfb64_encrypt(&(cfb_buf1[17]), &(cfb_buf2[17]),
                        (long)CFB_TEST_SIZE - 17, &dks,
                        cfb_tmp, &n, IDEA_DECRYPT);
-    if (memcmp(plain, cfb_buf2, CFB_TEST_SIZE) != 0) {
+    if (sgx_memcmp(plain, cfb_buf2, CFB_TEST_SIZE) != 0) {
         err = 1;
         printf("idea_cfb_encrypt decrypt error\n");
         for (i = 0; i < 24; i += 8)

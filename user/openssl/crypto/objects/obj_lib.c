@@ -84,27 +84,27 @@ ASN1_OBJECT *OBJ_dup(const ASN1_OBJECT *o)
     if (data == NULL)
         goto err;
     if (o->data != NULL)
-        memcpy(data, o->data, o->length);
+        sgx_memcpy(data, o->data, o->length);
     /* once data attached to object it remains const */
     r->data = data;
     r->length = o->length;
     r->nid = o->nid;
     r->ln = r->sn = NULL;
     if (o->ln != NULL) {
-        i = strlen(o->ln) + 1;
+        i = sgx_strlen(o->ln) + 1;
         ln = OPENSSL_malloc(i);
         if (ln == NULL)
             goto err;
-        memcpy(ln, o->ln, i);
+        sgx_memcpy(ln, o->ln, i);
         r->ln = ln;
     }
 
     if (o->sn != NULL) {
-        i = strlen(o->sn) + 1;
+        i = sgx_strlen(o->sn) + 1;
         sn = OPENSSL_malloc(i);
         if (sn == NULL)
             goto err;
-        memcpy(sn, o->sn, i);
+        sgx_memcpy(sn, o->sn, i);
         r->sn = sn;
     }
     r->flags = o->flags | (ASN1_OBJECT_FLAG_DYNAMIC |
@@ -131,5 +131,5 @@ int OBJ_cmp(const ASN1_OBJECT *a, const ASN1_OBJECT *b)
     ret = (a->length - b->length);
     if (ret)
         return (ret);
-    return (memcmp(a->data, b->data, a->length));
+    return (sgx_memcmp(a->data, b->data, a->length));
 }

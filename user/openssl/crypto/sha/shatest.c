@@ -115,8 +115,8 @@ int main(int argc, char *argv[])
     unsigned char md[SHA_DIGEST_LENGTH];
 
 # ifdef CHARSET_EBCDIC
-    ebcdic2ascii(test[0], test[0], strlen(test[0]));
-    ebcdic2ascii(test[1], test[1], strlen(test[1]));
+    ebcdic2ascii(test[0], test[0], sgx_strlen(test[0]));
+    ebcdic2ascii(test[1], test[1], sgx_strlen(test[1]));
 # endif
 
     EVP_MD_CTX_init(&c);
@@ -124,9 +124,9 @@ int main(int argc, char *argv[])
     R = ret;
     i = 1;
     while (*P != NULL) {
-        EVP_Digest(*P, strlen(*P), md, NULL, EVP_sha(), NULL);
+        EVP_Digest(*P, sgx_strlen(*P), md, NULL, EVP_sha(), NULL);
         p = pt(md);
-        if (strcmp(p, *R) != 0) {
+        if (sgx_strcmp(p, *R) != 0) {
             printf("error calculating SHA on '%s'\n", *P);
             printf("got %s instead of %s\n", p, *R);
             err++;
@@ -148,7 +148,7 @@ int main(int argc, char *argv[])
     p = pt(md);
 
     r = bigret;
-    if (strcmp(p, r) != 0) {
+    if (sgx_strcmp(p, r) != 0) {
         printf("error calculating SHA on '%s'\n", p);
         printf("got %s instead of %s\n", p, r);
         err++;

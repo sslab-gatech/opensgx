@@ -298,7 +298,7 @@ SSL *SSL_new(SSL_CTX *ctx)
     s = (SSL *)OPENSSL_malloc(sizeof(SSL));
     if (s == NULL)
         goto err;
-    memset(s, 0, sizeof(SSL));
+    sgx_memset(s, 0, sizeof(SSL));
 
 #ifndef OPENSSL_NO_KRB5
     s->kssl_ctx = kssl_ctx_new();
@@ -334,7 +334,7 @@ SSL *SSL_new(SSL_CTX *ctx)
 #endif
     s->sid_ctx_length = ctx->sid_ctx_length;
     OPENSSL_assert(s->sid_ctx_length <= sizeof s->sid_ctx);
-    memcpy(&s->sid_ctx, &ctx->sid_ctx, sizeof(s->sid_ctx));
+    sgx_memcpy(&s->sid_ctx, &ctx->sid_ctx, sizeof(s->sid_ctx));
     s->verify_callback = ctx->default_verify_callback;
     s->generate_session_id = ctx->generate_session_id;
 
@@ -392,7 +392,7 @@ SSL *SSL_new(SSL_CTX *ctx)
             OPENSSL_malloc(s->ctx->alpn_client_proto_list_len);
         if (s->alpn_client_proto_list == NULL)
             goto err;
-        memcpy(s->alpn_client_proto_list, s->ctx->alpn_client_proto_list,
+        sgx_memcpy(s->alpn_client_proto_list, s->ctx->alpn_client_proto_list,
                s->ctx->alpn_client_proto_list_len);
         s->alpn_client_proto_list_len = s->ctx->alpn_client_proto_list_len;
     }
@@ -434,7 +434,7 @@ int SSL_CTX_set_session_id_context(SSL_CTX *ctx, const unsigned char *sid_ctx,
         return 0;
     }
     ctx->sid_ctx_length = sid_ctx_len;
-    memcpy(ctx->sid_ctx, sid_ctx, sid_ctx_len);
+    sgx_memcpy(ctx->sid_ctx, sid_ctx, sid_ctx_len);
 
     return 1;
 }
@@ -448,7 +448,7 @@ int SSL_set_session_id_context(SSL *ssl, const unsigned char *sid_ctx,
         return 0;
     }
     ssl->sid_ctx_length = sid_ctx_len;
-    memcpy(ssl->sid_ctx, sid_ctx, sid_ctx_len);
+    sgx_memcpy(ssl->sid_ctx, sid_ctx, sid_ctx_len);
 
     return 1;
 }
@@ -486,7 +486,7 @@ int SSL_has_matching_session_id(const SSL *ssl, const unsigned char *id,
 
     r.ssl_version = ssl->version;
     r.session_id_length = id_len;
-    memcpy(r.session_id, id, id_len);
+    sgx_memcpy(r.session_id, id, id_len);
     /*
      * NB: SSLv2 always uses a fixed 16-byte session ID, so even if a
      * callback is calling us to check the uniqueness of a shorter ID, it
@@ -495,7 +495,7 @@ int SSL_has_matching_session_id(const SSL *ssl, const unsigned char *id,
      */
     if ((r.ssl_version == SSL2_VERSION) &&
         (id_len < SSL2_SSL_SESSION_ID_LENGTH)) {
-        memset(r.session_id + id_len, 0, SSL2_SSL_SESSION_ID_LENGTH - id_len);
+        sgx_memset(r.session_id + id_len, 0, SSL2_SSL_SESSION_ID_LENGTH - id_len);
         r.session_id_length = SSL2_SSL_SESSION_ID_LENGTH;
     }
 
@@ -792,7 +792,7 @@ size_t SSL_get_finished(const SSL *s, void *buf, size_t count)
         ret = s->s3->tmp.finish_md_len;
         if (count > ret)
             count = ret;
-        memcpy(buf, s->s3->tmp.finish_md, count);
+        sgx_memcpy(buf, s->s3->tmp.finish_md, count);
     }
     return ret;
 }
@@ -806,7 +806,7 @@ size_t SSL_get_peer_finished(const SSL *s, void *buf, size_t count)
         ret = s->s3->tmp.peer_finish_md_len;
         if (count > ret)
             count = ret;
-        memcpy(buf, s->s3->tmp.peer_finish_md, count);
+        sgx_memcpy(buf, s->s3->tmp.peer_finish_md, count);
     }
     return ret;
 }
@@ -1413,14 +1413,14 @@ char *SSL_get_shared_ciphers(const SSL *s, char *buf, int len)
         int n;
 
         c = sk_SSL_CIPHER_value(sk, i);
-        n = strlen(c->name);
+        n = sgx_strlen(c->name);
         if (n + 1 > len) {
             if (p != buf)
                 --p;
             *p = '\0';
             return buf;
         }
-        strcpy(p, c->name);
+        sgx_strcpy(p, c->name);
         p += n;
         *(p++) = ':';
         len -= n + 1;
@@ -1645,7 +1645,7 @@ int SSL_select_next_proto(unsigned char **out, unsigned char *outlen,
     for (i = 0; i < server_len;) {
         for (j = 0; j < client_len;) {
             if (server[i] == client[j] &&
-                memcmp(&server[i + 1], &client[j + 1], server[i]) == 0) {
+                sgx_memcmp(&server[i + 1], &client[j + 1], server[i]) == 0) {
                 /* We found a match */
                 result = &server[i];
                 status = OPENSSL_NPN_NEGOTIATED;
@@ -1745,7 +1745,7 @@ int SSL_CTX_set_alpn_protos(SSL_CTX *ctx, const unsigned char *protos,
     ctx->alpn_client_proto_list = OPENSSL_malloc(protos_len);
     if (!ctx->alpn_client_proto_list)
         return 1;
-    memcpy(ctx->alpn_client_proto_list, protos, protos_len);
+    sgx_memcpy(ctx->alpn_client_proto_list, protos, protos_len);
     ctx->alpn_client_proto_list_len = protos_len;
 
     return 0;
@@ -1765,7 +1765,7 @@ int SSL_set_alpn_protos(SSL *ssl, const unsigned char *protos,
     ssl->alpn_client_proto_list = OPENSSL_malloc(protos_len);
     if (!ssl->alpn_client_proto_list)
         return 1;
-    memcpy(ssl->alpn_client_proto_list, protos, protos_len);
+    sgx_memcpy(ssl->alpn_client_proto_list, protos, protos_len);
     ssl->alpn_client_proto_list_len = protos_len;
 
     return 0;
@@ -1846,7 +1846,7 @@ static int ssl_session_cmp(const SSL_SESSION *a, const SSL_SESSION *b)
         return (1);
     if (a->session_id_length != b->session_id_length)
         return (1);
-    return (memcmp(a->session_id, b->session_id, a->session_id_length));
+    return (sgx_memcmp(a->session_id, b->session_id, a->session_id_length));
 }
 
 /*
@@ -1881,7 +1881,7 @@ SSL_CTX *SSL_CTX_new(const SSL_METHOD *meth)
     if (ret == NULL)
         goto err;
 
-    memset(ret, 0, sizeof(SSL_CTX));
+    sgx_memset(ret, 0, sizeof(SSL_CTX));
 
     ret->method = meth;
 
@@ -1899,7 +1899,7 @@ SSL_CTX *SSL_CTX_new(const SSL_METHOD *meth)
     ret->get_session_cb = 0;
     ret->generate_session_id = 0;
 
-    memset((char *)&ret->stats, 0, sizeof(ret->stats));
+    sgx_memset((char *)&ret->stats, 0, sizeof(ret->stats));
 
     ret->references = 1;
     ret->quiet_shutdown = 0;
@@ -2627,7 +2627,7 @@ void ssl_update_cache(SSL *s, int mode)
         if ((((mode & SSL_SESS_CACHE_CLIENT)
               ? s->session_ctx->stats.sess_connect_good
               : s->session_ctx->stats.sess_accept_good) & 0xff) == 0xff) {
-            SSL_CTX_flush_sessions(s->session_ctx, (unsigned long)time(NULL));
+            SSL_CTX_flush_sessions(s->session_ctx, (unsigned long)sgx_time(NULL));
         }
     }
 }
@@ -3172,9 +3172,9 @@ SSL_CTX *SSL_set_SSL_CTX(SSL *ssl, SSL_CTX *ctx)
      */
     if ((ssl->ctx != NULL) &&
         (ssl->sid_ctx_length == ssl->ctx->sid_ctx_length) &&
-        (memcmp(ssl->sid_ctx, ssl->ctx->sid_ctx, ssl->sid_ctx_length) == 0)) {
+        (sgx_memcmp(ssl->sid_ctx, ssl->ctx->sid_ctx, ssl->sid_ctx_length) == 0)) {
         ssl->sid_ctx_length = ctx->sid_ctx_length;
-        memcpy(&ssl->sid_ctx, &ctx->sid_ctx, sizeof(ssl->sid_ctx));
+        sgx_memcpy(&ssl->sid_ctx, &ctx->sid_ctx, sizeof(ssl->sid_ctx));
     }
 
     CRYPTO_add(&ctx->references, 1, CRYPTO_LOCK_SSL_CTX);
@@ -3370,7 +3370,7 @@ void SSL_set_tmp_ecdh_callback(SSL *ssl,
 #ifndef OPENSSL_NO_PSK
 int SSL_CTX_use_psk_identity_hint(SSL_CTX *ctx, const char *identity_hint)
 {
-    if (identity_hint != NULL && strlen(identity_hint) > PSK_MAX_IDENTITY_LEN) {
+    if (identity_hint != NULL && sgx_strlen(identity_hint) > PSK_MAX_IDENTITY_LEN) {
         SSLerr(SSL_F_SSL_CTX_USE_PSK_IDENTITY_HINT,
                SSL_R_DATA_LENGTH_TOO_LONG);
         return 0;
@@ -3394,7 +3394,7 @@ int SSL_use_psk_identity_hint(SSL *s, const char *identity_hint)
     if (s->session == NULL)
         return 1;               /* session not created yet, ignored */
 
-    if (identity_hint != NULL && strlen(identity_hint) > PSK_MAX_IDENTITY_LEN) {
+    if (identity_hint != NULL && sgx_strlen(identity_hint) > PSK_MAX_IDENTITY_LEN) {
         SSLerr(SSL_F_SSL_USE_PSK_IDENTITY_HINT, SSL_R_DATA_LENGTH_TOO_LONG);
         return 0;
     }

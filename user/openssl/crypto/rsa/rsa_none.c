@@ -77,7 +77,7 @@ int RSA_padding_add_none(unsigned char *to, int tlen,
         return (0);
     }
 
-    memcpy(to, from, (unsigned int)flen);
+    sgx_memcpy(to, from, (unsigned int)flen);
     return (1);
 }
 
@@ -91,6 +91,6 @@ int RSA_padding_check_none(unsigned char *to, int tlen,
     }
 
     sgx_memset(to, 0, tlen - flen);
-    memcpy(to + tlen - flen, from, flen);
+    sgx_memcpy(to + tlen - flen, from, flen);
     return (tlen);
 }

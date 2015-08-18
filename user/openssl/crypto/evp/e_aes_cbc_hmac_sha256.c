@@ -245,20 +245,20 @@ static size_t tls1_1_multi_block_encrypt(EVP_AES_HMAC_SHA256 *key,
     ciph_d[0].inp = inp;
     /* 5+16 is place for header and explicit IV */
     ciph_d[0].out = out + 5 + 16;
-    memcpy(ciph_d[0].out - 16, IVs, 16);
-    memcpy(ciph_d[0].iv, IVs, 16);
+    sgx_memcpy(ciph_d[0].out - 16, IVs, 16);
+    sgx_memcpy(ciph_d[0].iv, IVs, 16);
     IVs += 16;
 
     for (i = 1; i < x4; i++) {
         ciph_d[i].inp = hash_d[i].ptr = hash_d[i - 1].ptr + frag;
         ciph_d[i].out = ciph_d[i - 1].out + packlen;
-        memcpy(ciph_d[i].out - 16, IVs, 16);
-        memcpy(ciph_d[i].iv, IVs, 16);
+        sgx_memcpy(ciph_d[i].out - 16, IVs, 16);
+        sgx_memcpy(ciph_d[i].iv, IVs, 16);
         IVs += 16;
     }
 
 #   if defined(BSWAP8)
-    memcpy(blocks[0].c, key->md.data, 8);
+    sgx_memcpy(blocks[0].c, key->md.data, 8);
     seqnum = BSWAP8(blocks[0].q[0]);
 #   endif
     for (i = 0; i < x4; i++) {
@@ -292,7 +292,7 @@ static size_t tls1_1_multi_block_encrypt(EVP_AES_HMAC_SHA256 *key,
         blocks[i].c[11] = (u8)(len >> 8);
         blocks[i].c[12] = (u8)(len);
 
-        memcpy(blocks[i].c + 13, hash_d[i].ptr, 64 - 13);
+        sgx_memcpy(blocks[i].c + 13, hash_d[i].ptr, 64 - 13);
         hash_d[i].ptr += 64 - 13;
         hash_d[i].blocks = (len - (64 - 13)) / 64;
 
@@ -329,7 +329,7 @@ static size_t tls1_1_multi_block_encrypt(EVP_AES_HMAC_SHA256 *key,
                 ciph_d[i].inp += MAXCHUNKSIZE;
                 ciph_d[i].out += MAXCHUNKSIZE;
                 ciph_d[i].blocks = MAXCHUNKSIZE / 16;
-                memcpy(ciph_d[i].iv, ciph_d[i].out - 16, 16);
+                sgx_memcpy(ciph_d[i].iv, ciph_d[i].out - 16, 16);
             }
             processed += MAXCHUNKSIZE;
             minblocks -= MAXCHUNKSIZE / 64;
@@ -346,7 +346,7 @@ static size_t tls1_1_multi_block_encrypt(EVP_AES_HMAC_SHA256 *key,
         const unsigned char *ptr = hash_d[i].ptr + off;
 
         off = (len - processed) - (64 - 13) - off; /* remainder actually */
-        memcpy(blocks[i].c, ptr, off);
+        sgx_memcpy(blocks[i].c, ptr, off);
         blocks[i].c[off] = 0x80;
         len += 64 + 13;         /* 64 is HMAC header */
         len *= 8;               /* convert to bits */
@@ -423,7 +423,7 @@ static size_t tls1_1_multi_block_encrypt(EVP_AES_HMAC_SHA256 *key,
         unsigned int len = (i == (x4 - 1) ? last : frag), pad, j;
         unsigned char *out0 = out;
 
-        memcpy(ciph_d[i].out, ciph_d[i].inp, len - processed);
+        sgx_memcpy(ciph_d[i].out, ciph_d[i].inp, len - processed);
         ciph_d[i].inp = ciph_d[i].out;
 
         out += 5 + 16 + len;
@@ -523,7 +523,7 @@ static int aesni_cbc_hmac_sha256_cipher(EVP_CIPHER_CTX *ctx,
 
         if (plen != len) {      /* "TLS" mode of operation */
             if (in != out)
-                memcpy(out + aes_off, in + aes_off, plen - aes_off);
+                sgx_memcpy(out + aes_off, in + aes_off, plen - aes_off);
 
             /* calculate HMAC and append it to payload */
             SHA256_Final(out + plen, &key->md);
@@ -793,7 +793,7 @@ static int aesni_cbc_hmac_sha256_ctrl(EVP_CIPHER_CTX *ctx, int type, int arg,
                 SHA256_Update(&key->head, ptr, arg);
                 SHA256_Final(hmac_key, &key->head);
             } else {
-                memcpy(hmac_key, ptr, arg);
+                sgx_memcpy(hmac_key, ptr, arg);
             }
 
             for (i = 0; i < sizeof(hmac_key); i++)
@@ -832,7 +832,7 @@ static int aesni_cbc_hmac_sha256_ctrl(EVP_CIPHER_CTX *ctx, int type, int arg,
             } else {
                 if (arg > 13)
                     arg = 13;
-                memcpy(key->aux.tls_aad, ptr, arg);
+                sgx_memcpy(key->aux.tls_aad, ptr, arg);
                 key->payload_length = arg;
 
                 return SHA256_DIGEST_LENGTH;

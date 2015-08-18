@@ -28,9 +28,9 @@
 # else
 #  define UP_fileno       fileno
 #  define UP_open         open
-#  define UP_read         read
-#  define UP_write        write
+#  define UP_read         sgx_read
+#  define UP_write        sgx_write
 #  define UP_lseek        lseek
-#  define UP_close        close
+#  define UP_close        sgx_close
 # endif
 #endif

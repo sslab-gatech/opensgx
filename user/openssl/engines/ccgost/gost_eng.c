@@ -74,7 +74,7 @@ static int gost_engine_destroy(ENGINE *e)
 static int bind_gost(ENGINE *e, const char *id)
 {
     int ret = 0;
-    if (id && strcmp(id, engine_gost_id))
+    if (id && sgx_strcmp(id, engine_gost_id))
         return 0;
 
     if (!ENGINE_set_id(e, engine_gost_id)) {

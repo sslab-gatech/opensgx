@@ -186,12 +186,12 @@ static int int_dup_ex_data(int class_index, CRYPTO_EX_DATA *to,
                            CRYPTO_EX_DATA *from);
 static void int_free_ex_data(int class_index, void *obj, CRYPTO_EX_DATA *ad);
 static CRYPTO_EX_DATA_IMPL impl_default = {
-    int_new_class + ENCLAVE_OFFSET,
-    int_cleanup + ENCLAVE_OFFSET,
-    int_get_new_index + ENCLAVE_OFFSET,
-    int_new_ex_data + ENCLAVE_OFFSET,
-    int_dup_ex_data + ENCLAVE_OFFSET,
-    int_free_ex_data + ENCLAVE_OFFSET
+    int_new_class,
+    int_cleanup,
+    int_get_new_index,
+    int_new_ex_data,
+    int_dup_ex_data,
+    int_free_ex_data
 };
 
 /*

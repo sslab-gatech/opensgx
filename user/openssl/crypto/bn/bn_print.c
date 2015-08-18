@@ -184,7 +184,7 @@ int BN_hex2bn(BIGNUM **bn, const char *a)
         a++;
     }
 
-    for (i = 0; isxdigit((unsigned char)a[i]); i++) ;
+    for (i = 0; sgx_isxdigit((unsigned char)a[i]); i++) ;
 
     num = i + neg;
     if (bn == NULL)
@@ -255,7 +255,7 @@ int BN_dec2bn(BIGNUM **bn, const char *a)
         a++;
     }
 
-    for (i = 0; isdigit((unsigned char)a[i]); i++) ;
+    for (i = 0; sgx_isdigit((unsigned char)a[i]); i++) ;
 
     num = i + neg;
     if (bn == NULL)

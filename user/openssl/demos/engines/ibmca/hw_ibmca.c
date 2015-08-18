@@ -886,7 +886,7 @@ static int ibmca_rand_status(void)
 #  ifdef ENGINE_DYNAMIC_SUPPORT
 static int bind_fn(ENGINE *e, const char *id)
 {
-    if (id && (strcmp(id, engine_ibmca_id) != 0)) /* WJH XXX */
+    if (id && (sgx_strcmp(id, engine_ibmca_id) != 0)) /* WJH XXX */
         return 0;
     if (!bind_helper(e))
         return 0;

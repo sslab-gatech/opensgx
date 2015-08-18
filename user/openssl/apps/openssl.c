@@ -291,7 +291,7 @@ int main(int Argc, char *ARGV[])
     if (getenv("OPENSSL_DEBUG_MEMORY") != NULL) { /* if not defined, use
                                                    * compiled-in library
                                                    * defaults */
-        if (!(0 == strcmp(getenv("OPENSSL_DEBUG_MEMORY"), "off"))) {
+        if (!(0 == sgx_strcmp(getenv("OPENSSL_DEBUG_MEMORY"), "off"))) {
             CRYPTO_malloc_debug_init();
             CRYPTO_set_mem_debug_options(V_CRYPTO_MDEBUG_ALL);
         } else {
@@ -491,32 +491,32 @@ static int do_cmd(LHASH_OF(FUNCTION) *prog, int argc, char *argv[])
             BIO_printf(bio_stdout, "%s\n", argv[0] + 3);
         BIO_free_all(bio_stdout);
         goto end;
-    } else if ((strcmp(argv[0], "quit") == 0) ||
-               (strcmp(argv[0], "q") == 0) ||
-               (strcmp(argv[0], "exit") == 0) ||
-               (strcmp(argv[0], "bye") == 0)) {
+    } else if ((sgx_strcmp(argv[0], "quit") == 0) ||
+               (sgx_strcmp(argv[0], "q") == 0) ||
+               (sgx_strcmp(argv[0], "exit") == 0) ||
+               (sgx_strcmp(argv[0], "bye") == 0)) {
         ret = -1;
         goto end;
-    } else if ((strcmp(argv[0], LIST_STANDARD_COMMANDS) == 0) ||
-               (strcmp(argv[0], LIST_MESSAGE_DIGEST_COMMANDS) == 0) ||
-               (strcmp(argv[0], LIST_MESSAGE_DIGEST_ALGORITHMS) == 0) ||
-               (strcmp(argv[0], LIST_CIPHER_COMMANDS) == 0) ||
-               (strcmp(argv[0], LIST_CIPHER_ALGORITHMS) == 0) ||
-               (strcmp(argv[0], LIST_PUBLIC_KEY_ALGORITHMS) == 0)) {
+    } else if ((sgx_strcmp(argv[0], LIST_STANDARD_COMMANDS) == 0) ||
+               (sgx_strcmp(argv[0], LIST_MESSAGE_DIGEST_COMMANDS) == 0) ||
+               (sgx_strcmp(argv[0], LIST_MESSAGE_DIGEST_ALGORITHMS) == 0) ||
+               (sgx_strcmp(argv[0], LIST_CIPHER_COMMANDS) == 0) ||
+               (sgx_strcmp(argv[0], LIST_CIPHER_ALGORITHMS) == 0) ||
+               (sgx_strcmp(argv[0], LIST_PUBLIC_KEY_ALGORITHMS) == 0)) {
         int list_type;
         BIO *bio_stdout;
 
-        if (strcmp(argv[0], LIST_STANDARD_COMMANDS) == 0)
+        if (sgx_strcmp(argv[0], LIST_STANDARD_COMMANDS) == 0)
             list_type = FUNC_TYPE_GENERAL;
-        else if (strcmp(argv[0], LIST_MESSAGE_DIGEST_COMMANDS) == 0)
+        else if (sgx_strcmp(argv[0], LIST_MESSAGE_DIGEST_COMMANDS) == 0)
             list_type = FUNC_TYPE_MD;
-        else if (strcmp(argv[0], LIST_MESSAGE_DIGEST_ALGORITHMS) == 0)
+        else if (sgx_strcmp(argv[0], LIST_MESSAGE_DIGEST_ALGORITHMS) == 0)
             list_type = FUNC_TYPE_MD_ALG;
-        else if (strcmp(argv[0], LIST_PUBLIC_KEY_ALGORITHMS) == 0)
+        else if (sgx_strcmp(argv[0], LIST_PUBLIC_KEY_ALGORITHMS) == 0)
             list_type = FUNC_TYPE_PKEY;
-        else if (strcmp(argv[0], LIST_CIPHER_ALGORITHMS) == 0)
+        else if (sgx_strcmp(argv[0], LIST_CIPHER_ALGORITHMS) == 0)
             list_type = FUNC_TYPE_CIPHER_ALG;
-        else                    /* strcmp(argv[0],LIST_CIPHER_COMMANDS) == 0 */
+        else                    /* sgx_strcmp(argv[0],LIST_CIPHER_COMMANDS) == 0 */
             list_type = FUNC_TYPE_CIPHER;
         bio_stdout = BIO_new_fp(stdout, BIO_NOCLOSE);
 #ifdef OPENSSL_SYS_VMS
@@ -594,7 +594,7 @@ static int SortFnByName(const void *_f1, const void *_f2)
 
     if (f1->type != f2->type)
         return f1->type - f2->type;
-    return strcmp(f1->name, f2->name);
+    return sgx_strcmp(f1->name, f2->name);
 }
 
 static void list_pkey(BIO *out)

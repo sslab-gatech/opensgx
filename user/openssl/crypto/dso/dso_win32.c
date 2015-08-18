@@ -62,8 +62,6 @@
 #include "cryptlib.h"
 #include <openssl/dso.h>
 
-#include "../sgx.h"
-
 #if !defined(DSO_WIN32)
 DSO_METHOD *DSO_METHOD_win32(void)
 {
@@ -93,7 +91,7 @@ static FARPROC GetProcAddressA(HMODULE hModule, LPCSTR lpProcName)
 static HINSTANCE LoadLibraryA(LPCSTR lpLibFileName)
 {
     WCHAR *fnamw;
-    size_t len_0 = strlen(lpLibFileName) + 1, i;
+    size_t len_0 = sgx_strlen(lpLibFileName) + 1, i;
 
 #  ifdef _MSC_VER
     fnamw = (WCHAR *)_alloca(len_0 * sizeof(WCHAR));
@@ -450,16 +448,16 @@ static char *win32_joiner(DSO *dso, const struct file_st *file_split)
     }
 
     if (file_split->node) {
-        strcpy(&result[offset], "\\\\");
+        sgx_strcpy(&result[offset], "\\\\");
         offset += 2;
-        strncpy(&result[offset], file_split->node, file_split->nodelen);
+        sgx_strncpy(&result[offset], file_split->node, file_split->nodelen);
         offset += file_split->nodelen;
         if (file_split->predir || file_split->dir || file_split->file) {
             result[offset] = '\\';
             offset++;
         }
     } else if (file_split->device) {
-        strncpy(&result[offset], file_split->device, file_split->devicelen);
+        sgx_strncpy(&result[offset], file_split->device, file_split->devicelen);
         offset += file_split->devicelen;
         result[offset] = ':';
         offset++;
@@ -472,7 +470,7 @@ static char *win32_joiner(DSO *dso, const struct file_st *file_split)
         if (!end)
             end = start
                 + file_split->predirlen - (start - file_split->predir);
-        strncpy(&result[offset], start, end - start);
+        sgx_strncpy(&result[offset], start, end - start);
         offset += (int)(end - start);
         result[offset] = '\\';
         offset++;
@@ -492,7 +490,7 @@ static char *win32_joiner(DSO *dso, const struct file_st *file_split)
                                                                 file_split->dir));
         if (!end)
             end = start + file_split->dirlen - (start - file_split->dir);
-        strncpy(&result[offset], start, end - start);
+        sgx_strncpy(&result[offset], start, end - start);
         offset += (int)(end - start);
         result[offset] = '\\';
         offset++;
@@ -505,7 +503,7 @@ static char *win32_joiner(DSO *dso, const struct file_st *file_split)
         offset++;
     }
 # endif
-    strncpy(&result[offset], file_split->file, file_split->filelen);
+    sgx_strncpy(&result[offset], file_split->file, file_split->filelen);
     offset += file_split->filelen;
     result[offset] = '\0';
     return (result);
@@ -528,14 +526,14 @@ static char *win32_merger(DSO *dso, const char *filespec1,
             DSOerr(DSO_F_WIN32_MERGER, ERR_R_MALLOC_FAILURE);
             return (NULL);
         }
-        strcpy(merged, filespec1);
+        sgx_strcpy(merged, filespec1);
     } else if (!filespec1) {
         merged = OPENSSL_malloc(strlen(filespec2) + 1);
         if (!merged) {
             DSOerr(DSO_F_WIN32_MERGER, ERR_R_MALLOC_FAILURE);
             return (NULL);
         }
-        strcpy(merged, filespec2);
+        sgx_strcpy(merged, filespec2);
     } else {
         filespec1_split = win32_splitter(dso, filespec1, 0);
         if (!filespec1_split) {
@@ -581,7 +579,7 @@ static char *win32_name_converter(DSO *dso, const char *filename)
     char *translated;
     int len, transform;
 
-    len = strlen(filename);
+    len = sgx_strlen(filename);
     transform = ((strstr(filename, "/") == NULL) &&
                  (strstr(filename, "\\") == NULL) &&
                  (strstr(filename, ":") == NULL));
@@ -714,7 +712,7 @@ static int win32_pathbyaddr(void *addr, char *path, int sz)
                     return len + 1;
                 if (len >= sz)
                     len = sz - 1;
-                memcpy(path, me32.szExePath, len);
+                sgx_memcpy(path, me32.szExePath, len);
                 path[len++] = 0;
                 return len;
             }

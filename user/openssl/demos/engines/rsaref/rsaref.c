@@ -237,7 +237,7 @@ static int bind_rsaref(ENGINE *e)
 #ifdef ENGINE_DYNAMIC_SUPPORT
 static int bind_helper(ENGINE *e, const char *id)
 {
-    if (id && (strcmp(id, engine_rsaref_id) != 0))
+    if (id && (sgx_strcmp(id, engine_rsaref_id) != 0))
         return 0;
     if (!bind_rsaref(e))
         return 0;

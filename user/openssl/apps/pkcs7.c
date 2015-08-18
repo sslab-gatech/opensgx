@@ -112,32 +112,32 @@ int MAIN(int argc, char **argv)
     argc--;
     argv++;
     while (argc >= 1) {
-        if (strcmp(*argv, "-inform") == 0) {
+        if (sgx_strcmp(*argv, "-inform") == 0) {
             if (--argc < 1)
                 goto bad;
             informat = str2fmt(*(++argv));
-        } else if (strcmp(*argv, "-outform") == 0) {
+        } else if (sgx_strcmp(*argv, "-outform") == 0) {
             if (--argc < 1)
                 goto bad;
             outformat = str2fmt(*(++argv));
-        } else if (strcmp(*argv, "-in") == 0) {
+        } else if (sgx_strcmp(*argv, "-in") == 0) {
             if (--argc < 1)
                 goto bad;
             infile = *(++argv);
-        } else if (strcmp(*argv, "-out") == 0) {
+        } else if (sgx_strcmp(*argv, "-out") == 0) {
             if (--argc < 1)
                 goto bad;
             outfile = *(++argv);
-        } else if (strcmp(*argv, "-noout") == 0)
+        } else if (sgx_strcmp(*argv, "-noout") == 0)
             noout = 1;
-        else if (strcmp(*argv, "-text") == 0)
+        else if (sgx_strcmp(*argv, "-text") == 0)
             text = 1;
-        else if (strcmp(*argv, "-print") == 0)
+        else if (sgx_strcmp(*argv, "-print") == 0)
             p7_print = 1;
-        else if (strcmp(*argv, "-print_certs") == 0)
+        else if (sgx_strcmp(*argv, "-print_certs") == 0)
             print_certs = 1;
 #ifndef OPENSSL_NO_ENGINE
-        else if (strcmp(*argv, "-engine") == 0) {
+        else if (sgx_strcmp(*argv, "-engine") == 0) {
             if (--argc < 1)
                 goto bad;
             engine = *(++argv);

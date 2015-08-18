@@ -498,14 +498,14 @@ void whirlpool_block(WHIRLPOOL_CTX *ctx, const void *inp, size_t n)
                     C4(K, (i - 4) & 7) ^ C5(K, (i - 5) & 7) ^
                     C6(K, (i - 6) & 7) ^ C7(K, (i - 7) & 7);
             }
-            memcpy(K.q, L, 64);
+            sgx_memcpy(K.q, L, 64);
             for (i = 0; i < 8; i++) {
                 L[i] ^= C0(S, i) ^ C1(S, (i - 1) & 7) ^
                     C2(S, (i - 2) & 7) ^ C3(S, (i - 3) & 7) ^
                     C4(S, (i - 4) & 7) ^ C5(S, (i - 5) & 7) ^
                     C6(S, (i - 6) & 7) ^ C7(S, (i - 7) & 7);
             }
-            memcpy(S.q, L, 64);
+            sgx_memcpy(S.q, L, 64);
         }
         for (i = 0; i < 64; i++)
             H->c[i] ^= S.c[i] ^ p[i];
@@ -514,7 +514,7 @@ void whirlpool_block(WHIRLPOOL_CTX *ctx, const void *inp, size_t n)
 
 # ifdef STRICT_ALIGNMENT
         if ((size_t)p & 7) {
-            memcpy(S.c, p, 64);
+            sgx_memcpy(S.c, p, 64);
             S.q[0] ^= (K.q[0] = H->q[0]);
             S.q[1] ^= (K.q[1] = H->q[1]);
             S.q[2] ^= (K.q[2] = H->q[2]);

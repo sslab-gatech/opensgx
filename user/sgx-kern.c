@@ -12,7 +12,7 @@
 #include <sgx-kern.h>
 #include <sgx-utils.h>
 #include <sgx-kern-epc.h>
-#include <sgx-signature.h>
+#include <sgx-crypto.h>
 
 #define NUM_THREADS 1
 
@@ -21,14 +21,14 @@ keid_t kenclaves[MAX_ENCLAVES];
 char *empty_page;
 static epc_t *epc_heap_beg;
 static epc_t *epc_heap_end;
+static epc_t *epc_stack_end;
 
 static einittoken_t *app_token;
-static int cur_eid;
-static epc_t *cur_secs;
 
 static void encls_qemu_init(uint64_t startPage, uint64_t endPage);
 static void set_cpusvn(uint8_t svn);
 static void set_intel_pubkey(uint64_t pubKey);
+static void set_stack(uint64_t sp);
 
 void set_app_token(einittoken_t *token)
 {
@@ -117,6 +117,47 @@ void EAUG(pageinfo_t *pageinfo, epc_t *epc)
 }
 
 static
+void EMODPR(secinfo_t *secinfo, uint64_t epc_addr)
+{
+    // RBX: Secinfo Addr(In)
+    // RCX: Destination EPC Addr(In)
+    // EAX: Error Code(out)
+    out_regs_t out;
+    encls(ENCLS_EMODPR, secinfo, epc_addr, 0x0, &out);
+}
+
+int EBLOCK(uint64_t epc_addr)
+{
+    // RCX: EPC Addr(In, EA)
+    // EAX: Error Code(Out)
+    out_regs_t out;
+    encls(ENCLS_EBLOCK, 0x0, epc_addr, 0x0, &out);
+
+    return (int)(out.oeax);
+}
+
+int EWB(pageinfo_t *pageinfo_addr, epc_t *epc_addr, uint64_t *VA_slot_addr)
+{
+    // EAX: Error(Out)
+    // RBX: Pageinfo Addr(In)
+    // RCX: EPC addr(In)
+    // RDX: VA slot addr(In)
+    out_regs_t out;
+    encls(ENCLS_EWB, pageinfo_addr, epc_addr, VA_slot_addr, &out);
+    return (int)(out.oeax);
+}
+
+void EPA(int keid)
+{
+    // RBX: PT_VA (In, Const)
+    // RCX: EPC Addr(In, EA)
+    uint64_t epc_addr = alloc_epc_page(keid);
+    // Assume that we maintain the one Enclave...
+    keid = 0;
+    encls(ENCLS_EPA, PT_VA, epc_addr, NULL, NULL);
+}
+
+static
 void encls_qemu_init(uint64_t startPage, uint64_t endPage)
 {
     // Function just for initializing EPCM within QEMU
@@ -133,7 +174,7 @@ void encls_epcm_clear(uint64_t target_epc)
 static
 void encls_stat(int keid, qstat_t *qstat)
 {
-    encls(ENCLS_OSGX_STAT, keid, qstat, 0x0, NULL);
+    encls(ENCLS_OSGX_STAT, keid, (uint64_t)qstat, 0x0, NULL);
 }
 
 static
@@ -148,6 +189,13 @@ void set_cpusvn(uint8_t svn)
 {
     // Set cpu svn.
     encls(ENCLS_OSGX_CPUSVN, svn, 0x0, 0x0, NULL);
+}
+
+static
+void set_stack(uint64_t sp)
+{
+    // Set enclave stack pointer.
+    encls(ENCLS_OSGX_SET_STACK, sp, 0x0, 0x0, NULL);
 }
 
 static
@@ -272,8 +320,8 @@ bool add_page_to_epc(void *page, epc_t *epc, epc_t *secs, page_type_t pt)
     pageinfo->linaddr = (uint64_t)epc_to_vaddr(epc);
 
     sgx_dbg(eadd, "add/copy %p -> %p", page, epc_to_vaddr(epc));
-    if (sgx_dbg_eadd)
-        hexdump(stderr, page, 32);
+    //if (sgx_dbg_eadd)
+    //    hexdump(stderr, page, 32);
 
     EADD(pageinfo, epc);
 
@@ -327,7 +375,7 @@ bool add_pages_to_epc(int eid, void *page, int npages,
 // add multiple empty pages to epc pages (will be allocated)
 static
 bool add_empty_pages_to_epc(int eid, int npages, epc_t *secs,
-                            epc_type_t epc_pt, page_type_t pt, bool is_heap)
+                            epc_type_t epc_pt, page_type_t pt, mem_type_t mt)
 {
     for (int i = 0; i < npages; i ++) {
         epc_t *epc = get_epc(eid, epc_pt);
@@ -335,13 +383,17 @@ bool add_empty_pages_to_epc(int eid, int npages, epc_t *secs,
             return false;
         if (!add_page_to_epc(empty_page, epc, secs, pt))
             return false;
-        if (i == 0 && is_heap) {
+        if (i == 0 && mt == MT_HEAP) {
             epc_heap_beg = epc;
             printf("DEBUG epc heap beg is set as %p\n",(void *)epc_heap_beg);
         }
-        if ((i == npages -1) && is_heap) {
+        if ((i == npages - 1) && mt == MT_HEAP) {
             epc_heap_end = (epc_t *)((char *)epc + PAGE_SIZE - 1);
             printf("DEBUG epc heap end is set as %p\n",(void *)epc_heap_end);
+        }
+        if ((i == npages - 1) && mt == MT_STACK) {
+            epc_stack_end = epc;
+            printf("DEBUG eps stack end is set as %p\n", (void *)epc_stack_end);
         }
     }
     return true;
@@ -399,9 +451,9 @@ int alloc_keid(void)
 // XXX. need a big lock
 // XXX. sig should reflects intel_flag, so don't put it as an arugment
 
-int syscall_create_enclave(void *entry, void *code, unsigned int code_pages,
-                           tcs_t *tcs, sigstruct_t *sig, einittoken_t *token,
-                           int intel_flag)
+int sys_create_enclave(void *base, unsigned int code_pages,
+                       tcs_t *tcs, sigstruct_t *sig, einittoken_t *token,
+                       int intel_flag)
 {
     int ret = -1;
     int eid = alloc_keid();
@@ -410,21 +462,22 @@ int syscall_create_enclave(void *entry, void *code, unsigned int code_pages,
     // full
     if (eid == -1)
         return -1;
-    cur_eid = eid;
+    kenclaves[eid].keid = eid;
 
     //      enclave (@eid) w/ npages
     //      |
     //      v
-    // EPC: [SECS][TCS][TLS]+[TARGET]+[SSA][HEAP][RESV]
+    // EPC: [SECS][TCS][TLS]+[CODE][DATA]+[SSA][HEAP][RESV]
     //
     // Note, npages must be power of 2.
     int sec_npages  = 1;
     int tcs_npages  = 1;
     int tls_npages  = get_tls_npages(tcs);
-    int ssa_npages  = STACK_PAGE_FRAMES_PER_THREAD;
+    int ssa_npages  = 2; // XXX: Temperily set
+    int stack_npages = STACK_PAGE_FRAMES_PER_THREAD;
     int heap_npages = HEAP_PAGE_FRAMES;
     int npages = sec_npages + tcs_npages + tls_npages \
-        + code_pages + ssa_npages + heap_npages;
+        + code_pages + ssa_npages + stack_npages + heap_npages;
     npages = rop2(npages);
 
     epc_t *enclave = alloc_epc_pages(npages, eid);
@@ -441,7 +494,7 @@ int syscall_create_enclave(void *entry, void *code, unsigned int code_pages,
     epc_t *secs = ecreate(eid, (uint64_t)enclave_addr, enclave_size, intel_flag);
     if (!secs)
         goto err;
-    cur_secs = secs;
+    kenclaves[eid].secs = secs;
 
     sgx_dbg(info, "enclave addr: %p (size: 0x%x w/ secs = %p)",
             enclave_addr, enclave_size, epc_to_vaddr(secs));
@@ -461,36 +514,48 @@ int syscall_create_enclave(void *entry, void *code, unsigned int code_pages,
 
     // allocate TLS pages
     sgx_dbg(info, "add tls (fs/gs) pages: %p (%d pages)",
-            entry, tls_npages);
-    if (!add_empty_pages_to_epc(eid, tls_npages, secs, REG_PAGE, PT_REG, 0))
+            empty_page, tls_npages);
+    if (!add_empty_pages_to_epc(eid, tls_npages, secs, REG_PAGE, PT_REG, MT_TLS))
         err(1, "failed to add pages");
 
     // allocate code pages
     sgx_dbg(info, "add target code/data: %p (%d pages)",
-            code, code_pages);
-    if (!add_pages_to_epc(eid, code, code_pages, secs, REG_PAGE, PT_REG))
+            base, code_pages);
+    if (!add_pages_to_epc(eid, base, code_pages, secs, REG_PAGE, PT_REG))
         err(1, "failed to add pages");
 
     // allocate SSA pages
     sgx_dbg(info, "add ssa pages: %p (%d pages)",
-            entry, ssa_npages);
-    if (!add_empty_pages_to_epc(eid, ssa_npages, secs, REG_PAGE, PT_REG, 0))
+            empty_page, ssa_npages);
+    if (!add_empty_pages_to_epc(eid, ssa_npages, secs, REG_PAGE, PT_REG, MT_SSA))
         err(1, "failed to add pages");
     kenclaves[eid].prealloc_ssa = ssa_npages * PAGE_SIZE;
 
+	// allocate stack pages
+    sgx_dbg(info, "add stack pages: %p (%d pages)",
+            empty_page, stack_npages);
+    if (!add_empty_pages_to_epc(eid, stack_npages, secs, REG_PAGE, PT_REG, MT_STACK))
+        err(1, "failed to add pages");
+    kenclaves[eid].prealloc_stack = stack_npages * PAGE_SIZE;
+
     // allocate heap pages
     sgx_dbg(info, "add heap pages: %p (%d pages)",
-            entry, heap_npages);
-    if (!add_empty_pages_to_epc(eid, heap_npages, secs, REG_PAGE, PT_REG, 1))
+            empty_page, heap_npages);
+    if (!add_empty_pages_to_epc(eid, heap_npages, secs, REG_PAGE, PT_REG, MT_HEAP))
         err(1, "failed to add pages");
     kenclaves[eid].prealloc_heap = heap_npages * PAGE_SIZE;
 
+#if 0
     // dump sig structure
     {
         char *msg = dbg_dump_sigstruct(sig);
         sgx_dbg(info, "sigstruct:\n%s", msg);
         free(msg);
     }
+#endif
+
+    // Stack enclave stack pointer.
+    set_stack((uint64_t)epc_stack_end);
 
     if (init_enclave(secs, sig, token))
         goto err;
@@ -516,50 +581,47 @@ int syscall_create_enclave(void *entry, void *code, unsigned int code_pages,
     return -1;
 }
 
-int syscall_stat_enclave(int keid, keid_t *stat)
+int sys_stat_enclave(int keid, keid_t *stat)
 {
-    kenclaves[cur_eid].kin_n++;
     if (keid < 0 || keid >= MAX_ENCLAVES) {
-        kenclaves[cur_eid].kout_n++;
         return -1;
     }
     //*stat = kenclaves[keid];
     if (stat == NULL) {
-        kenclaves[cur_eid].kout_n++;
         return -1;
     }
 
-    encls_stat(keid, &(kenclaves[cur_eid].qstat));
-    kenclaves[cur_eid].kout_n++;
+    kenclaves[keid].kin_n++;
+    encls_stat(keid, &(kenclaves[keid].qstat));
+    kenclaves[keid].kout_n++;
     memcpy(stat, &(kenclaves[keid]), sizeof(keid_t));
 
 	return 0;
 }
 
-unsigned long syscall_execute_EAUG() {
-    kenclaves[cur_eid].kin_n++;
-    epc_t *secs = cur_secs;
-    int eid = cur_eid;
-    printf("DEBUG current eid is %d\n", eid);
+unsigned long sys_add_epc(int keid) {
+    kenclaves[keid].kin_n++;
+    epc_t *secs = kenclaves[keid].secs; 
+    printf("DEBUG passed keid is %d\n", keid);
 
-    epc_t *free_epc_page = alloc_epc_page(eid);
+    epc_t *free_epc_page = alloc_epc_page(keid);
     if (free_epc_page == NULL) {
-        kenclaves[cur_eid].kout_n++;
+        kenclaves[keid].kout_n++;
         return 0;
     }
 
-    epc_t *epc = get_epc(eid, (uint64_t)REG_PAGE);
+    epc_t *epc = get_epc(keid, (uint64_t)REG_PAGE);
     if (!epc) {
-        kenclaves[cur_eid].kout_n++;
+        kenclaves[keid].kout_n++;
         return 0;
     }
     printf("DEBUG get epc works\n");
     if (!aug_page_to_epc(epc, secs)) {
-        kenclaves[cur_eid].kout_n++;
+        kenclaves[keid].kout_n++;
         return 0;
     }
-    kenclaves[cur_eid].augged_heap += PAGE_SIZE;
-    kenclaves[cur_eid].kout_n++;
+    kenclaves[keid].augged_heap += PAGE_SIZE;
+    kenclaves[keid].kout_n++;
     return (unsigned long)epc;
 }
 

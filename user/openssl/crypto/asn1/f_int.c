@@ -135,7 +135,7 @@ int a2i_ASN1_INTEGER(BIO *bp, ASN1_INTEGER *bs, char *buf, int size)
              * A...F a...f 0...9 are contiguous (yes, even in EBCDIC - but
              * not the whole alphabet). Nevertheless, isxdigit() is faster.
              */
-            if (!isxdigit(buf[j]))
+            if (!sgx_isxdigit(buf[j]))
 #endif
             {
                 i = j;

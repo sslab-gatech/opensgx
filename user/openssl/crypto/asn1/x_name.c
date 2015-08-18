@@ -209,7 +209,7 @@ static int x509_name_ex_d2i(ASN1_VALUE **val,
     /* We've decoded it: now cache encoding */
     if (!BUF_MEM_grow(nm.x->bytes, p - q))
         goto err;
-    memcpy(nm.x->bytes->data, q, p - q);
+    sgx_memcpy(nm.x->bytes->data, q, p - q);
 
     /* Convert internal representation to X509_NAME structure */
     for (i = 0; i < sk_STACK_OF_X509_NAME_ENTRY_num(intname.s); i++) {
@@ -252,7 +252,7 @@ static int x509_name_ex_i2d(ASN1_VALUE **val, unsigned char **out,
     }
     ret = a->bytes->length;
     if (out != NULL) {
-        memcpy(*out, a->bytes->data, ret);
+        sgx_memcpy(*out, a->bytes->data, ret);
         *out += ret;
     }
     return ret;
@@ -331,8 +331,8 @@ static int x509_name_ex_print(BIO *out, ASN1_VALUE **pval,
  * spaces collapsed, converted to lower case and the leading SEQUENCE header
  * removed. In future we could also normalize the UTF8 too. By doing this
  * comparison of Name structures can be rapidly perfomed by just using
- * memcmp() of the canonical encoding. By omitting the leading SEQUENCE name
- * constraints of type dirName can also be checked with a simple memcmp().
+ * sgx_memcmp() of the canonical encoding. By omitting the leading SEQUENCE name
+ * constraints of type dirName can also be checked with a simple sgx_memcmp().
  */
 
 static int x509_name_canon(X509_NAME *a)
@@ -355,6 +355,7 @@ static int x509_name_canon(X509_NAME *a)
     intname = sk_STACK_OF_X509_NAME_ENTRY_new_null();
     if (!intname)
         goto err;
+
     for (i = 0; i < sk_X509_NAME_ENTRY_num(a->entries); i++) {
         entry = sk_X509_NAME_ENTRY_value(a->entries, i);
         if (entry->set != set) {
@@ -377,7 +378,6 @@ static int x509_name_canon(X509_NAME *a)
     }
 
     /* Finally generate encoding */
-
     a->canon_enclen = i2d_name_canon(intname, NULL);
 
     p = OPENSSL_malloc(a->canon_enclen);
@@ -433,11 +433,11 @@ static int asn1_string_canon(ASN1_STRING *out, ASN1_STRING *in)
     /*
      * Convert string in place to canonical form. Ultimately we may need to
      * handle a wider range of characters but for now ignore anything with
-     * MSB set and rely on the isspace() and tolower() functions.
+     * MSB set and rely on the sgx_isspace() and sgx_tolower() functions.
      */
 
     /* Ignore leading spaces */
-    while ((len > 0) && !(*from & 0x80) && isspace(*from)) {
+    while ((len > 0) && !(*from & 0x80) && sgx_isspace(*from)) {
         from++;
         len--;
     }
@@ -445,7 +445,7 @@ static int asn1_string_canon(ASN1_STRING *out, ASN1_STRING *in)
     to = from + len - 1;
 
     /* Ignore trailing spaces */
-    while ((len > 0) && !(*to & 0x80) && isspace(*to)) {
+    while ((len > 0) && !(*to & 0x80) && sgx_isspace(*to)) {
         to--;
         len--;
     }
@@ -460,7 +460,7 @@ static int asn1_string_canon(ASN1_STRING *out, ASN1_STRING *in)
             i++;
         }
         /* Collapse multiple spaces */
-        else if (isspace(*from)) {
+        else if (sgx_isspace(*from)) {
             /* Copy one space across */
             *to++ = ' ';
             /*
@@ -472,9 +472,9 @@ static int asn1_string_canon(ASN1_STRING *out, ASN1_STRING *in)
                 from++;
                 i++;
             }
-            while (!(*from & 0x80) && isspace(*from));
+            while (!(*from & 0x80) && sgx_isspace(*from));
         } else {
-            *to++ = tolower(*from);
+            *to++ = sgx_tolower(*from);
             from++;
             i++;
         }

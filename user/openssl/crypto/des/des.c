@@ -153,16 +153,16 @@ int main(int argc, char **argv)
                     break;
                 case 'c':
                     cflag = 1;
-                    strncpy(cksumname, p, 200);
+                    sgx_strncpy(cksumname, p, 200);
                     cksumname[sizeof(cksumname) - 1] = '\0';
-                    p += strlen(cksumname);
+                    p += sgx_strlen(cksumname);
                     break;
                 case 'C':
                     cflag = 1;
                     longk = 1;
-                    strncpy(cksumname, p, 200);
+                    sgx_strncpy(cksumname, p, 200);
                     cksumname[sizeof(cksumname) - 1] = '\0';
-                    p += strlen(cksumname);
+                    p += sgx_strlen(cksumname);
                     break;
                 case 'e':
                     eflag = 1;
@@ -192,9 +192,9 @@ int main(int argc, char **argv)
                     break;
                 case 'u':
                     uflag = 1;
-                    strncpy(uuname, p, 200);
+                    sgx_strncpy(uuname, p, 200);
                     uuname[sizeof(uuname) - 1] = '\0';
-                    p += strlen(uuname);
+                    p += sgx_strlen(uuname);
                     break;
                 case 'h':
                     hflag = 1;
@@ -208,8 +208,8 @@ int main(int argc, char **argv)
                         int j;
 
                         i++;
-                        strncpy(key, argv[i], KEYSIZB);
-                        for (j = strlen(argv[i]) - 1; j >= 0; j--)
+                        sgx_strncpy(key, argv[i], KEYSIZB);
+                        for (j = sgx_strlen(argv[i]) - 1; j >= 0; j--)
                             argv[i][j] = '\0';
                     }
                     break;
@@ -263,7 +263,7 @@ int main(int argc, char **argv)
         (stat(out, &outs) != -1) &&
         (ins.st_dev == outs.st_dev) && (ins.st_ino == outs.st_ino))
 #else                           /* OPENSSL_SYS_MSDOS */
-        (strcmp(in, out) == 0))
+        (sgx_strcmp(in, out) == 0))
 #endif
     {
         fputs("input and output file are the same\n", stderr);
@@ -489,18 +489,18 @@ void doencryption(void)
                 char tmpbuf[8];
 
                 if (rem)
-                    memcpy(tmpbuf, &(buf[l]), (unsigned int)rem);
+                    sgx_memcpy(tmpbuf, &(buf[l]), (unsigned int)rem);
                 DES_3cbc_encrypt((DES_cblock *)buf, (DES_cblock *)obuf,
                                  (long)l, ks, ks2, &iv, &iv2, do_encrypt);
                 if (rem)
-                    memcpy(&(buf[l]), tmpbuf, (unsigned int)rem);
+                    sgx_memcpy(&(buf[l]), tmpbuf, (unsigned int)rem);
             } else {
                 DES_cbc_encrypt(buf, obuf, (long)l, &ks, &iv, do_encrypt);
                 if (l >= 8)
-                    memcpy(iv, &(obuf[l - 8]), 8);
+                    sgx_memcpy(iv, &(obuf[l - 8]), 8);
             }
             if (rem)
-                memcpy(buf, &(buf[l]), (unsigned int)rem);
+                sgx_memcpy(buf, &(buf[l]), (unsigned int)rem);
 
             i = 0;
             while (i < l) {
@@ -556,7 +556,7 @@ void doencryption(void)
             } else {
                 DES_cbc_encrypt(buf, obuf, (long)l, &ks, &iv, do_encrypt);
                 if (l >= 8)
-                    memcpy(iv, &(buf[l - 8]), 8);
+                    sgx_memcpy(iv, &(buf[l - 8]), 8);
             }
 
             if (uflag)
@@ -640,12 +640,12 @@ int uufwrite(unsigned char *data, int size, unsigned int num, FILE *fp)
 
     if (uubufnum) {
         if (uubufnum + num < 45) {
-            memcpy(&(uubuf[uubufnum]), data, (unsigned int)num);
+            sgx_memcpy(&(uubuf[uubufnum]), data, (unsigned int)num);
             uubufnum += num;
             return (num);
         } else {
             i = 45 - uubufnum;
-            memcpy(&(uubuf[uubufnum]), data, (unsigned int)i);
+            sgx_memcpy(&(uubuf[uubufnum]), data, (unsigned int)i);
             j = uuencode((unsigned char *)uubuf, 45, b);
             fwrite(b, 1, (unsigned int)j, fp);
             uubufnum = 0;
@@ -666,7 +666,7 @@ int uufwrite(unsigned char *data, int size, unsigned int num, FILE *fp)
         i += left;
     }
     if (i != num) {
-        memcpy(uubuf, &(data[i]), (unsigned int)rem);
+        sgx_memcpy(uubuf, &(data[i]), (unsigned int)rem);
         uubufnum = rem;
     }
     return (ret);
@@ -684,7 +684,7 @@ void uufwriteEnd(FILE *fp)
         j = uuencode(uubuf, uubufnum, b);
         fwrite(b, 1, (unsigned int)j, fp);
     }
-    fwrite(end, 1, strlen(end), fp);
+    fwrite(end, 1, sgx_strlen(end), fp);
 }
 
 /*
@@ -714,7 +714,7 @@ int uufread(unsigned char *out, int size, unsigned int num, FILE *fp)
         return (0);
     tot = 0;
     if (valid) {
-        memcpy(out, bb, (unsigned int)valid);
+        sgx_memcpy(out, bb, (unsigned int)valid);
         tot = valid;
         valid = 0;
     }
@@ -723,7 +723,7 @@ int uufread(unsigned char *out, int size, unsigned int num, FILE *fp)
         fgets((char *)b, 300, fp);
         if (b[0] == '\0')
             break;
-        i = strlen((char *)b);
+        i = sgx_strlen((char *)b);
         if ((b[0] == 'e') && (b[1] == 'n') && (b[2] == 'd')) {
             done = 1;
             while (!feof(fp)) {
@@ -737,13 +737,13 @@ int uufread(unsigned char *out, int size, unsigned int num, FILE *fp)
         if ((i + tot + 8) > num) {
             /* num to copy to make it a multiple of 8 */
             j = (num / 8 * 8) - tot - 8;
-            memcpy(&(out[tot]), bb, (unsigned int)j);
+            sgx_memcpy(&(out[tot]), bb, (unsigned int)j);
             tot += j;
-            memcpy(bb, &(bb[j]), (unsigned int)i - j);
+            sgx_memcpy(bb, &(bb[j]), (unsigned int)i - j);
             valid = i - j;
             break;
         }
-        memcpy(&(out[tot]), bb, (unsigned int)i);
+        sgx_memcpy(&(out[tot]), bb, (unsigned int)i);
         tot += i;
     }
     return (tot);

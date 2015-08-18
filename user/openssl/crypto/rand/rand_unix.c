@@ -235,7 +235,7 @@ int RAND_poll(void)
         rnd >>= 8;
     }
     RAND_add(buf, sizeof(buf), ENTROPY_NEEDED);
-    memset(buf, 0, sizeof(buf));
+    sgx_memset(buf, 0, sizeof(buf));
 
     return 1;
 }
@@ -243,7 +243,9 @@ int RAND_poll(void)
 int RAND_poll(void)
 {
     unsigned long l;
-    pid_t curr_pid = getpid();
+    // XXX: Workaround for SGX
+    pid_t curr_pid = (pid_t)sgx_time(NULL);
+//    pid_t curr_pid = getpid();
 #  if defined(DEVRANDOM) || defined(DEVRANDOM_EGD)
     unsigned char tmpbuf[ENTROPY_NEEDED];
     int n = 0;
@@ -260,7 +262,7 @@ int RAND_poll(void)
 #  endif
 
 #  ifdef DEVRANDOM
-    memset(randomstats, 0, sizeof(randomstats));
+    sgx_memset(randomstats, 0, sizeof(randomstats));
     /*
      * Use a random entropy pool device. Linux, FreeBSD and OpenBSD have
      * this. Use /dev/urandom if you can as /dev/random may block if it runs
@@ -269,7 +271,8 @@ int RAND_poll(void)
 
     for (i = 0; (i < sizeof(randomfiles) / sizeof(randomfiles[0])) &&
          (n < ENTROPY_NEEDED); i++) {
-        if ((fd = open(randomfiles[i], O_RDONLY
+        if ((fd = sgx_open(randomfiles[i], O_RDONLY
+//        if ((fd = open(randomfiles[i], O_RDONLY
 #   ifdef O_NONBLOCK
                        | O_NONBLOCK
 #   endif
@@ -290,17 +293,22 @@ int RAND_poll(void)
              * Avoid using same input... Used to be O_NOFOLLOW above, but
              * it's not universally appropriate...
              */
+// XXX: Workaround for SGX
+/*
             if (fstat(fd, st) != 0) {
-                close(fd);
+                sgx_close(fd);
+//                close(fd);
                 continue;
             }
+*/
             for (j = 0; j < i; j++) {
                 if (randomstats[j].st_ino == st->st_ino &&
                     randomstats[j].st_dev == st->st_dev)
                     break;
             }
             if (j < i) {
-                close(fd);
+                sgx_close(fd);
+//                close(fd);
                 continue;
             }
 
@@ -321,12 +329,14 @@ int RAND_poll(void)
                 pset.fd = fd;
                 pset.events = POLLIN;
                 pset.revents = 0;
-
+                // XXX: Workaroung for SGX
+                try_read = 1;
+/*
                 if (poll(&pset, 1, usec / 1000) < 0)
                     usec = 0;
                 else
                     try_read = (pset.revents & POLLIN) != 0;
-
+*/
 #   else
                 /* use select() */
                 fd_set fset;
@@ -354,7 +364,8 @@ int RAND_poll(void)
 #   endif
 
                 if (try_read) {
-                    r = read(fd, (unsigned char *)tmpbuf + n,
+//                    r = read(fd, (unsigned char *)tmpbuf + n,
+                    r = sgx_read(fd, (unsigned char *)tmpbuf + n,
                              ENTROPY_NEEDED - n);
                     if (r > 0)
                         n += r;
@@ -378,7 +389,8 @@ int RAND_poll(void)
                     (errno == EINTR || errno == EAGAIN)) && usec != 0
                    && n < ENTROPY_NEEDED);
 
-            close(fd);
+            sgx_close(fd);
+//            close(fd);
         }
     }
 #  endif                        /* defined(DEVRANDOM) */
@@ -410,10 +422,11 @@ int RAND_poll(void)
     /* put in some default random data, we need more than just this */
     l = curr_pid;
     RAND_add(&l, sizeof(l), 0.0);
-    l = getuid();
+//    l = getuid();
+    l = sgx_time(NULL);
     RAND_add(&l, sizeof(l), 0.0);
 
-    l = time(NULL);
+    l = sgx_time(NULL);
     RAND_add(&l, sizeof(l), 0.0);
 
 #  if defined(OPENSSL_SYS_BEOS)

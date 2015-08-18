@@ -28,23 +28,51 @@ void enclave_main()
     int port = 5566;
     int srvr_fd;
     int clnt_fd;
+    int n;
+    char buf[256];
+    struct sockaddr_in addr;
 
-    srvr_fd = sgx_socket();
+    srvr_fd = sgx_socket(PF_INET, SOCK_STREAM, 0);
 
     if (srvr_fd == -1) {
         sgx_exit(NULL);
     }
 
-    if (sgx_bind(srvr_fd, port) != 0) {
+    sgx_memset(&addr, 0, sizeof(addr));
+    addr.sin_family = AF_INET;
+    addr.sin_port = sgx_htons(port);
+    addr.sin_addr.s_addr = INADDR_ANY;
+
+    if (sgx_bind(srvr_fd, (struct sockaddr *)&addr, sizeof(addr)) != 0) {
         sgx_exit(NULL);
     }
 
-    if (sgx_listen(srvr_fd) != 0) {
+    if (sgx_listen(srvr_fd, 10) != 0) {
         sgx_exit(NULL);
     }
 
     while (1) {
-        clnt_fd = sgx_accept(srvr_fd);
+        struct sockaddr_in addr;
+        socklen_t len = sizeof(addr);
+        clnt_fd = sgx_accept(srvr_fd, (struct sockaddr *)&addr, &len);
+        if (clnt_fd < 0) {
+            sgx_puts("ERROR on accept\n");
+            continue;
+        }
+
+        sgx_memset(buf, 0, 256);
+        //int n = sgx_read(clnt_fd, buf, 255);
+        int n = sgx_recv(clnt_fd, buf, 255, 0);
+        if (n < 0)
+            sgx_puts("ERROR on read\n");
+
+        sgx_puts(buf);
+
+        //n = sgx_write(clnt_fd, "Successfully received", 21);
+        n = sgx_send(clnt_fd, "Successfully received", 21, 0);
+        if (n < 0)
+            sgx_puts("ERROR on write\n");
+
         sgx_close(clnt_fd);
     }
 

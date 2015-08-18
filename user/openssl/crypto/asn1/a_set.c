@@ -76,7 +76,7 @@ static int SetBlobCmp(const void *elem1, const void *elem2)
     const MYBLOB *b2 = (const MYBLOB *)elem2;
     int r;
 
-    r = memcmp(b1->pbData, b2->pbData,
+    r = sgx_memcmp(b1->pbData, b2->pbData,
                b1->cbData < b2->cbData ? b1->cbData : b2->cbData);
     if (r != 0)
         return r;
@@ -149,12 +149,12 @@ int i2d_ASN1_SET(STACK_OF(OPENSSL_BLOCK) *a, unsigned char **pp,
 /* Copy to temp mem */
     p = pTempMem;
     for (i = 0; i < sk_OPENSSL_BLOCK_num(a); ++i) {
-        memcpy(p, rgSetBlob[i].pbData, rgSetBlob[i].cbData);
+        sgx_memcpy(p, rgSetBlob[i].pbData, rgSetBlob[i].cbData);
         p += rgSetBlob[i].cbData;
     }
 
 /* Copy back to user mem*/
-    memcpy(pStart, pTempMem, totSize);
+    sgx_memcpy(pStart, pTempMem, totSize);
     OPENSSL_free(pTempMem);
     OPENSSL_free(rgSetBlob);
 

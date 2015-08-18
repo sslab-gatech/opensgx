@@ -217,8 +217,8 @@ static int add_cert_dir(BY_DIR *ctx, const char *dir, int type)
                 continue;
             for (j = 0; j < sk_BY_DIR_ENTRY_num(ctx->dirs); j++) {
                 ent = sk_BY_DIR_ENTRY_value(ctx->dirs, j);
-                if (strlen(ent->dir) == (size_t)len &&
-                    strncmp(ent->dir, ss, (unsigned int)len) == 0)
+                if (sgx_strlen(ent->dir) == (size_t)len &&
+                    sgx_strncmp(ent->dir, ss, (unsigned int)len) == 0)
                     break;
             }
             if (j < sk_BY_DIR_ENTRY_num(ctx->dirs))
@@ -240,7 +240,7 @@ static int add_cert_dir(BY_DIR *ctx, const char *dir, int type)
                 by_dir_entry_free(ent);
                 return 0;
             }
-            strncpy(ent->dir, ss, (unsigned int)len);
+            sgx_strncpy(ent->dir, ss, (unsigned int)len);
             ent->dir[len] = '\0';
             if (!sk_BY_DIR_ENTRY_push(ctx->dirs, ent)) {
                 by_dir_entry_free(ent);
@@ -304,7 +304,7 @@ static int get_cert_by_subject(X509_LOOKUP *xl, int type, X509_NAME *name,
         int idx;
         BY_DIR_HASH htmp, *hent;
         ent = sk_BY_DIR_ENTRY_value(ctx->dirs, i);
-        j = strlen(ent->dir) + 1 + 8 + 6 + 1 + 1;
+        j = sgx_strlen(ent->dir) + 1 + 8 + 6 + 1 + 1;
         if (!BUF_MEM_grow(b, j)) {
             X509err(X509_F_GET_CERT_BY_SUBJECT, ERR_R_MALLOC_FAILURE);
             goto finish;
@@ -328,7 +328,7 @@ static int get_cert_by_subject(X509_LOOKUP *xl, int type, X509_NAME *name,
         for (;;) {
             char c = '/';
 #ifdef OPENSSL_SYS_VMS
-            c = ent->dir[strlen(ent->dir) - 1];
+            c = ent->dir[sgx_strlen(ent->dir) - 1];
             if (c != ':' && c != '>' && c != ']') {
                 /*
                  * If no separator is present, we assume the directory
@@ -419,7 +419,7 @@ static int get_cert_by_subject(X509_LOOKUP *xl, int type, X509_NAME *name,
         if (tmp != NULL) {
             ok = 1;
             ret->type = tmp->type;
-            memcpy(&ret->data, &tmp->data, sizeof(ret->data));
+            sgx_memcpy(&ret->data, &tmp->data, sizeof(ret->data));
             /*
              * If we were going to up the reference count, we would need to
              * do it on a perl 'type' basis

@@ -1324,8 +1324,8 @@ static void hwcrhk_log_message(void *logstr, const char *message)
 #  ifndef OPENSSL_NO_DYNAMIC_ENGINE
 static int bind_fn(ENGINE *e, const char *id)
 {
-    if (id && (strcmp(id, engine_hwcrhk_id) != 0) &&
-        (strcmp(id, engine_hwcrhk_id_alt) != 0))
+    if (id && (sgx_strcmp(id, engine_hwcrhk_id) != 0) &&
+        (sgx_strcmp(id, engine_hwcrhk_id_alt) != 0))
         return 0;
     if (!bind_helper(e))
         return 0;

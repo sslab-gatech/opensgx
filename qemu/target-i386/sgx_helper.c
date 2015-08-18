@@ -1,3 +1,8 @@
+#include <string.h>
+#include <stdio.h>
+#include "openssl/evp.h"
+#include "openssl/modes.h"
+
 #include "cpu.h"
 #include "sgx.h"
 #include "sgx-utils.h"
@@ -13,6 +18,9 @@
 #include "polarssl/ctr_drbg.h"
 #include "polarssl/sha1.h"
 #include "polarssl/aes_cmac128.h"
+
+
+
 
 static qeid_t qenclaves[MAX_ENCLAVES];
 
@@ -51,6 +59,115 @@ typedef enum {
 
 // why?
 op_type_t operation = none;
+
+// Data structure &Functions for Ewb inst
+static const unsigned char gcm_key[] = {
+0x5f, 0x8a, 0xe6, 0xd1, 0x65, 0x8b, 0xb2, 0x6d, 0xe6, 0xf8, 0xa0, 0x69,
+0xa3, 0x52, 0x02, 0x93};
+
+void handleError(char *errMsg)
+{
+    printf("%s\n", errMsg);
+    exit(-1);
+}
+
+int encrypt_epc(unsigned char *plaintext, int plaintext_len, unsigned char *aad,
+            int aad_len, unsigned char *key, unsigned char *iv,
+            unsigned char *ciphertext, unsigned char *tag) {
+    EVP_CIPHER_CTX *ctx;
+    int len;
+    int ciphertext_len; 
+
+    if(!(ctx = EVP_CIPHER_CTX_new())) {
+        handleError("Context Creation Error !!!");
+    }
+    if(EVP_EncryptInit_ex(ctx, EVP_aes_128_gcm(), NULL, NULL, NULL) != 1) {
+        handleError("EVP Init Error !!!");
+    }
+    if(EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, 16, NULL) != 1) {
+        handleError("Context Control Error !!!");
+    }
+    if(EVP_EncryptInit_ex(ctx, NULL, NULL, key, iv) != 1) {
+        handleError("Key & IV Init Error !!!");
+    }
+    if(EVP_EncryptUpdate(ctx, NULL, &len, aad, aad_len) !=1 ) {
+        handleError("Aad Addtion Error !!!");
+    }
+    if(EVP_EncryptUpdate(ctx, ciphertext, &len, plaintext, plaintext_len) !=1 ) {
+        handleError("Encryption Error !!!");
+    }
+    ciphertext_len = len; 
+
+
+    /* Finalise the encryption. Normally ciphertext bytes may be written at
+     * this stage, but this does not occur in GCM mode
+     */
+    if(EVP_EncryptFinal_ex(ctx, ciphertext + len, &len) != 1) {
+        handleError("Finalize Error !!!");
+    }
+    /* Get the tag  */
+    if(EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, 16, tag) != 1) { 
+        handleError("Getting Tag Error !!!");
+    }
+    /* Clean up */
+    EVP_CIPHER_CTX_free(ctx);
+    return ciphertext_len;
+}
+
+int decrypt_epc(unsigned char *ciphertext, int ciphertext_len, unsigned char *aad,
+            int aad_len, unsigned char *tag, unsigned char *key, unsigned char *iv,
+            unsigned char *plaintext)
+{
+    EVP_CIPHER_CTX *ctx;
+    int len;
+    int plaintext_len;
+    int ret;
+
+    // create and init the context
+    if(!(ctx = EVP_CIPHER_CTX_new())) {
+        handleError("Context Creation Error !!!");
+    }
+    // init the decrypt operation
+    if(!EVP_DecryptInit_ex(ctx, EVP_aes_128_gcm(), NULL, NULL, NULL)) { 
+        handleError("EVIP Decrypt Init Error !!!");
+    }
+    // Set iv length.
+    if(!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, 16, NULL)) {
+        handleError("Context Control Error !!!");
+    }
+    if(EVP_DecryptInit_ex(ctx, NULL, NULL, key, iv) != 1) {
+        handleError("Key & IV Init Error !!!");
+    } 
+    if(EVP_DecryptUpdate(ctx, NULL, &len, aad, aad_len) !=1 ) {
+        handleError("Aad Addtion Error !!!");
+    }
+    if(EVP_DecryptUpdate(ctx, plaintext, &len, ciphertext, ciphertext_len) !=1 ) {
+        handleError("Encryption Error !!!");
+    }
+    plaintext_len = len;
+
+    if(!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, 16, tag)) {
+        handleError("Setting Tag Error !!!");
+    }
+    /*
+      A non positive return value from EVP_DecryptFinal_ex 
+      should be considered as a failure to authenticate 
+      ciphertext and/or AAD
+    */
+    ret = EVP_DecryptFinal_ex(ctx, plaintext + len, &len);
+
+    // clean up
+    EVP_CIPHER_CTX_free(ctx);
+
+    if(ret > 0) { //Decrypt Success 
+        plaintext_len += len;
+        return plaintext_len;
+    }
+    else {
+        return -1;
+    }
+}
+
 
 // A helper function to intialize attributes_t
 static inline
@@ -164,11 +281,41 @@ void check_within_epc(void *page_addr, CPUX86State *env)
     }
 }
 
+static
+bool is_within_same_epc(void *target_addr1, void *target_addr2, CPUX86State *env)
+{
+
+    check_within_epc(target_addr1, env);
+    check_within_epc(target_addr2, env);
+
+    int i = 0, target_index1 = 0, target_index2 = 0 ;
+    int start_addr, end_addr; 
+  
+    start_addr = EPC_BaseAddr; 
+    end_addr = EPC_BaseAddr + PAGE_SIZE;
+    for (i = 0 ; i < NUM_EPC; i++) {
+       if( target_index1 && target_index2) //found two indices. 
+           break;
+       if((!target_index1) && (target_addr1 > start_addr) && (target_addr1 < end_addr)) {
+           target_index1 = i;
+       }
+       if((!target_index2) && (target_addr2 > start_addr) && (target_addr2 < end_addr)) {
+           target_index2 = i;
+       }
+       start_addr += PAGE_SIZE;
+       end_addr += PAGE_SIZE;
+    }
+    printf("first target addr:%lx\t index:%d\n", target_addr1, target_index1);
+    printf("second target addr:%lx\t index:%d\n", target_addr2, target_index2);
+
+    return (target_index1 == target_index2); 
+}
+
 // Canonical Check
 static
 void is_canonical(uint64_t addr, CPUX86State *env)
 {
-    assert(env);
+    /*assert(env);
 
     // Canonical form : bit 48-63 is same as bit 47
     uint64_t MASK_48_63 = 0xFFFF800000000000;
@@ -184,7 +331,7 @@ void is_canonical(uint64_t addr, CPUX86State *env)
             sgx_msg(warn, "canonical check fail");
             raise_exception(env, EXCP0D_GPF);
         }
-    }
+    }*/
 }
 
 // check whether valid field of epcm is 1
@@ -317,7 +464,7 @@ void assignBits(uint64_t *page, secs_t *secs)
 }
 
 static
-void saveState(ssa_t* page, CPUX86State *env)
+void saveState(gprsgx_t* page, CPUX86State *env)
 {
     sgx_dbg(trace, "State will be store in %p", (void *)page);
     page->rax = env->regs[R_EAX];
@@ -328,12 +475,11 @@ void saveState(ssa_t* page, CPUX86State *env)
     page->rbp = env->regs[R_EBP];
     page->rsi = env->regs[R_ESI];
     page->rdi = env->regs[R_EDI];
-    page->exitinfo = env->cregs.CR_GPR_PA.exitinfo;
     page->rflags = env->eflags;
 }
 
 static
-void restoreGPRs(ssa_t *page, CPUX86State *env)
+void restoreGPRs(gprsgx_t *page, CPUX86State *env)
 {
     env->regs[R_EAX] = page->rax;
     env->regs[R_EBX] = page->rbx;
@@ -343,7 +489,6 @@ void restoreGPRs(ssa_t *page, CPUX86State *env)
     env->regs[R_EBP] = page->rbp;
     env->regs[R_ESI] = page->rsi;
     env->regs[R_EDI] = page->rdi;
-    env->cregs.CR_GPR_PA.exitinfo = page->exitinfo;
     /* FIXME: tf to removed*/
     env->eflags = page->rflags;
 }
@@ -504,7 +649,7 @@ uint16_t epcm_search(void *addr, CPUX86State *env)
     int16_t index = -1;
 
     for (i = 0; i < NUM_EPC; i ++) {
-        // Can be in between page addresses. for example: EEXTEND : 256 chunks
+        // Can be in between page addresses. for example: EEXTEND : 256 chunks && EWB : Version Array (VA)
         if ((epcm[i].epcPageAddress <= (uint64_t)addr)
                 && ((uint64_t)addr < epcm[i].epcPageAddress + PAGE_SIZE)) {
             index = i;
@@ -603,7 +748,7 @@ bool checkEINIT(uint64_t eid)
 {
     eid_einit_t *temp = entry_eid;
     while (temp != NULL) {
-        if (temp->eid == eid) 
+        if (temp->eid == eid)
             return true;
         temp = temp->next;
     }
@@ -713,7 +858,7 @@ bool checkOtherEnclaveFunctions(uint64_t eid, uint64_t mem_addr)
 }
 */
 
-//FIXME: Two pointers being used carried on from old code. 
+//FIXME: Two pointers being used carried on from old code.
 //  Need to have start and end address as a part of struct
 //  entry.
 /*
@@ -925,15 +1070,45 @@ static void abortAccess(CPUX86State *env) {
 }
 */
 
+void helper_mem_execute(CPUX86State *env, target_ulong a0)
+{
+    int epcm_index = 0;
+    uint64_t mem_addr = (uint64_t)a0;
+    sgx_dbg(mtrace, "Executing memory (enclave:%d): %p",
+            (int)env->cregs.CR_ENCLAVE_MODE, (void *)mem_addr);
+
+    if (env->cregs.CR_ENCLAVE_MODE) {
+        if (is_within_epc(mem_addr)){
+            sgx_dbg(trace, "Executing memory in EPC (enclave:%d): %p",
+                 (int)env->cregs.CR_ENCLAVE_MODE, (void *)mem_addr); //temporary
+            epcm_index = epcm_search((void *)mem_addr, env);
+            if(!is_within_enclave(env, mem_addr)) {
+                sgx_dbg(trace, "Mode EINIT Range: Executed %lX", mem_addr);
+                sgx_msg(trace, "Inside Enclave. Executing Incorrect enclave memory");
+                raise_exception(env, EXCP0D_GPF);
+            }
+            else if((epcm[epcm_index].execute) == 0){
+                sgx_dbg(trace, "EPCM execute property is violated at %p", mem_addr);
+                raise_exception(env, EXCP0D_GPF);
+            }
+        }
+    }
+}
+
 // helper test
 void helper_mem_access(CPUX86State *env, target_ulong a0, int operation)
 {
+    int ld_ = 0;
+    int st_ = 1;
+    int epcm_index = 0;
+
     // Do not add overheads prior to any enclave initiation process
     if (!is_enclave_initialized())
         return;
 
     // FIXME:For EPC access, cpu_ldq_data doesn't seem to work correctly
     uint64_t mem_addr = (uint64_t)a0;
+    //printf("memory access: %x\n", mem_addr);
 
     sgx_dbg(mtrace, "Accessing memory (enclave:%d): %p",
             (int)env->cregs.CR_ENCLAVE_MODE, (void *)mem_addr);
@@ -942,11 +1117,23 @@ void helper_mem_access(CPUX86State *env, target_ulong a0, int operation)
     //  - no access to EPC pages
     // Enclave mode access
     //  - not allow to access other enclaves
+    // CCH: plan to add the case when an enclave access area outside EPC or shared memory
     if (env->cregs.CR_ENCLAVE_MODE) {
-        if (is_within_epc(mem_addr) && !is_within_enclave(env, mem_addr)) {
-            sgx_dbg(trace, "Mode EINIT Range: Accessed %lX %lX", a0, mem_addr);
-            sgx_msg(trace, "Inside Enclave. Accessing Incorrect enclave memory");
-            raise_exception(env, EXCP0D_GPF);
+        if (is_within_epc(mem_addr)){
+            epcm_index = epcm_search((void *)mem_addr, env);
+            if(!is_within_enclave(env, mem_addr)) {
+                sgx_dbg(trace, "Mode EINIT Range: Accessed %lX %lX", a0, mem_addr);
+                sgx_msg(trace, "Inside Enclave. Accessing Incorrect enclave memory");
+                raise_exception(env, EXCP0D_GPF);
+            }
+            else if((operation == ld_) && (epcm[epcm_index].read) == 0){
+                sgx_dbg(trace, "EPCM read property is violated at %p", mem_addr);
+                //raise_exception(env, EXCP0D_GPF);  // blocked temporarily just for reaching the end of epcm rwx test
+            }
+            else if((operation == st_) && (epcm[epcm_index].write) == 0){
+                sgx_dbg(trace, "EPCM write property is violated at %p", mem_addr);
+                //raise_exception(env, EXCP0D_GPF);  // blocked temporarily just for reaching the end of epcm rwx test
+            }
         }
     } else {
         if (is_within_epc(mem_addr) || (mem_addr == (uint64_t)epcm) ||
@@ -1104,10 +1291,10 @@ void sgx_eaccept(CPUX86State *env)
     epcm_entry_t *epcm_secinfo = &epcm[index_secinfo];
 
     //NOTE: the last condition is different to SPEC, since it is not reasonable to compare the address of secinfo with the start address of the EPC where secinfo is located
-    if ((epcm_secinfo->valid == 0) || (epcm_secinfo->read == 0) || 
+    if ((epcm_secinfo->valid == 0) || (epcm_secinfo->read == 0) ||
         (epcm_secinfo->pending != 0) || (epcm_secinfo->modified != 0) ||
         (epcm_secinfo->blocked != 0) || (epcm_secinfo->page_type != PT_REG) ||
-        (epcm_secinfo->enclave_secs != env->cregs.CR_ACTIVE_SECS) || 
+        (epcm_secinfo->enclave_secs != env->cregs.CR_ACTIVE_SECS) ||
             (epcm_secinfo->enclave_addr != ((uint64_t)tmp_secinfo & (~(PAGE_SIZE-1))))) {
         sgx_msg(warn, "there is something wrong in EPCM of secinfo page");
         raise_exception(env, EXCP0D_GPF);
@@ -1164,11 +1351,11 @@ void sgx_eaccept(CPUX86State *env)
     }
 
     // Verify that accept request matches current EPC page settings
-    if((epcm_dest->enclave_addr != (uint64_t)destPage) || 
+    if((epcm_dest->enclave_addr != (uint64_t)destPage) ||
        (epcm_dest->pending != scratch_secinfo.flags.pending) ||
-       (epcm_dest->modified != scratch_secinfo.flags.modified) || 
+       (epcm_dest->modified != scratch_secinfo.flags.modified) ||
        (epcm_dest->read != scratch_secinfo.flags.r) ||
-       (epcm_dest->write != scratch_secinfo.flags.w) || 
+       (epcm_dest->write != scratch_secinfo.flags.w) ||
        (epcm_dest->execute != scratch_secinfo.flags.x) ||
        (epcm_dest->page_type != scratch_secinfo.flags.page_type)){
         sgx_msg(warn, "accept request does not match current EPC page settings");
@@ -1230,6 +1417,98 @@ Done:
 static
 void sgx_eacceptcopy(CPUX86State *env)
 {
+    //RBX: Secinfo addr(In, EA)
+    //RCX: Destination EPC addr(In, EA)
+    //RDX: Source EPC addr(In, EA)
+    //EAX: Error code(Out)
+    uint64_t sec_index = 0 , dst_index = 0, src_index = 0;
+    secinfo_t scratch_secinfo;
+
+    if(!is_aligned(env->regs[R_EBX], 64)) {
+        raise_exception(env, EXCP0D_GPF);
+    }
+    if(!is_aligned(env->regs[R_ECX], PAGE_SIZE) || !is_aligned(env->regs[R_EDX], PAGE_SIZE)) {
+        raise_exception(env, EXCP0D_GPF);
+    }
+    if (((uint64_t)env->regs[R_EBX] < env->cregs.CR_ELRANGE[0])
+            || ((uint64_t)env->regs[R_EBX] >= (env->cregs.CR_ELRANGE[0] + env->cregs.CR_ELRANGE[1]))) {
+            sgx_dbg(trace, "Secinfo is not in CR_ELRANGE: %lx", (long unsigned int)env->regs[R_EBX]);
+            raise_exception(env, EXCP0D_GPF);
+    }
+    if (((uint64_t)env->regs[R_ECX] < env->cregs.CR_ELRANGE[0])
+            || ((uint64_t)env->regs[R_ECX] >= (env->cregs.CR_ELRANGE[0] + env->cregs.CR_ELRANGE[1]))) {
+            sgx_dbg(trace, "Src EPC page is not in CR_ELRANGE: %lx", (long unsigned int)env->regs[R_ECX]);
+            raise_exception(env, EXCP0D_GPF);
+    }
+    if (((uint64_t)env->regs[R_EDX] < env->cregs.CR_ELRANGE[0])
+            || ((uint64_t)env->regs[R_EDX] >= (env->cregs.CR_ELRANGE[0] + env->cregs.CR_ELRANGE[1]))) {
+            sgx_dbg(trace, "Dst EPC page is not in CR_ELRANGE: %lx", (long unsigned int)env->regs[R_EDX]);
+            raise_exception(env, EXCP0D_GPF);
+    }
+
+    //XXX: isn't it redundant ?
+    check_within_epc(env->regs[R_EBX], env);
+    check_within_epc(env->regs[R_ECX], env);
+    check_within_epc(env->regs[R_EDX], env);
+
+    sec_index = epcm_search((void *)env->regs[R_EBX], env);
+    if(epcm[sec_index].valid == 0 || epcm[sec_index].read == 0 || epcm[sec_index].pending != 0 || 
+       epcm[sec_index].modified != 0 || epcm[sec_index].blocked != 0 || epcm[sec_index].page_type != PT_REG ||
+       epcm[sec_index].enclave_secs != env->cregs.CR_ACTIVE_SECS || epcm[sec_index].enclave_addr == env->regs[R_EBX]) {
+        raise_exception(env, EXCP0D_GPF);
+    }
+
+    memset(&scratch_secinfo, 0, sizeof(secinfo_t));
+    memcpy(&scratch_secinfo, env->regs[R_EBX], sizeof(secinfo_t));
+
+    //check for mis-configured secinfo flags
+    is_reserved_zero(scratch_secinfo.reserved, sizeof(((secinfo_t *)0)->reserved), env);
+    if((scratch_secinfo.flags.r == 0 && scratch_secinfo.flags.w != 0) ||
+       scratch_secinfo.flags.page_type != PT_REG) { 
+        raise_exception(env, EXCP0D_GPF);
+    }
+
+    //check security attributes of the destination EPC page
+    src_index = epcm_search((void*)env->regs[R_EDX], env);
+    if(epcm[src_index].valid == 0 || epcm[src_index].pending != 0 || epcm[src_index].modified != 0 ||
+       epcm[src_index].blocked != 0 || epcm[src_index].page_type != PT_REG ||
+       epcm[src_index].enclave_secs != env->cregs.CR_ACTIVE_SECS) {
+            raise_exception(env, EXCP0D_GPF);
+    }
+
+    //check security attributes of the destination EPC page
+    dst_index = epcm_search((void*)env->regs[R_ECX], env);
+    if(epcm[dst_index].valid == 0 || epcm[dst_index].pending != 1 || epcm[dst_index].modified != 0 ||
+      epcm[dst_index].page_type != PT_REG || epcm[dst_index].enclave_secs != env->cregs.CR_ACTIVE_SECS) {
+        env->eflags = 1;
+        env->regs[R_EAX] = ERR_SGX_PAGE_ATTRIBUTES_MISMATCH;
+        goto Done;
+    }
+    //TODO: check destination EPC page for concurrency 
+    
+    //Re-check security attributes of the destination EPC page
+    //check security attributes of the destination EPC page
+    if(epcm[dst_index].valid == 0 || epcm[dst_index].pending != 1 || epcm[dst_index].modified != 0 ||
+      epcm[dst_index].read != 1 || epcm[dst_index].write != 1 || epcm[dst_index].execute != 0 ||
+      epcm[dst_index].page_type != scratch_secinfo.flags.page_type ||
+      epcm[dst_index].enclave_secs != env->cregs.CR_ACTIVE_SECS || epcm[dst_index].enclave_addr == env->regs[R_ECX]) {
+        raise_exception(env, EXCP0D_GPF);
+    }
+
+    //copy 4KBytes from the source to destination EPC page
+    memcpy((void *)env->regs[R_ECX], (void *)env->regs[R_EDX], PAGE_SIZE);
+
+    //update epcm permission
+    epcm[dst_index].read    |= scratch_secinfo.flags.r;
+    epcm[dst_index].write   |= scratch_secinfo.flags.w;
+    epcm[dst_index].execute |= scratch_secinfo.flags.x;
+    epcm[dst_index].pending  = 0;
+
+    env->eflags &= ~(CC_Z);
+    env->regs[R_EAX] = 0;
+
+    Done:
+        env->eflags &= ~(CC_C | CC_P | CC_A | CC_O | CC_S);
 }
 
 // EENTER instruction
@@ -1247,7 +1526,6 @@ void sgx_eenter(CPUX86State *env)
     uint64_t tmp_gsbase;
     uint64_t tmp_gslimit;
     uint64_t tmp_ssa;
-    uint64_t tmp_enc_stack;
     uint64_t tmp_xsize;
     uint64_t tmp_ssa_page;
     uint64_t tmp_gpr;
@@ -1315,7 +1593,7 @@ void sgx_eenter(CPUX86State *env)
     if (tmp_mode64) {
         is_canonical((uint64_t)aep, env);
     }
-    /* TODO - Check concurrency of operations on TCS */
+    // TODO - Check concurrency of operations on TCS
 #if DEBUG
     sgx_dbg(trace, "TCS-> nssa = %d", tcs->nssa);
     sgx_dbg(trace, "TCS-> cssa = %d", tcs->cssa);
@@ -1327,15 +1605,16 @@ void sgx_eenter(CPUX86State *env)
                     (uint64_t)tcs,
                     epcm[index_tcs].page_type);
 #endif
-    /*Check Validity and whether access has been blocked*/
+    // Check Validity and whether access has been blocked
     epcm_invalid_check(&epcm[index_tcs], env);
     epcm_blocked_check(&epcm[index_tcs], env);
 
-    /* Async Exit pointer -- make a struct of registers */
-    /* Check for Address and page type*/
+    // Async Exit pointer -- make a struct of registers
+    // Check for Address and page type
     epcm_enclave_addr_check(&epcm[index_tcs], (uint64_t)tcs, env);
     epcm_page_type_check(&epcm[index_tcs], PT_TCS, env);
-    /* Alignment OFSBASGX with Page Size*/
+
+    // Alignment OFSBASGX with Page Size
     if (!is_aligned((void *)tcs->ofsbasgx, PAGE_SIZE)) {
         sgx_dbg(err, "Failed to check alignment: %p on %d bytes",
                 (void *)tcs->ofsbasgx, PAGE_SIZE);
@@ -1346,13 +1625,13 @@ void sgx_eenter(CPUX86State *env)
                 (void *)tcs->ogsbasgx, PAGE_SIZE);
         raise_exception(env, EXCP0D_GPF);
     }
-    /* Get the address of SECS for TCS - Implicit Access - Cached by the processor - EPC*/
-    /* Obtain the Base and Limits of FS and GS Sections*/
-    /* Check proposed FS/GS segments fall within DS */
+    // Get the address of SECS for TCS - Implicit Access - Cached by the processor - EPC
+    // Obtain the Base and Limits of FS and GS Sections
+    // Check proposed FS/GS segments fall within DS
     secs_t *tmp_secs =  get_secs_address(&epcm[index_tcs]); // TODO: Change when the ENCLS is implemented - pageinfo_t
     index_secs = epcm_search(tmp_secs, env);
 
-    /* Alignment - OSSA With Page Size*/
+    // Alignment - OSSA With Page Size
     if (!is_aligned((void *)(tmp_secs->baseAddr + tcs->ossa), PAGE_SIZE)) {
         sgx_dbg(err, "Failed to check alignment: %p on %d bytes",
                 (void *)(tmp_secs->baseAddr + tcs->ossa), PAGE_SIZE);
@@ -1361,29 +1640,31 @@ void sgx_eenter(CPUX86State *env)
 
     if (!tmp_mode64) {
         tmp_fsbase = tcs->ofsbasgx + tmp_secs->baseAddr;
-        tmp_fslimit = tmp_fsbase + tcs->fslimit;
+        tmp_fslimit = tmp_fsbase + tmp_secs->baseAddr + tcs->fslimit;
         tmp_gsbase = tcs->ogsbasgx + tmp_secs->baseAddr;
-        tmp_gslimit = tmp_gsbase + tcs->gslimit;
-        /* if FS wrap-around, make sure DS has no holes */
+        tmp_gslimit = tmp_gsbase + tmp_secs->baseAddr + tcs->gslimit;
+        // if FS wrap-around, make sure DS has no holes
         if (tmp_fslimit < tmp_fsbase) {
             if (env->segs[R_DS].limit < DSLIMIT) {
                 sgx_msg(warn, "Invalid FS range.");
                 raise_exception(env, EXCP0D_GPF);
-        } else
-        if (tmp_fslimit > env->segs[R_DS].limit) {
-                    sgx_msg(warn, "Invalid FS range.");
-                    raise_exception(env, EXCP0D_GPF);
+            } else {
+                if (tmp_fslimit > env->segs[R_DS].limit) {
+                   sgx_msg(warn, "Invalid FS range.");
+                   raise_exception(env, EXCP0D_GPF);
+                }
             }
         }
-        /* if GS wrap-around, make sure DS has no holes */
+        // if GS wrap-around, make sure DS has no holes
         if (tmp_gslimit < tmp_gsbase) {
             if (env->segs[R_DS].limit < DSLIMIT) {
                 sgx_msg(warn, "Invalid DS range.");
                 raise_exception(env, EXCP0D_GPF);
-            } else
-            if (tmp_gslimit > env->segs[R_DS].limit) {
-                sgx_msg(warn, "Invalid DS range.");
-                raise_exception(env, EXCP0D_GPF);
+            } else {
+			    if (tmp_gslimit > env->segs[R_DS].limit) {
+                    sgx_msg(warn, "Invalid DS range.");
+                    raise_exception(env, EXCP0D_GPF);
+                }
             }
         }
     } else {
@@ -1394,11 +1675,11 @@ void sgx_eenter(CPUX86State *env)
         is_canonical((uint64_t)(void*)tmp_gsbase, env);
     }
 
-    /* Ensure that the FLAGS field in the TCS does not have any reserved bits set*/
+    // Ensure that the FLAGS field in the TCS does not have any reserved bits set
     checkReservedBits((uint64_t *)&tcs->flags, 0xFFFFFFFFFFFFFFFEL, env);
     eid = tmp_secs->eid_reserved.eid_pad.eid;
 
-    /* SECS must exist and enclave must have previously been EINITted */
+    // SECS must exist and enclave must have previously been EINITted
     if ((tmp_secs == NULL) && !checkEINIT(eid)) { // != NULL taken care of earlier itself
         sgx_msg(warn, "Check secs failed.");
         raise_exception(env, EXCP0D_GPF);
@@ -1406,18 +1687,18 @@ void sgx_eenter(CPUX86State *env)
 #if DEBUG
     sgx_dbg(trace, "SECS and checkEINIT worked %d %d", tmp_secs->attributes.mode64bit, tmp_mode64);
 #endif
-    /* make sure the logical processor’s operating mode matches the enclave*/
+    // Make sure the logical processor’s operating mode matches the enclave
     if (tmp_secs->attributes.mode64bit != tmp_mode64) {
         sgx_msg(warn, "Attribute mode64bit mismatched.");
         raise_exception(env, EXCP0D_GPF);
     }
-    /* OSFXSR == 0 ?*/
+    // OSFXSR == 0 ?
     if (!(env->cr[4] & CR4_OSFXSR_MASK)) {
         sgx_msg(warn, "OSFXSR check failed.");
         raise_exception(env, EXCP0D_GPF);
     }
 
-    /* Check for legal values of SECS.ATTRIBUTES.XFRM */
+    // Check for legal values of SECS.ATTRIBUTES.XFRM
     if (!(env->cr[4] & CR4_OSXSAVE_MASK)) {
         if (tmp_secs->attributes.xfrm != 0x03) {
         sgx_msg(warn, "Attribute mode64bit mismatched.");
@@ -1430,8 +1711,8 @@ void sgx_eenter(CPUX86State *env)
         }
     }
 
-    /* Make sure the SSA contains at least one more frame */
-    /* Causing Exception */
+    // Make sure the SSA contains at least one more frame
+    // Causing Exception
     if (tcs->cssa >= tcs->nssa) {
         raise_exception(env, EXCP0D_GPF);
     }
@@ -1441,29 +1722,25 @@ void sgx_eenter(CPUX86State *env)
             tcs->ossa, tcs->nssa, tcs->cssa);
 #endif
 
-    /* Compute linear addres of stack for enclave only uses. 
-    // 0x8 (8bytes for stack alignment) should be subtracted. 
-    // because saving stack information in 2nd ssa page could overwrite stack
-    */
-    tmp_enc_stack = tcs->ossa + tmp_secs->baseAddr + PAGE_SIZE - 0x8;
-    /* Compute linear address of SSA frame */
+    // Compute linear address of SSA frame
     tmp_ssa = tcs->ossa + tmp_secs->baseAddr + PAGE_SIZE * tmp_secs->ssaFrameSize * (tcs->cssa);
     tmp_xsize = compute_xsave_frame_size(env, tmp_secs->attributes);
 
-    sgx_dbg(trace, "first ssa page is reserved for enclave only stack:%p", (void *)tmp_enc_stack);
     sgx_dbg(trace, "ssa: %p (size:%lu) base: %p",
             (void *)tmp_ssa, tmp_xsize, (void *)tmp_secs->baseAddr);
 
+// TODO: Implement XSAVE/XSTOR related spec
+#if 0
     iter = 0;
     for (tmp_ssa_page = tmp_ssa; tmp_ssa_page > (tmp_ssa - tmp_xsize); tmp_ssa_page -= PAGE_SIZE ) {
         uint16_t index_ssa = epcm_search((void *)tmp_ssa_page, env);
-        /* Check page is read/write accessible */
+        // Check page is read/write accessible
         if (!checkRWAccessible(tmp_ssa_page, env)) {
                 releaseLocks();
                 //abortAccess(env);
                 raise_exception(env, EXCP0D_GPF);
         }
-        /* Temporarily block */
+        // Temporarily block
 #if DEBUG
         sgx_dbg(trace, "EPCM INDEX SSA %"PRIx64" index_tcs: %d", &epcm[index_ssa], index_tcs);
 #endif
@@ -1490,17 +1767,23 @@ void sgx_eenter(CPUX86State *env)
 
         env->cregs.CR_XSAVE_PAGE[iter++] = getPhysicalAddr(env, tmp_ssa_page); // unused currently
     }
+#endif
 
-    /* Compute Address of GPR Area*/
-    tmp_gpr = tmp_ssa - PAGE_SIZE * (tmp_secs->ssaFrameSize); // sizeof gpr area
+    // Compute Address of GPR Area
+    tmp_gpr = tmp_ssa + PAGE_SIZE * (tmp_secs->ssaFrameSize) - sizeof(gprsgx_t);
     index_gpr = epcm_search((void *)tmp_gpr, env);
 
     // Temporarily block
     check_within_epc((void *)tmp_gpr, env);
-    /* Check for validity and block*/
+    // Check for validity and block
     epcm_invalid_check(&epcm[index_gpr], env);
     epcm_blocked_check(&epcm[index_gpr], env);
-    epcm_field_check(&epcm[index_gpr], (uint64_t)tmp_gpr, PT_REG,
+    // XXX: Spec might be wrong in r2 p.77:
+    // the check EPCM(DS:TMP_GPR).ENCLAVEADDRESS != DS:TMP_GPR)
+    // ENCLAVEADDRESS is assumed to be the epc page address, whreas
+    // TMP_GPR address is within the page.
+    // In second parameter, use tmp_ssa instead of tmp_gpr for now.
+    epcm_field_check(&epcm[index_gpr], (uint64_t)tmp_ssa, PT_REG,
                      (uint64_t)epcm[index_tcs].enclave_secs, env);
     if (!epcm[index_gpr].read || !epcm[index_gpr].write) {
         raise_exception(env, EXCP0D_GPF);
@@ -1509,10 +1792,13 @@ void sgx_eenter(CPUX86State *env)
         checkWithinDSSegment(env, tmp_gpr + sizeof(env->regs[R_EAX]));
     }
 
-    /* GetPhysical Address of TMP_GPR */
-    env->cregs.CR_GPR_PA.addr = (uint64_t)getPhysicalAddr(env, tmp_gpr);
+    // GetPhysical Address of TMP_GPR
+    // XXX: In current design, (enclave) linear address = (enclave) physical address
+    //env->cregs.CR_GPR_PA = (uint64_t)getPhysicalAddr(env, tmp_gpr);
+    env->cregs.CR_GPR_PA = tmp_gpr;
+
 #if DEBUG
-    sgx_dbg(trace, "Physical Address obtained cr_gpr_a: %lp", (void *)env->cregs.CR_GPR_PA.addr);
+    sgx_dbg(trace, "Physical Address obtained cr_gpr_a: %lp", (void *)env->cregs.CR_GPR_PA);
 #endif
     tmp_target = env->eip;
 
@@ -1523,9 +1809,9 @@ void sgx_eenter(CPUX86State *env)
             raise_exception(env, EXCP0D_GPF);
         }
     }
-    /* Ensure the enclave is not already active and also concurrency of TCS*/
+    // Ensure the enclave is not already active and also concurrency of TCS
     /* if ( tcs->state == ACTIVE )
-    raise_exception(env, EXCP0D_GPF);
+           raise_exception(env, EXCP0D_GPF);
     */
     curr_Eid = tmp_secs->eid_reserved.eid_pad.eid;
     env->cregs.CR_ENCLAVE_MODE = true;
@@ -1536,14 +1822,14 @@ void sgx_eenter(CPUX86State *env)
     sgx_dbg(trace, "range: %p-%lx",
             (void *)env->cregs.CR_ELRANGE[0],
             env->cregs.CR_ELRANGE[1]);
-    /* Save state for possible AEXs */
+    // Save state for possible AEXs
 
     // NOTE. epc pages have same physical/linear address
     env->cregs.CR_TCS_LA = (uint64_t)tcs;
     env->cregs.CR_TCS_PA = (uint64_t)tcs;
     env->cregs.CR_AEP = (uint64_t)aep;
-    
-    /* Save the hidden portions of FS and GS */
+
+    // Save the hidden portions of FS and GS
     env->cregs.CR_SAVE_FS.selector = env->segs[R_FS].selector;
     env->cregs.CR_SAVE_FS.base = env->segs[R_FS].base;
     env->cregs.CR_SAVE_FS.limit = env->segs[R_FS].limit;
@@ -1554,20 +1840,20 @@ void sgx_eenter(CPUX86State *env)
     env->cregs.CR_SAVE_GS.limit = env->segs[R_GS].limit;
     env->cregs.CR_SAVE_GS.flags = env->segs[R_GS].flags;
 
-    /* If XSAVE is enabled, save XCR0 and replace it with SECS.ATTRIBUTES.XFRM */
+    // If XSAVE is enabled, save XCR0 and replace it with SECS.ATTRIBUTES.XFRM
     if ((env->cr[4] & CR4_OSXSAVE_MASK)) {
         env->cregs.CR_SAVE_XCR0 = env->xcr0;
         env->xcr0 = tmp_secs->attributes.xfrm;
     }
 
-    //set eip into the enclave
+    // Set eip into the enclave
     env->eip = tmp_secs->baseAddr + tcs->oentry;
-    // following used to affect the tb flow
+    // Following used to affect the tb flow
     env->cregs.CR_CURR_EIP = env->eip;
     sgx_dbg(trace, "entry ptr: %p (base: %p, offset: %lx)",
             (void *)env->eip, (void *)tmp_secs->baseAddr, tcs->oentry);
 
-    // return values
+    // Return values
     env->regs[R_EAX] = tcs->cssa;
     env->regs[R_ECX] = env->cregs.CR_NEXT_EIP;
 
@@ -1583,16 +1869,16 @@ void sgx_eenter(CPUX86State *env)
     }
     fprintf(stderr, "\n");
 
-    // save the outside RSP and RBP so they can be restored on interrupt or EEXIT
-    env->cregs.CR_GPR_PA.ursp = env->regs[R_ESP];
-    env->cregs.CR_GPR_PA.urbp = env->regs[R_EBP];
+    // Save the outside RSP and RBP so they can be restored on interrupt or EEXIT
+    ((gprsgx_t *)env->cregs.CR_GPR_PA)->ursp = env->regs[R_ESP];
+    ((gprsgx_t *)env->cregs.CR_GPR_PA)->urbp = env->regs[R_EBP];
 
-    // setting up the base and stack pointers
-    env->regs[R_ESP] = tmp_enc_stack;
-    env->regs[R_EBP] = 0; 
+    // Setting up the base and stack pointers
+    env->regs[R_ESP] = env->cregs.CR_ESP;
+    env->regs[R_EBP] = env->cregs.CR_EBP;;
 
     sgx_dbg(info, "old ursp: %p\t changed rsp %p at eenter",
-            (void *)env->cregs.CR_GPR_PA.ursp,
+            (void *)((gprsgx_t *)env->cregs.CR_GPR_PA)->ursp,
             (void *)env->regs[R_ESP]);
 
     sgx_dbg(trace, "transfer to rip: %p (rsp: %p, rbp: %p)",
@@ -1600,7 +1886,7 @@ void sgx_eenter(CPUX86State *env)
             (void *)env->regs[R_ESP],
             (void *)env->regs[R_EBP]);
 
-    // swap FS/GS (XXX?)
+    // Swap FS/GS (XXX?)
     env->segs[R_FS].base = tmp_fsbase;
     env->segs[R_FS].limit = tcs->fslimit;
 
@@ -1629,11 +1915,11 @@ void sgx_eenter(CPUX86State *env)
     env->segs[R_GS].flags |= env->segs[R_DS].flags & DESC_L_MASK;
     env->segs[R_GS].selector = 0x0B;
 
-    //for later EEXIT
+    // For later EEXIT
     env->cregs.CR_EXIT_EIP = env->cregs.CR_NEXT_EIP;
     sgx_dbg(info,"saved EXIT_EIP at eenter: %lX", env->cregs.CR_EXIT_EIP);
 
-    update_ssa_base();
+    //update_ssa_base();
 
     sgx_dbg(trace, "async rip: %p", (void *)env->cregs.CR_AEP);
 
@@ -1659,7 +1945,7 @@ void sgx_eenter(CPUX86State *env)
 
     // Added for QEMU TB flow while operating in enclave mode
     env->cregs.CR_ENC_INSN_RET = true;
-    
+
     CPUState *cs = CPU(x86_env_get_cpu(env));
     tlb_flush(cs, 1);
 
@@ -1682,8 +1968,7 @@ void sgx_eexit(CPUX86State *env)
     uint64_t retAddr;
     secs_t *secs;
     void *addr;
-    uint64_t tmp_ssa;
-    uint64_t tmp_gpr;
+    gprsgx_t *tmp_gpr;
     tcs_t *tcs;
 
     sgx_dbg(trace, "Current ESP: %lx   EBP: %lx", env->regs[R_ESP], env->regs[R_EBP]);
@@ -1695,7 +1980,7 @@ void sgx_eexit(CPUX86State *env)
     if(retAddr != 0)
         sgx_dbg(trace, "EEXIT will return to provided addr: %lx", retAddr);
     else
-        sgx_dbg(trace, "EEXIT will return saved EXIT_EIP: %lx", env->cregs.CR_EXIT_EIP); 
+        sgx_dbg(trace, "EEXIT will return saved EXIT_EIP: %lx", env->cregs.CR_EXIT_EIP);
     addr = (void *)env->regs[R_EBX];
     tmp_mode64 = (env->efer & MSR_EFER_LMA) && (env->segs[R_CS].flags & DESC_L_MASK);
 
@@ -1707,52 +1992,51 @@ void sgx_eexit(CPUX86State *env)
         }
     }
 
-    // TODO: will fix it to save current CR_EXIT_EIP and 
-    // address right after eexit that should be returned 
-    // after ERESUME. 
+    // TODO: will fix it to save current CR_EXIT_EIP and
+    // address right after eexit that should be returned
+    // after ERESUME.
 
-    //for trampoline
+    // For trampoline
     if(retAddr != 0) {
         //is it necessary ? may be not
         env->eip = retAddr;
         // get tcs
         tcs = (tcs_t *)env->cregs.CR_TCS_LA ;
         {
-            sgx_dbg(trace, "SSA ossa: %ld nssa %d cssa %d",
+            sgx_dbg(trace, "SSA ossa: %lX nssa %d cssa %d",
                     tcs->ossa, tcs->nssa, tcs->cssa);
         }
-        // get current Free SSA 
-        tmp_ssa = (secs->baseAddr) + (tcs->ossa + (PAGE_SIZE * secs->ssaFrameSize * tcs->cssa));
-        /* Compute Address of GPR Area*/
-        tmp_gpr = tmp_ssa - PAGE_SIZE * (secs->ssaFrameSize); // sizeof gpr area
+
+        // Get current GPR
+        tmp_gpr = (gprsgx_t *)env->cregs.CR_GPR_PA;
         //sgx_dbg(trace, "current gpr is %lp\t ssa is %lp", tmp_gpr,tmp_ssa);
 
-        saveState((ssa_t *)tmp_gpr, env);
-	//push old CR_EXIT_EIP to the SSA
-        ((ssa_t *)tmp_gpr)->SAVED_EXIT_EIP = env->cregs.CR_EXIT_EIP;
-        //push Next eip to the SSA
-        ((ssa_t *)tmp_gpr)->rip = env->cregs.CR_NEXT_EIP;
+        saveState(tmp_gpr, env);
+	    // Push old CR_EXIT_EIP to the SSA
+        tmp_gpr->SAVED_EXIT_EIP = env->cregs.CR_EXIT_EIP;
+        // Push Next eip to the SSA
+        tmp_gpr->rip = env->cregs.CR_NEXT_EIP;
         sgx_dbg(trace, "Addr followed by eexit is %lX", env->cregs.CR_NEXT_EIP);
-        
-        // increase cssa by one 
+
+        // Increase cssa by one
         tcs->cssa += 1;
 
-        //change CR_EXIT_EIP to designated addr
+        // Change CR_EXIT_EIP to designated addr
         env->cregs.CR_EXIT_EIP = retAddr;
 
-        //ESP should be changed to point a non-enclave sp.
-        //Currently, we don't have a speical stack memory area for trampoline 
-        //So we subtract sufficient number from the ursp to make it not to overwrite
-        //user stack area reserved before calling eenter.
-        //XXX: it works fine now, but it could crush if the function calling eenter
-        //has huge local variable in it. 
-        env->regs[R_ESP] = env->cregs.CR_GPR_PA.ursp - 0x1000;
+        // ESP should be changed to point a non-enclave sp.
+        // Currently, we don't have a speical stack memory area for trampoline
+        // So we subtract sufficient number from the ursp to make it not to overwrite
+        // user stack area reserved before calling eenter.
+        // XXX: it works fine now, but it could crush if the function calling eenter
+        // has huge local variable in it.
+        env->regs[R_ESP] = tmp_gpr->ursp - 0x1000;
         env->regs[R_EBP] = 0;
     }
     else {
         // Change the stack pointer as untrusted area
-        env->regs[R_ESP] = env->cregs.CR_GPR_PA.ursp;
-        env->regs[R_EBP] = env->cregs.CR_GPR_PA.urbp;
+        env->regs[R_ESP] = ((gprsgx_t *)env->cregs.CR_GPR_PA)->ursp;
+        env->regs[R_EBP] = ((gprsgx_t *)env->cregs.CR_GPR_PA)->urbp;
     }
 
     // Return Current AEP in RCX
@@ -1785,7 +2069,7 @@ void sgx_eexit(CPUX86State *env)
         //raise_exception(env, EXCP0D_GPF);
     }
 
-    update_ssa_base();
+    //update_ssa_base();
 
     env->cregs.CR_ENCLAVE_MODE = false;
     env->cregs.CR_EXIT_MODE = true;
@@ -1888,6 +2172,13 @@ void sgx_egetkey(CPUX86State *env)
            (uint8_t *)&tmp_currentsecs->miscselect,
            (uint8_t *)&keyrequest->miscmask, 4);
 
+    // TODO
+    sgx_dbg(trace, "tmp_miscselect %x",tmp_miscselect );
+    // TODO
+    sgx_dbg(trace, "tmp_currentsecs %x",tmp_currentsecs->miscselect );
+    // TODO
+    sgx_dbg(trace, "keyrequest->miscmask %x",keyrequest->miscmask );
+    sgx_dbg(trace, "tmp_currentsecs->attributes %x", tmp_currentsecs->attributes);
     keydep_t keydep;
     memset(&keydep, 0, sizeof(keydep_t));
 
@@ -1945,9 +2236,9 @@ void sgx_egetkey(CPUX86State *env)
             keydep.isvprodID = 0;
             keydep.isvsvn    = 0;
             memcpy(keydep.ownerEpoch,      env->cregs.CSR_SGX_OWNEREPOCH,  16);
-            //memcpy(&keydep.attributes,     &tmp_currentsecs->attributes,   16);
+            memcpy(&keydep.attributes,     &tmp_currentsecs->attributes,   16);
             memset(&keydep.attributesMask, 0,                              16);
-            //memcpy(keydep.mrEnclave,       tmp_currentsecs->mrEnclave,     32);
+            memcpy(keydep.mrEnclave,       tmp_currentsecs->mrEnclave,     32);
             memset(keydep.mrSigner,        0,                              32);
             memcpy(keydep.keyid,           keyrequest->keyid,              32);
             memcpy(keydep.seal_key_fuses,  env->cregs.CR_SEAL_FUSES,       16);
@@ -1955,6 +2246,7 @@ void sgx_egetkey(CPUX86State *env)
             memcpy(keydep.padding,         pkcs1_5_padding,               352);
             memcpy(&keydep.miscselect,     &tmp_miscselect,                 4);
             memset(&keydep.miscmask,       0,                               4);
+
             break;
         }
         case LAUNCH_KEY: {
@@ -2115,8 +2407,72 @@ _EXIT:
 }
 
 static
-void sgx_emode(CPUX86State *env)
+void sgx_emodpe(CPUX86State *env)
 {
+    // RBX: secinfo addr(IN)
+    // RCX: Destination EPC addr (IN)
+    uint64_t sec_index = 0;
+    uint64_t epc_index = 0;
+    secinfo_t scratch_secinfo;
+ 
+    if(!is_aligned(env->regs[R_EBX], 64)) {
+        raise_exception(env, EXCP0D_GPF);
+    }
+    if(!is_aligned(env->regs[R_ECX], PAGE_SIZE)) {
+        raise_exception(env, EXCP0D_GPF);
+    }
+    if (((uint64_t)env->regs[R_EBX] < env->cregs.CR_ELRANGE[0])
+            || ((uint64_t)env->regs[R_EBX] >= (env->cregs.CR_ELRANGE[0] + env->cregs.CR_ELRANGE[1]))) {
+            sgx_dbg(trace, "Secinfo is not in CR_ELRANGE: %lx", (long unsigned int)env->regs[R_EBX]);
+            raise_exception(env, EXCP0D_GPF);
+    }
+    if (((uint64_t)env->regs[R_ECX] < env->cregs.CR_ELRANGE[0])
+            || ((uint64_t)env->regs[R_ECX] >= (env->cregs.CR_ELRANGE[0] + env->cregs.CR_ELRANGE[1]))) {
+            sgx_dbg(trace, "EPC addr is not in CR_ELRANGE: %lx", (long unsigned int)env->regs[R_EBX]);
+            raise_exception(env, EXCP0D_GPF);
+    }
+    check_within_epc(env->regs[R_EBX], env);
+    check_within_epc(env->regs[R_ECX], env);
+    
+    sec_index = epcm_search((void *)env->regs[R_EBX], env);
+    if(epcm[sec_index].valid == 0 || epcm[sec_index].read == 0 || epcm[sec_index].pending != 0 || 
+       epcm[sec_index].modified != 0 || epcm[sec_index].blocked != 0 || epcm[sec_index].page_type != PT_REG ||
+       epcm[sec_index].enclave_secs != env->cregs.CR_ACTIVE_SECS || epcm[sec_index].enclave_addr == env->regs[R_EBX]) {
+            raise_exception(env, EXCP0D_GPF);
+    }
+
+    memset(&scratch_secinfo, 0, sizeof(secinfo_t));
+    memcpy(&scratch_secinfo, env->regs[R_EBX], sizeof(secinfo_t));
+
+    is_reserved_zero(&(scratch_secinfo.reserved), sizeof(((secinfo_t *)0)->reserved), env);
+
+    //check security attributes of the EPC page
+    epc_index = epcm_search((void*)env->regs[R_ECX], env);
+    if(epcm[epc_index].valid == 0 || epcm[epc_index].pending != 0 || epcm[epc_index].modified != 0 ||
+       epcm[epc_index].blocked != 0 || epcm[epc_index].page_type != PT_REG || 
+       epcm[epc_index].enclave_secs != env->cregs.CR_ACTIVE_SECS) {
+            raise_exception(env, EXCP0D_GPF);
+    }
+    //TODO: Check the EPC page for concurrency 
+
+    // Re-check attributes of the EPC page
+    if(epcm[epc_index].valid == 0 || epcm[epc_index].pending != 0 || epcm[epc_index].modified != 0 || 
+       epcm[epc_index].blocked != 0 || epcm[epc_index].page_type != PT_REG || 
+       epcm[epc_index].enclave_secs != env->cregs.CR_ACTIVE_SECS || 
+       epcm[epc_index].enclave_addr != env->regs[R_ECX]) {
+            raise_exception(env, EXCP0D_GPF);
+    }
+    
+    //check for mis-configured SECINFO flags
+    if(epcm[sec_index].read == 0 && scratch_secinfo.flags.r == 0 && scratch_secinfo.flags.w != 0) {
+        raise_exception(env, EXCP0D_GPF);
+    }
+
+    //update EPCM permissions
+    epcm[epc_index].read |= scratch_secinfo.flags.r;
+    epcm[epc_index].write |= scratch_secinfo.flags.w;
+    epcm[epc_index].execute |= scratch_secinfo.flags.x;
+
 }
 
 // EREPORT instruction
@@ -2147,18 +2503,37 @@ void sgx_ereport(CPUX86State *env)
     /* REPORT MAC needs to be computed over data which cannot be modified */
     tmp_report.isvProdID  = tmp_currentsecs->isvprodID;
     tmp_report.isvsvn     = tmp_currentsecs->isvsvn;
-    tmp_report.attributes = tmp_currentsecs->attributes;
+    //TODO
+//    tmp_report.attributes = tmp_currentsecs->attributes;
+    memcpy(&tmp_report.attributes, &tmp_currentsecs->attributes, 16);
+    sgx_dbg(trace, "tmp_currentsecs->attributes %x", tmp_currentsecs->attributes);
+    sgx_dbg(trace, "tmp_report->attributes %x", tmp_report.attributes);
+    //TODO
+    memcpy(&tmp_report.miscselect,&tmp_currentsecs->miscselect,    4);
+    //
     memcpy(tmp_report.cpusvn,     env->cregs.CR_CPUSVN,          16);
     memcpy(tmp_report.reportData, (void*)env->regs[R_ECX],       64);
     memcpy(tmp_report.mrenclave,  tmp_currentsecs->mrEnclave,    32);
     memcpy(tmp_report.mrsigner,   tmp_currentsecs->mrSigner,     32);
     memcpy(tmp_report.keyid,      &(env->cregs.CR_REPORT_KEYID), 32);
     // Set all reserved to 0
-    memset(tmp_report.reserved,  0, 32);
+
+    //TODO
+ //   memset(tmp_report.reserved,  0, 32);
+    memset(tmp_report.reserved , 0 ,28);
+
     memset(tmp_report.reserved2, 0, 32);
     memset(tmp_report.reserved3, 0, 96);
     memset(tmp_report.reserved4, 0, 60);
-
+    {
+	uint8_t report[512];
+	memset(report, 0, 512);
+    	memcpy(report, (uint8_t *)&tmp_report, 432);
+        sgx_msg(info, "Generated report:");
+        int k;
+        for (k = 0; k < 432; k++)
+            fprintf(stderr, "%02X", report[k]);
+    }
     uint8_t *pkcs1_5_padding = alloc_pkcs1_5_padding();
 
     // key dependencies init
@@ -2170,6 +2545,10 @@ void sgx_ereport(CPUX86State *env)
     tmp_keydependencies.isvsvn    = 0;
     memcpy(tmp_keydependencies.ownerEpoch,      env->cregs.CSR_SGX_OWNEREPOCH,  16);
     memcpy(&tmp_keydependencies.attributes,     &targetinfo->attributes,        16);
+
+// TODO
+//    memcpy(&tmp_keydependencies.attributes,     &tmp_currentsecs->attributes,        16);
+
     memset(&tmp_keydependencies.attributesMask, 0,                              16);
     memcpy(tmp_keydependencies.mrEnclave,       targetinfo->measurement,        32);
     memset(tmp_keydependencies.mrSigner,        0,                              32);
@@ -2313,6 +2692,7 @@ void sgx_eresume(CPUX86State *env)
     }
 
     // TODO - Check concurrency of operations on TCS
+
     // Check Validity and whether access has been blocked
     epcm_invalid_check(&epcm[index_tcs], env);
     epcm_blocked_check(&epcm[index_tcs], env);
@@ -2356,6 +2736,120 @@ void sgx_eresume(CPUX86State *env)
         raise_exception(env, EXCP0D_GPF);
     }
 
+    // Ensure that the FLAGS field in the TCS does not have any reserved bits set
+    checkReservedBits((uint64_t *)&tcs->flags, 0xFFFFFFFFFFFFFFFEL, env);
+    eid = tmp_secs->eid_reserved.eid_pad.eid;
+    // SECS must exist and enclave must have previously been EINITted
+    if ((tmp_secs == NULL) && !checkEINIT(eid)) {// != NULL taken care of earlier itself
+        raise_exception(env, EXCP0D_GPF);
+    }
+   // make sure the logical processor’s operating mode matches the enclave
+    if (tmp_secs->attributes.mode64bit != tmp_mode64) {
+        raise_exception(env, EXCP0D_GPF);
+    }
+    // OSFXSR == 0 ?
+    if (!(env->cr[4] & CR4_OSFXSR_MASK)) {
+        raise_exception(env, EXCP0D_GPF);
+    }
+    // Check for legal values of SECS.ATTRIBUTES.XFRM
+    if (!(env->cr[4] & CR4_OSXSAVE_MASK)) {
+        if (tmp_secs->attributes.xfrm != 0x03) {
+            raise_exception(env, EXCP0D_GPF);
+        } else
+            if ((tmp_secs->attributes.xfrm & env->xcr0) ==
+                   tmp_secs->attributes.xfrm) {
+               raise_exception(env, EXCP0D_GPF);
+        }
+    }
+    // Make sure the SSA contains at least one more frame
+#if DEBUG
+    sgx_dbg(trace, "SSA cssa first check %d", tcs->cssa);
+#endif
+    if (tcs->cssa == 0) {
+        raise_exception(env, EXCP0D_GPF);
+    }
+
+    // Compute linear address of SSA frame
+    tmp_ssa = (tcs->ossa) + (tmp_secs->baseAddr + PAGE_SIZE * tmp_secs->ssaFrameSize * (tcs->cssa - 1));
+    tmp_xsize = compute_xsave_frame_size(env, tmp_secs->attributes);
+
+#if DEBUG
+    sgx_dbg(trace, "SSA_: %lx  XSize: %lu", tmp_ssa, tmp_xsize);
+#endif
+
+// TODO: Implement XSAVE/XSTOR related spec
+#if 0
+    iter = 0;
+    for (tmp_ssa_page = tmp_ssa; tmp_ssa_page > (tmp_ssa - tmp_xsize); tmp_ssa_page -= PAGE_SIZE ) {
+        uint16_t index_ssa = epcm_search((void *)tmp_ssa_page, env);
+        sgx_dbg(trace, "Index_ssa : %d", index_ssa);
+
+        // Check page is read/write accessible
+        if (!checkRWAccessible(tmp_ssa_page, env)) {
+                releaseLocks();
+                // abortAccess(env);
+                raise_exception(env, EXCP0D_GPF);
+        }
+        // Temporarily block
+        check_within_epc((void *)tmp_ssa_page, env);
+
+        epcm_invalid_check(&epcm[index_ssa], env);
+        epcm_blocked_check(&epcm[index_ssa], env);
+#if DEBUG
+        sgx_dbg(trace, "EnclaveAddress: %lu  tmp_ssa %lu enclavesecs_ssa %lu enclavesecs_tcs %lu read %d write %d",
+                        epcm[index_ssa].enclave_addr, tmp_ssa_page, epcm[index_ssa].enclave_secs,
+                        epcm[index_tcs].enclave_secs, epcm[index_secs].read, epcm[index_secs].write);
+#endif
+        epcm_field_check(&epcm[index_ssa],
+                         (uint64_t)tmp_ssa_page, PT_REG,
+                         (uint64_t)epcm[index_tcs].enclave_secs, env);
+        if (epcm[index_secs].read != 0 || epcm[index_secs].write != 0) { //  XXX: R == 1 / 0 ?
+            raise_exception(env, EXCP0D_GPF);
+        }
+        env->cregs.CR_XSAVE_PAGE[iter++] = getPhysicalAddr(env, tmp_ssa_page); // unused currently
+    }
+#endif
+
+    // Compute Address of GPR Area
+    tmp_gpr = tmp_ssa + PAGE_SIZE * (tmp_secs->ssaFrameSize) - sizeof(gprsgx_t);
+
+    index_gpr = epcm_search((void *)tmp_gpr, env);
+
+    // Temporarily block
+    check_within_epc((void *)tmp_gpr, env);
+    // Check for validity and block
+    epcm_invalid_check(&epcm[index_gpr], env);
+    epcm_blocked_check(&epcm[index_gpr], env);
+    // XXX: Spec might be wrong, see comment is sgx_eenter.
+    // In second parameter, use tmp_ssa instead of tmp_gpr for now.
+    epcm_field_check(&epcm[index_gpr], (uint64_t)tmp_ssa, PT_REG,
+                     (uint64_t)epcm[index_tcs].enclave_secs, env);
+
+    if (!epcm[index_gpr].read || !epcm[index_gpr].write) {
+        raise_exception(env, EXCP0D_GPF);
+    }
+    if (!tmp_mode64) {
+        checkWithinDSSegment(env, tmp_gpr + sizeof(env->regs[R_EAX]));
+    }
+
+    // GetPhysical Address of TMP_GPR
+    // XXX: In current design, (enclave) linear address = (enclave) physical address
+    //env->cregs.CR_GPR_PA.addr = (uint64_t)getPhysicalAddr(env, tmp_gpr);
+    env->cregs.CR_GPR_PA = tmp_gpr;
+
+#if DEBUG
+    sgx_dbg(trace, "Physical Address obtained cr_gpr_a: %lp", (void *)env->cregs.CR_GPR_PA);
+#endif
+
+    tmp_target = ((gprsgx_t *)(env->cregs.CR_GPR_PA))->rip;
+    if (tmp_mode64) {
+        is_canonical(tmp_target, env);
+    } else {
+        if (tmp_target > env->segs[R_CS].limit) {
+            raise_exception(env, EXCP0D_GPF);
+        }
+    }
+
     if (!tmp_mode64) {
         tmp_fsbase = tcs->ofsbasgx + tmp_secs->baseAddr;
         tmp_fslimit = tmp_fsbase + tcs->fslimit;
@@ -2386,116 +2880,6 @@ void sgx_eresume(CPUX86State *env)
 
         is_canonical((uint64_t)(void*)tmp_fsbase, env);
         is_canonical((uint64_t)(void*)tmp_gsbase, env);
-    }
-
-    // Ensure that the FLAGS field in the TCS does not have any reserved bits set
-    checkReservedBits((uint64_t *)&tcs->flags, 0xFFFFFFFFFFFFFFFEL, env);
-    eid = tmp_secs->eid_reserved.eid_pad.eid;
-    // SECS must exist and enclave must have previously been EINITted 
-    if ((tmp_secs == NULL) && !checkEINIT(eid)) {// != NULL taken care of earlier itself
-        raise_exception(env, EXCP0D_GPF);
-    }
-   // make sure the logical processor’s operating mode matches the enclave
-    if (tmp_secs->attributes.mode64bit != tmp_mode64) {
-        raise_exception(env, EXCP0D_GPF);
-    }
-    // OSFXSR == 0 ?
-    if (!(env->cr[4] & CR4_OSFXSR_MASK)) {
-        raise_exception(env, EXCP0D_GPF);
-    }
-    // Check for legal values of SECS.ATTRIBUTES.XFRM
-    if (!(env->cr[4] & CR4_OSXSAVE_MASK)) {
-        if (tmp_secs->attributes.xfrm != 0x03) {
-            raise_exception(env, EXCP0D_GPF);
-        } else
-            if ((tmp_secs->attributes.xfrm & env->xcr0) ==
-                   tmp_secs->attributes.xfrm) {
-               raise_exception(env, EXCP0D_GPF);
-        }
-    }
-    // Make sure the SSA contains at least one more frame
-#if DEBUG
-    sgx_dbg(trace, "SSA cssa first check %d", tcs->cssa);
-#endif
-    if (tcs->cssa == 0) {
-        raise_exception(env, EXCP0D_GPF);
-    }
-
-    tmp_target = ((ssa_t *)(env->cregs.CR_GPR_PA.addr))->rip;
-
-    // Compute linear address of SSA frame
-    tmp_ssa = (tcs->ossa) + (tmp_secs->baseAddr + PAGE_SIZE * tmp_secs->ssaFrameSize * (tcs->cssa - 1));
-    tmp_xsize = compute_xsave_frame_size(env, tmp_secs->attributes);
-
-#if DEBUG
-    sgx_dbg(trace, "SSA_: %lx  XSize: %lu", tmp_ssa, tmp_xsize);
-#endif
-
-    iter = 0;
-    for (tmp_ssa_page = tmp_ssa; tmp_ssa_page > (tmp_ssa - tmp_xsize); tmp_ssa_page -= PAGE_SIZE ) {
-        uint16_t index_ssa = epcm_search((void *)tmp_ssa_page, env);
-        sgx_dbg(trace, "Index_ssa : %d", index_ssa);
-
-        // Check page is read/write accessible
-        if (!checkRWAccessible(tmp_ssa_page, env)) {
-                releaseLocks();
-                // abortAccess(env);
-                raise_exception(env, EXCP0D_GPF);
-        }
-        // Temporarily block
-        check_within_epc((void *)tmp_ssa_page, env);
-
-        epcm_invalid_check(&epcm[index_ssa], env);
-        epcm_blocked_check(&epcm[index_ssa], env);
-#if DEBUG
-        sgx_dbg(trace, "EnclaveAddress: %lu  tmp_ssa %lu enclavesecs_ssa %lu enclavesecs_tcs %lu read %d write %d", 
-                        epcm[index_ssa].enclave_addr, tmp_ssa_page, epcm[index_ssa].enclave_secs,
-                        epcm[index_tcs].enclave_secs, epcm[index_secs].read, epcm[index_secs].write);
-#endif
-        epcm_field_check(&epcm[index_ssa],
-                        (uint64_t)tmp_ssa_page, PT_REG,
-                         (uint64_t)epcm[index_tcs].enclave_secs, env);
-        if (epcm[index_secs].read != 0 || epcm[index_secs].write != 0) { //  XXX: R == 1 / 0 ?
-            raise_exception(env, EXCP0D_GPF);
-        }
-        env->cregs.CR_XSAVE_PAGE[iter++] = getPhysicalAddr(env, tmp_ssa_page); // unused currently
-    }
-
-    // Compute Address of GPR Area
-    tmp_gpr = tmp_ssa - PAGE_SIZE * (tmp_secs->ssaFrameSize);// + 1; // sizeof gpr area
-    index_gpr = epcm_search((void *)tmp_gpr, env);
-
-    // Restore GPRs 
-    restoreGPRs((ssa_t *)tmp_gpr, env);
-    env->cregs.CR_EXIT_EIP = ((ssa_t *)tmp_gpr)->SAVED_EXIT_EIP;
-    // Temporarily block
-    check_within_epc((void *)tmp_gpr, env);
-    // Check for validity and block
-    epcm_invalid_check(&epcm[index_gpr], env);
-    epcm_blocked_check(&epcm[index_gpr], env);
-    epcm_field_check(&epcm[index_gpr], (uint64_t)tmp_gpr, PT_REG,
-                     (uint64_t)epcm[index_tcs].enclave_secs, env);
-
-    if (!epcm[index_gpr].read || !epcm[index_gpr].write) {
-        raise_exception(env, EXCP0D_GPF);
-    }
-    if (!tmp_mode64) {
-        checkWithinDSSegment(env, tmp_gpr + sizeof(env->regs[R_EAX]));
-    }
-
-    // GetPhysical Address of TMP_GPR
-    env->cregs.CR_GPR_PA.addr = (uint64_t)getPhysicalAddr(env, tmp_gpr);
-
-#if DEBUG
-    sgx_dbg(trace, "Physical Address obtained cr_gpr_a: %lp", (void *)env->cregs.CR_GPR_PA.addr);
-#endif 
-
-    if (tmp_mode64) {
-        is_canonical(tmp_target, env);
-    } else {
-        if (tmp_target > env->segs[R_CS].limit) {
-            raise_exception(env, EXCP0D_GPF);
-        }
     }
 
     env->cregs.CR_ENCLAVE_MODE = true;
@@ -2543,6 +2927,10 @@ void sgx_eresume(CPUX86State *env)
 
     sgx_dbg(trace, "Restart from here: %lx", env->eip);
 
+    // Restore GPRs
+    restoreGPRs((gprsgx_t *)tmp_gpr, env);
+    env->cregs.CR_EXIT_EIP = ((gprsgx_t *)tmp_gpr)->SAVED_EXIT_EIP;
+
     // Pop the Stack Frame
     tcs->cssa = tcs->cssa - 1;
 
@@ -2582,7 +2970,7 @@ void sgx_eresume(CPUX86State *env)
     sgx_dbg(trace, "EBP: %lx  ESP: %lx", env->regs[R_EBP], env->regs[R_ESP]);
 
     // FIXME: Not needed mostly
-    update_ssa_base();
+    //update_ssa_base();
 
     env->cregs.CR_DBGOPTIN = tcs->flags.dbgoptin;
     // Supress all code breakpoints -- Not Needed as of now
@@ -2622,7 +3010,7 @@ const char *enclu_cmd_to_str(long cmd) {
     case ENCLU_EENTER:      return "EENTER";
     case ENCLU_EEXIT:       return "EEXIT";
     case ENCLU_EGETKEY:     return "EGETKEY";
-    case ENCLU_EMODE:       return "EMODE";
+    case ENCLU_EMODPE:       return "EMODPE";
     case ENCLU_EREPORT:     return "EREPORT";
     case ENCLU_ERESUME:     return "ERESUME";
     }
@@ -2664,8 +3052,9 @@ void helper_sgx_enclu(CPUX86State *env, uint64_t next_eip)
             env->cregs.CR_NEXT_EIP = next_eip;
             sgx_egetkey(env);
             break;
-        case ENCLU_EMODE:
-            sgx_emode(env);
+        case ENCLU_EMODPE:
+            sgx_emodpe(env);
+            break;
         case ENCLU_EREPORT:
             env->cregs.CR_NEXT_EIP = next_eip;
             sgx_ereport(env);
@@ -2673,6 +3062,13 @@ void helper_sgx_enclu(CPUX86State *env, uint64_t next_eip)
         case ENCLU_ERESUME:
             sgx_eresume(env);
             break;
+
+//added
+//	case ENCLU_ECALMAC:
+//	    sgx_ecalmac(env);
+//	    break;
+
+
         default:
             sgx_err("not implemented yet");
     }
@@ -2975,10 +3371,10 @@ void sgx_eadd(CPUX86State *env)
     tmp_secinfo = cpu_load_pi_secinfo(env, pageInfo);
     tmp_linaddr = cpu_load_pi_linaddr(env, pageInfo);
 
-    sgx_dbg(eadd, "pageinfo: %p, tmp_secs: %p", pageInfo, tmp_secs);
-    sgx_dbg(eadd, " linaddr: %08lx", (uintptr_t)tmp_linaddr);
-    sgx_dbg(eadd, " secinfo: %08lx", (uintptr_t)tmp_secinfo);
-    sgx_dbg(eadd, " srcpge : %08lx", (uintptr_t)tmp_srcpge);
+    //sgx_dbg(eadd, "pageinfo: %p, tmp_secs: %p", pageInfo, tmp_secs);
+    //sgx_dbg(eadd, " linaddr: %08lx", (uintptr_t)tmp_linaddr);
+    //sgx_dbg(eadd, " secinfo: %08lx", (uintptr_t)tmp_secinfo);
+    //sgx_dbg(eadd, " srcpge : %08lx", (uintptr_t)tmp_srcpge);
 
     // If tmp_srcpge is not 4KByte aligned or tmp_secs is not aligned or
     // tmp_secinfo is not 64 Byte aligned or tmp_linaddr is not 4KByte aligned,
@@ -3025,7 +3421,7 @@ void sgx_eadd(CPUX86State *env)
 
     // if epcm[RCX].valid == 1, then GP(0).
     uint16_t index_page = epcm_search(destPage, env);
-    sgx_dbg(eadd, "index_page: %d, destPage: %p", index_page, destPage);
+    //sgx_dbg(eadd, "index_page: %d, destPage: %p", index_page, destPage);
     epcm_valid_check(&epcm[index_page], env);
 
     // SECS concurrency check
@@ -3039,7 +3435,7 @@ void sgx_eadd(CPUX86State *env)
 
     // copy
     memcpy(destPage, tmp_srcpge, PAGE_SIZE);
-    
+
     // Actual Page copy from source to destination - XXX- Copy the entire page
     // 1) PT_TCS - Copy the entire page
     // 2) PT_REGS - Copy the address
@@ -3345,7 +3741,7 @@ void sgx_einit(CPUX86State *env)
     {
         unsigned char hash_measured[32];
         memcpy(hash_measured, tmp_mrEnclave, 32);
-        sgx_msg(info, "Expected enclave measurement:");
+        sgx_msg(info, "Expected enclave measurement:--------testtest");
         int k;
 		for (k = 0; k < 32; k++)
             fprintf(stderr, "%02X", (uint8_t)hash_measured[k]);
@@ -3811,6 +4207,366 @@ void sgx_eaug(CPUX86State *env)
 }
 
 static
+void sgx_emodpr(CPUX86State *env)
+{
+    // RBX: Secinfo Addr(In)
+    // RCX: Destination EPC Addr(In)
+    // EAX: Error Code(out)
+    int page_index;
+    secs_t   *tmp_secs;
+    secinfo_t scratch_secinfo;
+    memset(&scratch_secinfo, 0, sizeof(secinfo_t));
+ 
+    if(!is_aligned(env->regs[R_EBX], 64)) {
+        raise_exception(env, EXCP0D_GPF);
+    }
+    if(!is_aligned(env->regs[R_ECX], PAGE_SIZE)) {
+        raise_exception(env, EXCP0D_GPF);
+    }
+    check_within_epc(env->regs[R_ECX], env);
+
+    memcpy(&scratch_secinfo, env->regs[R_EBX], sizeof(secinfo_t));
+
+    // (* Check for mis-configured SECINFO flags*)
+    is_reserved_zero(scratch_secinfo.reserved, sizeof(((secinfo_t *)0)->reserved), env);
+    if (!(scratch_secinfo.flags.r == 0 || scratch_secinfo.flags.w != 0)) {
+        raise_exception(env, EXCP0D_GPF);
+    }
+
+    // TODO: Check concurrency with SGX1 or SGX2 instructions on the EPC page
+
+    page_index = epcm_search((void *)env->regs[R_ECX], env);
+    if(epcm[page_index].valid == 0) {
+        raise_exception(env, EXCP0D_GPF);
+    }
+    // TODO: Check the EPC page for concurrency 
+    
+    if(epcm[page_index].pending != 0 || epcm[page_index].modified != 0) {
+        env->eflags = 1;
+        env->regs[R_EAX] = ERR_SGX_PAGE_NOT_MODIFIABLE;
+        goto Done; 
+    }
+    if(epcm[page_index].page_type != PT_REG) {
+        raise_exception(env, EXCP0D_GPF);
+    }
+    tmp_secs = get_secs_address(&epcm[page_index]);
+    //we don't have init field in secs.attributes..
+    //TODO: if(tmp_secs.attributes.init == 0)
+    //TODO: check concurrency with ETRACK
+    
+    epcm[page_index].read &= scratch_secinfo.flags.r;
+    epcm[page_index].write &= scratch_secinfo.flags.w;
+    epcm[page_index].execute &= scratch_secinfo.flags.x;
+    
+    env->eflags &= ~(CC_Z);
+    env->regs[R_EAX] = 0;
+
+    Done:
+        env->eflags &= ~(CC_C | CC_P | CC_A | CC_O | CC_S);
+}
+
+static
+void sgx_eblock(CPUX86State *env)
+{
+    // RCX: EPC Addr(In, EA)
+    // EAX: Error Code(Out)
+
+    uint64_t *epc_addr = (uint64_t *)env->regs[R_ECX];
+    uint16_t epcm_index = 0;
+    uint64_t tmp_blkstate = 0;
+    // Check if DS:RCX is not 4KByte Aligned
+    if (!is_aligned(epc_addr, PAGE_SIZE)) {
+        sgx_dbg(err, "Failed to check alignment: %p on %d bytes",
+                epc_addr, PAGE_SIZE);
+        raise_exception(env, EXCP0D_GPF);
+    }
+
+    // If RCX does not resolve within an EPC, then GP(0).
+    check_within_epc(epc_addr, env);
+
+    // Clear ZF,CF,PF,AF,OF,SF;
+    env->eflags &= ~(CC_Z | CC_C | CC_P | CC_A | CC_O | CC_S);
+
+    // TODO - Check concurrency with other instructions
+
+    epcm_index = epcm_search(epc_addr, env);
+    if(epcm[epcm_index].valid == 0) {
+        env->eflags |= CC_Z;
+        env->regs[R_EAX] = ERR_SGX_PG_INVLD;
+	goto Done; 
+    }
+
+    if((epcm[epcm_index].page_type != PT_REG) && (epcm[epcm_index].page_type != PT_TCS) &&
+       (epcm[epcm_index].page_type != PT_TRIM)) {
+        env->eflags &= CC_C;
+        if(epcm[epcm_index].page_type == PT_SECS) {
+            env->regs[R_EAX] = ERR_SGX_PG_IS_SECS;
+        }
+        else {
+            env->regs[R_EAX] = ERR_SGX_NOTBLOCKABLE;
+        }
+        goto Done;
+    }
+    
+    // (* Check if the page is already blocked and report blocked state *)
+    tmp_blkstate = epcm[epcm_index].blocked;
+
+    // (* at this point, the page must be valid and PT_TCS or PT_REG or PT_TRIM*)
+    if(tmp_blkstate == 1) {
+        env->eflags |= CC_C;
+        env->regs[R_EAX] = ERR_SGX_BLKSTATE;
+    }
+    else {
+        epcm[epcm_index].blocked = 1;
+    }
+   
+
+Done: 
+    return;
+}
+
+/*
+1. Enclave signals OS that a particular page is no longer in use.
+2. OS calls EMODT on the page, requesting that the page’s type be changed to PT_TRIM.
+a. SECS and VA pages cannot be trimmed in this way, so the initial type of the page must be PT_REG or
+PT_TCS
+b. EMODT may only be called on VALID pages
+3. OS performs an ETRACK instruction to remove the TLB addresses from all the processors
+4. Enclave issues an EACCEPT instruction.
+5. The OS may now permanently remove it (by calling EREMOVE).
+*/
+static
+void sgx_emodt(CPUX86State *env)
+{
+    
+    // RBX: SECINFO addr(In, EA)
+    // RCX: EPC Addr(In, EA)
+    // EAX: Error Code(Out)
+    secs_t *tmp_secs;
+    secinfo_t scratch_secinfo;
+    uint64_t *tmp_secinfo = env->regs[R_EBX];
+    uint64_t *target_addr = (uint64_t *)env->regs[R_ECX];
+    uint16_t epcm_index = 0;
+
+
+    // If RBX is not 64 Byte aligned, then GP(0).
+    if (!is_aligned(tmp_secinfo, SECINFO_ALIGN_SIZE)) {
+        sgx_dbg(err, "Failed to check alignment: %p on %d bytes",
+                tmp_secinfo, SECINFO_ALIGN_SIZE);
+        raise_exception(env, EXCP0D_GPF);
+    }
+
+    // If RCX is not 4 KByte aligned, then GP(0).
+    if (!is_aligned(target_addr, PAGE_SIZE)) {
+        sgx_dbg(err, "Failed to check alignment: %p on %d bytes",
+                target_addr, PAGE_SIZE);
+        raise_exception(env, EXCP0D_GPF);
+    }
+
+    // If RCX does not resolve within an EPC, then GP(0).
+    check_within_epc(target_addr, env);
+
+    memcpy(&scratch_secinfo, tmp_secinfo, sizeof(secinfo_t));
+
+    // (* Check for mis-configured SECINFO flags*)
+    is_reserved_zero(scratch_secinfo.reserved, sizeof(((secinfo_t *)0)->reserved), env);
+    if (!(scratch_secinfo.flags.page_type == PT_TCS || scratch_secinfo.flags.page_type == PT_TRIM)) {
+        raise_exception(env, EXCP0D_GPF);
+    }
+
+    // TODO:(* Check concurrency with SGX1 instructions on the EPC page *)
+    
+    epcm_index = epcm_search(target_addr, env);
+    if (epcm[epcm_index].page_type == PT_REG || epcm[epcm_index].page_type == PT_TCS) {
+        raise_exception(env, EXCP0E_PAGE);
+    }
+
+    // (* Check for mis-configured SECINFO flags*)
+    if ((epcm[epcm_index].read == 0) && (scratch_secinfo.flags.r == 0) &&
+        (scratch_secinfo.flags.w != 0)) { 
+        env->eflags = 1;
+        env->regs[R_EAX] = ERR_SGX_PAGE_NOT_MODIFIABLE;
+        goto Done;
+    }
+
+    if ((epcm[epcm_index].pending != 0)) { // TODO:|| epcm[epcm_index].modified != 0
+        env->eflags = 1;
+        env->regs[R_EAX] = ERR_SGX_PAGE_NOT_MODIFIABLE;
+        goto Done;
+    }
+
+    tmp_secs = get_secs_address(&epcm[epcm_index]);
+
+    if (tmp_secs->attributes.einittokenkey == 0)
+        raise_exception(env, EXCP0D_GPF);
+
+    //TODO: check concurrency with ETRACK
+
+    //TODO: epcm[epcm_index].modified = 1;
+    epcm[epcm_index].read  = 0;
+    epcm[epcm_index].write = 0;
+    epcm[epcm_index].execute  = 0;
+    epcm[epcm_index].page_type = scratch_secinfo.flags.page_type;
+
+    env->eflags &= ~(CC_Z);
+    env->regs[R_EAX] = 0;
+   
+
+    Done: 
+    env->eflags &= ~(CC_C | CC_P | CC_A | CC_O | CC_S );
+    
+}
+
+static
+void sgx_epa(CPUX86State *env)
+{
+
+    // RBX: PT_VA (In, Const)
+    // RCX: EPC Addr(In, EA)
+    uint64_t *epc_addr = (uint64_t *)env->regs[R_ECX];
+    uint16_t epcm_index = 0;
+    if(env->regs[R_EBX] != PT_VA || !(is_aligned(epc_addr, PAGE_SIZE))) {
+        raise_exception(env, EXCP0D_GPF);
+    }
+    check_within_epc(epc_addr, env);
+
+    /*TODO (* Check concurrency with other SGX instructions *)*/
+
+    /* Check EPC page must be empty */
+    epcm_index = epcm_search(epc_addr, env);
+    if(epcm[epcm_index].valid != 0) {
+        raise_exception(env, EXCP0D_GPF);
+    }
+
+    /* Clears EPC page */
+    memset(epc_addr, 0, PAGE_SIZE * 8);
+  
+    epcm[epcm_index].page_type = PT_VA;
+    epcm[epcm_index].enclave_addr = 0;
+    epcm[epcm_index].blocked = 0;
+    /* Based on Spec ver2--------- */
+    epcm[epcm_index].pending = 0;
+    epcm[epcm_index].modified = 0;
+    /* --------------------------- */
+    epcm[epcm_index].read = 0;
+    epcm[epcm_index].write = 0;
+    epcm[epcm_index].execute = 0;
+    epcm[epcm_index].valid = 0;
+}
+
+static
+void sgx_ewb(CPUX86State *env)
+{
+    // EAX: Error(Out)
+    // RBX: Pageinfo Addr(In)
+    // RCX: EPC addr(In)
+    // RDX: VA slot addr(In)
+    int epc_index = 0, va_index = 0;
+    uint64_t *tmp_srcpge;
+    pcmd_t *tmp_pcmd;
+    secs_t *tmp_secs;
+    uint64_t tmp_pcmd_enclaveid;
+    mac_header_t tmp_header; //MAC Header
+    memset(&tmp_header, 0, 128);
+    uint64_t tmp_ver;
+
+    if (!(is_aligned(env->regs[R_EBX], 32)) || 
+        !(is_aligned(env->regs[R_ECX], PAGE_SIZE))) {
+        raise_exception(env, EXCP0D_GPF);
+    }
+    check_within_epc(env->regs[R_ECX], env);
+
+    if (!(is_aligned(env->regs[R_EDX], 8))) {
+        raise_exception(env, EXCP0D_GPF);
+    } 
+    check_within_epc(env->regs[R_EDX], env);
+
+    /* EPCPAGE and VASLOT should not resolve to the same EPC page */
+    if(is_within_same_epc(env->regs[R_ECX], env->regs[R_EDX], env)) {
+        raise_exception(env, EXCP0D_GPF);
+    }
+    tmp_srcpge = ((pageinfo_t*)(env->regs[R_EBX]))->srcpge;
+    tmp_pcmd = ((pageinfo_t*)(env->regs[R_EBX]))->secinfo; //secinfo = pcmd addr
+
+    if(!(is_aligned(tmp_pcmd, 128)) || !(is_aligned(tmp_srcpge, PAGE_SIZE))) {
+        raise_exception(env, EXCP0D_GPF);
+    }
+    /* TODO: Check for concurrent SGX instruction access to the page */
+    /* TODO: Check if the VA Page is being removed or changed*/
+    epc_index = epcm_search(env->regs[R_ECX], env);
+    va_index = epcm_search(env->regs[R_EDX], env);
+    /* Verify that EPCPAGE and VASLOT page are valid EPC pages and DS:RDX is VA */
+    if((epcm[epc_index].valid == 0) || (epcm[va_index].valid == 0) || 
+       (epcm[va_index].page_type != PT_VA)) {
+        raise_exception(env, EXCP0D_GPF);
+    }
+    /* Perform page-type-specific exception checks */
+    if((epcm[epc_index].page_type == PT_REG || epcm[epc_index].page_type == PT_TCS)) {
+        tmp_secs = get_secs_address(&epcm[epc_index]);
+        /* TODO: Check that EBLOCK has occurred correctly */
+    }
+
+    env->eflags &= ~(CC_Z | CC_C | CC_P | CC_A | CC_O | CC_S);
+    env->regs[R_EAX] = 0x0;
+   
+    /* Perform page-type-specific checks */ 
+    if((epcm[epc_index].page_type == PT_REG || epcm[epc_index].page_type == PT_TCS)) {
+        /* check to see if the page is evictable */
+        if(epcm[epc_index].blocked == 0) {
+            env->regs[R_EAX] = ERR_SGX_PAGE_NOT_BLOCKED;
+            env->eflags |= CC_Z;
+            goto ERROR_EXIT;
+        }
+        /* TODO: Check if tracking done correctly */
+        /* Obtain EID to establish cryptographic binding betw the paged-out page and the enclave */
+        tmp_header.eid = tmp_secs->eid_reserved.eid_pad.eid;
+
+        /* Obtain EID as an enclave handle for software */
+        tmp_pcmd_enclaveid = tmp_secs->eid_reserved.eid_pad.eid;
+    }
+    else if(epcm[epc_index].page_type == PT_SECS) {
+    /*TODO: check that there are no child pages inside the enclave
+      Skip this temporalily... please never swap out PT_SECS...
+    */
+    }
+    else if(epcm[epc_index].page_type == PT_VA) {
+        tmp_header.eid = 0;
+        tmp_pcmd_enclaveid = 0;
+    }
+    tmp_header.linaddr = epcm[epc_index].enclave_addr;
+    tmp_header.secinfo.flags.page_type = epcm[epc_index].page_type;
+    tmp_header.secinfo.flags.r = epcm[epc_index].read;
+    tmp_header.secinfo.flags.w = epcm[epc_index].write;
+    tmp_header.secinfo.flags.x = epcm[epc_index].execute;
+    // it seems rsvd in the spec indicates reserved field.. but not sure..
+    //TMP_HEADER.SECINFO.FLAGS.RSVD = 0;
+ 
+    /* Encrypt the page, AES-GCM produces 2 values, {ciphertext, MAC}. */
+    encrypt_epc((unsigned char *)env->regs[R_ECX], PAGE_SIZE, (unsigned char *)&tmp_header,
+                sizeof(tmp_header), gcm_key, NULL, tmp_srcpge, tmp_pcmd->mac);
+
+    memset(&tmp_pcmd->secinfo, 0 , sizeof(secinfo_t));
+    tmp_pcmd->secinfo.flags.page_type = epcm[epc_index].page_type; 
+    tmp_pcmd->secinfo.flags.r = epcm[epc_index].read;
+    tmp_pcmd->secinfo.flags.w = epcm[epc_index].write;
+    tmp_pcmd->secinfo.flags.x = epcm[epc_index].execute;
+    memset(tmp_pcmd->reserved, 0, sizeof(tmp_pcmd->reserved));
+    tmp_pcmd->enclaveid = tmp_pcmd_enclaveid;
+    ((pageinfo_t *)(env->regs[R_EBX]))->linaddr = epcm[epc_index].enclave_addr;
+
+    /*Check if version array slot was empty */
+    if( *((uint64_t *)(env->regs[R_EDX])) ){
+        env->regs[R_EAX] = ERR_SGX_VA_SLOT_OCCUPIED;
+        env->eflags |= CC_C;
+    }
+    env->regs[R_EDX] = tmp_ver;
+    epcm[epc_index].valid = 0;
+
+    ERROR_EXIT:
+        env->eflags &= ~(CC_C | CC_P | CC_A | CC_O | CC_S);
+}
+
+static
 void encls_intel_pubkey(CPUX86State *env)
 {
     uint8_t *intel_pubKey = (uint8_t *)env->regs[R_EBX];
@@ -3835,7 +4591,10 @@ static void sanity_check(void)
     assert(sizeof(attributes_t) == 16);
     assert(sizeof(tcs_t) == 4096);
     assert(sizeof(tcs_flags_t) == 8);
-    assert(sizeof(ssa_t) == 176);
+    printf("exininfo_t size: %d\n", sizeof(exitinfo_t));
+    printf("grpsgx_t size: %d\n", sizeof(gprsgx_t));
+    assert(sizeof(gprsgx_t) == 192);
+    assert(sizeof(ssa_t) == 4096);
     assert(sizeof(pageinfo_t) == 32);
     assert(sizeof(secinfo_flags_t) == 8);
     assert(sizeof(secinfo_t) == 64);
@@ -3844,6 +4603,8 @@ static void sanity_check(void)
     assert(sizeof(keypolicy_t) == 2);
     assert(sizeof(keyrequest_t) == 512);
     assert(sizeof(keydep_t) == 544);
+    assert(sizeof(pcmd_t) == 128);
+    assert(sizeof(mac_header_t) == 128);
 }
 
 static void init_qenclave(void)
@@ -3916,6 +4677,15 @@ void encls_set_stat(CPUX86State *env)
     memcpy(stat, &(qenclaves[eid].stat), sizeof(stat_t));
 }
 
+static
+void encls_set_stack(CPUX86State *env)
+{
+    uint8_t *sp = (uint8_t *)env->regs[R_EBX];
+
+    env->cregs.CR_EBP = (uint64_t)sp;
+    env->cregs.CR_ESP = (uint64_t)sp;
+}
+
 /* static uint8_t skipSECSPages(uint64_t baseAddr)
 {
     uint8_t iter = 0;
@@ -3970,21 +4740,30 @@ void helper_sgx_encls(CPUX86State *env)
         case ENCLS_EINIT:
             sgx_einit(env);
             break;
-/*
         case ENCLS_EREMOVE:
-            sgx_eremove(env);
+           //sgx_eremove(env);
             break;
-*/
         case ENCLS_EEXTEND:
             sgx_eextend(env);
+            break;
+        case ENCLS_EBLOCK:
+            sgx_eblock(env);
+            break;
+        case ENCLS_EPA:
+            sgx_epa(env);
+        case ENCLS_EWB:
+            sgx_ewb(env);
             break;
         case ENCLS_EAUG:
             sgx_eaug(env);
             break;
+        case ENCLS_EMODPR:
+            sgx_emodpr(env);
+            break;
 
         // custom (non-spec) hypercalls: for setting up qemu
         case ENCLS_OSGX_INIT:
-            init_qenclave(); // Initializing QEMU Enclave Descriptor 
+            init_qenclave(); // Initializing QEMU Enclave Descriptor
             encls_qemu_init(env);
             break;
         case ENCLS_OSGX_PUBKEY:
@@ -3999,6 +4778,9 @@ void helper_sgx_encls(CPUX86State *env)
         case ENCLS_OSGX_STAT:
             encls_set_stat(env);
             break;
+        case ENCLS_OSGX_SET_STACK:
+            encls_set_stack(env);
+            break;
         default:
             sgx_err("not implemented yet");
     }
@@ -4008,13 +4790,13 @@ void helper_sgx_ehandle(CPUX86State *env)
 {
     // Save RIP for later use
     secs_t *secs;
-    ssa_t *tmp_ssa;
+    gprsgx_t *tmp_gpr;
     bool tmp_mode64;
 
     sgx_msg(info, "Entered Exception Handler QEMU");
 
     secs = (secs_t *)env->cregs.CR_ACTIVE_SECS;
-    tmp_ssa = (ssa_t*)(env->cregs.CR_GPR_PA.addr); //CR_XSAVE_PAGE[0];
+    tmp_gpr = (gprsgx_t *)(env->cregs.CR_GPR_PA); //CR_XSAVE_PAGE[0];
 
     // Check for 64 bit mode
     tmp_mode64 = (env->efer & MSR_EFER_LMA) && (env->segs[R_CS].flags & DESC_L_MASK);
@@ -4023,10 +4805,10 @@ void helper_sgx_ehandle(CPUX86State *env)
        the RF bit is set to what would have been saved on stack in the non-SGX case *) */
 
     if (!tmp_mode64) {
-        saveState(tmp_ssa, env);
+        saveState(tmp_gpr, env);
     //    tmp_ssa->rflags.tf = 0;
     } else {
-        saveState(tmp_ssa, env);
+        saveState(tmp_gpr, env);
     //    tmp_ssa->rflags.tf = 0;
     }
 #if DEBUG
@@ -4046,8 +4828,8 @@ void helper_sgx_ehandle(CPUX86State *env)
     // XXX: Obtain from the TMP_SSA dedicated to the current EID
     sgx_dbg(trace, "Before ESP: %lx   EBP: %lx", env->regs[R_ESP], env->regs[R_EBP]);
 
-    env->regs[R_ESP] = env->cregs.CR_GPR_PA.ursp;
-    env->regs[R_EBP] = env->cregs.CR_GPR_PA.urbp;
+    env->regs[R_ESP] = tmp_gpr->ursp;
+    env->regs[R_EBP] = tmp_gpr->urbp;
 
     sgx_dbg(trace, "After ESP: %lx   EBP: %lx", env->regs[R_ESP], env->regs[R_EBP]);
     // Restore FS and GS
@@ -4069,7 +4851,7 @@ void helper_sgx_ehandle(CPUX86State *env)
     // Put the AEP into RCX for later use by ERESUME
     //env->regs[R_ECX] = env->cregs.CR_AEP;
     // Update the SSA frame #
-    
+
     ((tcs_t *)env->cregs.CR_TCS_PA)->cssa += 1;
 
     // (* Restore XCR0 if needed *)

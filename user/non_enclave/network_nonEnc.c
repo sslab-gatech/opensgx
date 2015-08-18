@@ -19,7 +19,7 @@
 
 #include <nonEncLib.h>
 
-void main()
+int main()
 {
     char ip[] = "127.0.0.1";
     char sendPort[] = "35555";
@@ -37,6 +37,8 @@ void main()
     memset(buf, 0, 512);
     recv_func(recvPort, buf, 512);
     printf("%s\n",buf);
-    
+
     close_socket();
+
+    return 0;
 }

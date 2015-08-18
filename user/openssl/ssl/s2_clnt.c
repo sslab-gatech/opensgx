@@ -143,7 +143,7 @@ IMPLEMENT_ssl2_meth_func(SSLv2_client_method,
 
 int ssl2_connect(SSL *s)
 {
-    unsigned long l = (unsigned long)time(NULL);
+    unsigned long l = (unsigned long)sgx_time(NULL);
     BUF_MEM *buf = NULL;
     int ret = -1;
     void (*cb) (const SSL *ssl, int type, int val) = NULL;
@@ -420,7 +420,7 @@ static int get_server_hello(SSL *s)
     } else {
 # if 0
         /* very bad */
-        memset(s->session->session_id, 0,
+        sgx_memset(s->session->session_id, 0,
                SSL_MAX_SSL_SESSION_ID_LENGTH_IN_BYTES);
         s->session->session_id_length = 0;
 # endif
@@ -528,7 +528,7 @@ static int get_server_hello(SSL *s)
         SSLerr(SSL_F_GET_SERVER_HELLO, SSL_R_SSL2_CONNECTION_ID_TOO_LONG);
         return -1;
     }
-    memcpy(s->s2->conn_id, p, s->s2->tmp.conn_id_length);
+    sgx_memcpy(s->s2->conn_id, p, s->s2->tmp.conn_id_length);
     return (1);
 }
 
@@ -570,7 +570,7 @@ static int client_hello(SSL *s)
              SSL2_MAX_SSL_SESSION_ID_LENGTH)) {
             i = s->session->session_id_length;
             s2n(i, p);          /* session id length */
-            memcpy(d, s->session->session_id, (unsigned int)i);
+            sgx_memcpy(d, s->session->session_id, (unsigned int)i);
             d += i;
         } else {
             s2n(0, p);
@@ -583,7 +583,7 @@ static int client_hello(SSL *s)
          */
         if (RAND_pseudo_bytes(s->s2->challenge, SSL2_CHALLENGE_LENGTH) <= 0)
             return -1;
-        memcpy(d, s->s2->challenge, SSL2_CHALLENGE_LENGTH);
+        sgx_memcpy(d, s->s2->challenge, SSL2_CHALLENGE_LENGTH);
         d += SSL2_CHALLENGE_LENGTH;
 
         s->state = SSL2_ST_SEND_CLIENT_HELLO_B;
@@ -661,7 +661,7 @@ static int client_master_key(SSL *s)
         }
         clear = i - enc;
         s2n(clear, p);
-        memcpy(d, sess->master_key, (unsigned int)clear);
+        sgx_memcpy(d, sess->master_key, (unsigned int)clear);
         d += clear;
 
         enc = ssl_rsa_public_encrypt(sess->sess_cert, enc,
@@ -689,7 +689,7 @@ static int client_master_key(SSL *s)
             SSLerr(SSL_F_CLIENT_MASTER_KEY, ERR_R_INTERNAL_ERROR);
             return -1;
         }
-        memcpy(d, sess->key_arg, (unsigned int)karg);
+        sgx_memcpy(d, sess->key_arg, (unsigned int)karg);
         d += karg;
 
         s->state = SSL2_ST_SEND_CLIENT_MASTER_KEY_B;
@@ -712,7 +712,7 @@ static int client_finished(SSL *s)
             SSLerr(SSL_F_CLIENT_FINISHED, ERR_R_INTERNAL_ERROR);
             return -1;
         }
-        memcpy(p, s->s2->conn_id, (unsigned int)s->s2->conn_id_length);
+        sgx_memcpy(p, s->s2->conn_id, (unsigned int)s->s2->conn_id_length);
 
         s->state = SSL2_ST_SEND_CLIENT_FINISHED_B;
         s->init_num = s->s2->conn_id_length + 1;
@@ -977,13 +977,13 @@ static int get_server_finished(SSL *s)
          */
         /* ZZZZZZZZZZZZZ */
         s->session->session_id_length = SSL2_SSL_SESSION_ID_LENGTH;
-        memcpy(s->session->session_id, p + 1, SSL2_SSL_SESSION_ID_LENGTH);
+        sgx_memcpy(s->session->session_id, p + 1, SSL2_SSL_SESSION_ID_LENGTH);
     } else {
         if (!(s->options & SSL_OP_MICROSOFT_SESS_ID_BUG)) {
             if ((s->session->session_id_length >
                  sizeof s->session->session_id)
                 || (0 !=
-                    memcmp(buf + 1, s->session->session_id,
+                    sgx_memcmp(buf + 1, s->session->session_id,
                            (unsigned int)s->session->session_id_length))) {
                 ssl2_return_error(s, SSL2_PE_UNDEFINED_ERROR);
                 SSLerr(SSL_F_GET_SERVER_FINISHED,

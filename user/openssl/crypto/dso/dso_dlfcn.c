@@ -339,8 +339,8 @@ static char *dlfcn_merger(DSO *dso, const char *filespec1,
     {
         int spec2len, len;
 
-        spec2len = strlen(filespec2);
-        len = spec2len + (filespec1 ? strlen(filespec1) : 0);
+        spec2len = sgx_strlen(filespec2);
+        len = spec2len + (filespec1 ? sgx_strlen(filespec1) : 0);
 
         if (filespec2 && filespec2[spec2len - 1] == '/') {
             spec2len--;
@@ -374,7 +374,7 @@ static char *dlfcn_name_converter(DSO *dso, const char *filename)
     char *translated;
     int len, rsize, transform;
 
-    len = strlen(filename);
+    len = sgx_strlen(filename);
     rsize = len + 1;
     transform = (strstr(filename, "/") == NULL);
     if (transform) {
@@ -465,7 +465,7 @@ static int dlfcn_pathbyaddr(void *addr, char *path, int sz)
             return len + 1;
         if (len >= sz)
             len = sz - 1;
-        memcpy(path, dli.dli_fname, len);
+        sgx_memcpy(path, dli.dli_fname, len);
         path[len++] = 0;
         return len;
     }

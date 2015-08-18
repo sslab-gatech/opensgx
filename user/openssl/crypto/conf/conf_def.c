@@ -254,7 +254,7 @@ static int def_load_bio(CONF *conf, BIO *in, long *line)
         *p = '\0';
         BIO_gets(in, p, CONFBUFSIZE - 1);
         p[CONFBUFSIZE - 1] = '\0';
-        ii = i = strlen(p);
+        ii = i = sgx_strlen(p);
         if (i == 0 && !again)
             break;
         again = 0;
@@ -369,11 +369,11 @@ static int def_load_bio(CONF *conf, BIO *in, long *line)
                 CONFerr(CONF_F_DEF_LOAD_BIO, ERR_R_MALLOC_FAILURE);
                 goto err;
             }
-            BUF_strlcpy(v->name, pname, strlen(pname) + 1);
+            BUF_strlcpy(v->name, pname, sgx_strlen(pname) + 1);
             if (!str_copy(conf, psection, &(v->value), start))
                 goto err;
 
-            if (strcmp(psection, section) != 0) {
+            if (sgx_strcmp(psection, section) != 0) {
                 if ((tv = _CONF_get_section(conf, psection))
                     == NULL)
                     tv = _CONF_new_section(conf, psection);
@@ -481,7 +481,7 @@ static int str_copy(CONF *conf, char *section, char **pto, char *from)
     if ((buf = BUF_MEM_new()) == NULL)
         return (0);
 
-    len = strlen(from) + 1;
+    len = sgx_strlen(from) + 1;
     if (!BUF_MEM_grow(buf, len))
         goto err;
 

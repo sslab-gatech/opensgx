@@ -88,7 +88,7 @@ int RSA_padding_add_PKCS1_type_1(unsigned char *to, int tlen,
     sgx_memset(p, 0xff, j);
     p += j;
     *(p++) = '\0';
-    memcpy(p, from, (unsigned int)flen);
+    sgx_memcpy(p, from, (unsigned int)flen);
     return (1);
 }
 
@@ -139,7 +139,7 @@ int RSA_padding_check_PKCS1_type_1(unsigned char *to, int tlen,
         RSAerr(RSA_F_RSA_PADDING_CHECK_PKCS1_TYPE_1, RSA_R_DATA_TOO_LARGE);
         return (-1);
     }
-    memcpy(to, p, (unsigned int)j);
+    sgx_memcpy(to, p, (unsigned int)j);
 
     return (j);
 }
@@ -177,7 +177,7 @@ int RSA_padding_add_PKCS1_type_2(unsigned char *to, int tlen,
 
     *(p++) = '\0';
 
-    memcpy(p, from, (unsigned int)flen);
+    sgx_memcpy(p, from, (unsigned int)flen);
     return (1);
 }
 
@@ -219,7 +219,7 @@ int RSA_padding_check_PKCS1_type_2(unsigned char *to, int tlen,
      *
      * TODO(emilia): Consider porting BN_bn2bin_padded from BoringSSL.
      */
-    memcpy(em + num - flen, from, flen);
+    sgx_memcpy(em + num - flen, from, flen);
 
     good = constant_time_is_zero(em[0]);
     good &= constant_time_eq(em[1], 2);
@@ -265,7 +265,7 @@ int RSA_padding_check_PKCS1_type_2(unsigned char *to, int tlen,
         goto err;
     }
 
-    memcpy(to, em + msg_index, mlen);
+    sgx_memcpy(to, em + msg_index, mlen);
 
  err:
     if (em != NULL)

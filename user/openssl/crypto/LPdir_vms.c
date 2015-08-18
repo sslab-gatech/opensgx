@@ -82,7 +82,7 @@ const char *LP_find_file(LP_DIR_CTX **ctx, const char *directory)
 
     errno = 0;
     if (*ctx == NULL) {
-        size_t filespeclen = strlen(directory);
+        size_t filespeclen = sgx_strlen(directory);
         char *filespec = NULL;
 
         if (filespeclen == 0) {
@@ -112,15 +112,15 @@ const char *LP_find_file(LP_DIR_CTX **ctx, const char *directory)
         }
         sgx_memset(*ctx, '\0', sizeof(LP_DIR_CTX));
 
-        strcpy((*ctx)->filespec, directory);
-        strcat((*ctx)->filespec, "*.*;");
+        sgx_strcpy((*ctx)->filespec, directory);
+        sgx_strcat((*ctx)->filespec, "*.*;");
 
 /* Arrange 32-bit pointer to (copied) string storage, if needed. */
 #if __INITIAL_POINTER_SIZE == 64
 # define CTX_FILESPEC ctx_filespec_32p
         /* Copy the file name to storage with a 32-bit pointer. */
         ctx_filespec_32p = ctx_filespec_32;
-        strcpy(ctx_filespec_32p, (*ctx)->filespec);
+        sgx_strcpy(ctx_filespec_32p, (*ctx)->filespec);
 #else                           /* __INITIAL_POINTER_SIZE == 64 */
 # define CTX_FILESPEC (*ctx)->filespec
 #endif                          /* __INITIAL_POINTER_SIZE == 64 [else] */
@@ -170,7 +170,7 @@ const char *LP_find_file(LP_DIR_CTX **ctx, const char *directory)
         }
     }
 
-    strncpy((*ctx)->result, r, l);
+    sgx_strncpy((*ctx)->result, r, l);
     (*ctx)->result[l] = '\0';
     str$free1_dx(&(*ctx)->result_dsc);
 

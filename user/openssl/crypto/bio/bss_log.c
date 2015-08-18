@@ -242,11 +242,11 @@ static int MS_CALLBACK slg_write(BIO *b, const char *in, int inl)
     if ((buf = (char *)OPENSSL_malloc(inl + 1)) == NULL) {
         return (0);
     }
-    strncpy(buf, in, inl);
+    sgx_strncpy(buf, in, inl);
     buf[inl] = '\0';
 
     i = 0;
-    while (strncmp(buf, mapping[i].str, mapping[i].strl) != 0)
+    while (sgx_strncmp(buf, mapping[i].str, mapping[i].strl) != 0)
         i++;
     priority = mapping[i].log_level;
     pp = buf + mapping[i].strl;
@@ -274,7 +274,7 @@ static int MS_CALLBACK slg_puts(BIO *bp, const char *str)
 {
     int n, ret;
 
-    n = strlen(str);
+    n = sgx_strlen(str);
     ret = slg_write(bp, str, n);
     return (ret);
 }
@@ -409,9 +409,9 @@ static void xsyslog(BIO *bp, int priority, const char *string)
     /* We know there's an 8-byte header.  That's documented. */
     opcdef_p = OPCDEF_MALLOC(8 + len);
     opcdef_p->opc$b_ms_type = OPC$_RQ_RQST;
-    memcpy(opcdef_p->opc$z_ms_target_classes, &VMS_OPC_target, 3);
+    sgx_memcpy(opcdef_p->opc$z_ms_target_classes, &VMS_OPC_target, 3);
     opcdef_p->opc$l_ms_rqstid = 0;
-    memcpy(&opcdef_p->opc$l_ms_text, buf, len);
+    sgx_memcpy(&opcdef_p->opc$l_ms_text, buf, len);
 
     opc_dsc.dsc$b_dtype = DSC$K_DTYPE_T;
     opc_dsc.dsc$b_class = DSC$K_CLASS_S;

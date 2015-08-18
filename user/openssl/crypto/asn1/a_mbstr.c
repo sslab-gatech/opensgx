@@ -103,7 +103,7 @@ int ASN1_mbstring_ncopy(ASN1_STRING **out, const unsigned char *in, int len,
     char strbuf[32];
     int (*cpyfunc) (unsigned long, void *) = NULL;
     if (len == -1)
-        len = strlen((const char *)in);
+        len = sgx_strlen((const char *)in);
     if (!mask)
         mask = DIRSTRING_TYPE;
 
@@ -277,8 +277,10 @@ static int traverse_string(const unsigned char *p, int len, int inform,
             len -= 4;
         } else {
             ret = UTF8_getc(p, len, &value);
-            if (ret < 0)
+            if (ret < 0) {
+                //sgx_printf("%d\n", ret);
                 return -1;
+            }
             len -= ret;
             p += ret;
         }
@@ -407,7 +409,7 @@ static int is_printable(unsigned long value)
         return 1;
     if ((ch >= '0') && (ch <= '9'))
         return 1;
-    if ((ch == ' ') || strchr("'()+,-./:=?", ch))
+    if ((ch == ' ') || sgx_strchr("'()+,-./:=?", ch))
         return 1;
 #else                           /* CHARSET_EBCDIC */
     if ((ch >= os_toascii['a']) && (ch <= os_toascii['z']))
@@ -416,7 +418,7 @@ static int is_printable(unsigned long value)
         return 1;
     if ((ch >= os_toascii['0']) && (ch <= os_toascii['9']))
         return 1;
-    if ((ch == os_toascii[' ']) || strchr("'()+,-./:=?", os_toebcdic[ch]))
+    if ((ch == os_toascii[' ']) || sgx_strchr("'()+,-./:=?", os_toebcdic[ch]))
         return 1;
 #endif                          /* CHARSET_EBCDIC */
     return 0;

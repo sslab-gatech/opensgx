@@ -79,6 +79,8 @@
 #include <string.h>
 #include <time.h>
 
+#include "../sgx.h"
+
 #ifdef OPENSSL_NO_EC
 int main(int argc, char *argv[])
 {
@@ -1825,7 +1827,7 @@ int main(int argc, char *argv[])
 
     /* enable memory leak checking unless explicitly disabled */
     if (!((getenv("OPENSSL_DEBUG_MEMORY") != NULL)
-          && (0 == strcmp(getenv("OPENSSL_DEBUG_MEMORY"), "off")))) {
+          && (0 == sgx_strcmp(getenv("OPENSSL_DEBUG_MEMORY"), "off")))) {
         CRYPTO_malloc_debug_init();
         CRYPTO_set_mem_debug_options(V_CRYPTO_MDEBUG_ALL);
     } else {

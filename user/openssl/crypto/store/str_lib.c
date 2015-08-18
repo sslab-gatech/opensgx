@@ -1744,7 +1744,7 @@ int STORE_ATTR_INFO_in_ex(STORE_ATTR_INFO *a, STORE_ATTR_INFO *b)
             case STORE_ATTR_FRIENDLYNAME:
             case STORE_ATTR_EMAIL:
             case STORE_ATTR_FILENAME:
-                if (strcmp(a->values[i].cstring, b->values[i].cstring))
+                if (sgx_strcmp(a->values[i].cstring, b->values[i].cstring))
                     return 0;
                 break;
             case STORE_ATTR_KEYID:
@@ -1752,7 +1752,7 @@ int STORE_ATTR_INFO_in_ex(STORE_ATTR_INFO *a, STORE_ATTR_INFO *b)
             case STORE_ATTR_SUBJECTKEYID:
             case STORE_ATTR_ISSUERSERIALHASH:
             case STORE_ATTR_CERTHASH:
-                if (memcmp(a->values[i].sha1string,
+                if (sgx_memcmp(a->values[i].sha1string,
                            b->values[i].sha1string, a->value_sizes[i]))
                     return 0;
                 break;

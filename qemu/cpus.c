@@ -33,6 +33,8 @@
 #include "sysemu/kvm.h"
 #include "qmp-commands.h"
 
+#include "tcg-plugin.h"
+
 #include "qemu/thread.h"
 #include "sysemu/cpus.h"
 #include "sysemu/qtest.h"
@@ -1098,6 +1100,7 @@ void pause_all_vcpus(void)
             qemu_cpu_kick(cpu);
         }
     }
+    if(guest_ins_count == 1) tcg_plugin_cpus_stopped();
 }
 
 void cpu_resume(CPUState *cpu)

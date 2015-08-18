@@ -25,15 +25,12 @@
 
 void enclave_main()
 {
-    int i = 0;
-    int c = 6;
+    int a[30000];
 
-    while (i < 6) {
-        i++;
-    }
-    c = 7;
+    for(int i=0;i<30000;i++)
+        a[i] = 1;
 
-    (void) c;
+    sgx_puts("test stack\n");
 
     sgx_exit(NULL);
 }

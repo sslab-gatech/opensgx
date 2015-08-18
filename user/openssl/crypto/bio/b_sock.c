@@ -83,8 +83,6 @@ NETDB_DEFINE_CONTEXT
 static int wsa_init_done = 0;
 # endif
 
-#include "../sgx.h"
-
 /*
  * WSAAPI specifier is required to make indirect calls to run-time
  * linked WinSock 2 functions used in this module, to be specific
@@ -196,22 +194,22 @@ int BIO_get_port(const char *str, unsigned short *port_ptr)
             *port_ptr = ntohs((unsigned short)s->s_port);
         CRYPTO_w_unlock(CRYPTO_LOCK_GETSERVBYNAME);
         if (s == NULL) {
-            if (strcmp(str, "http") == 0)
+            if (sgx_strcmp(str, "http") == 0)
                 *port_ptr = 80;
-            else if (strcmp(str, "telnet") == 0)
+            else if (sgx_strcmp(str, "telnet") == 0)
                 *port_ptr = 23;
-            else if (strcmp(str, "socks") == 0)
+            else if (sgx_strcmp(str, "socks") == 0)
                 *port_ptr = 1080;
-            else if (strcmp(str, "https") == 0)
+            else if (sgx_strcmp(str, "https") == 0)
                 *port_ptr = 443;
-            else if (strcmp(str, "ssl") == 0)
+            else if (sgx_strcmp(str, "ssl") == 0)
                 *port_ptr = 443;
-            else if (strcmp(str, "ftp") == 0)
+            else if (sgx_strcmp(str, "ftp") == 0)
                 *port_ptr = 21;
-            else if (strcmp(str, "gopher") == 0)
+            else if (sgx_strcmp(str, "gopher") == 0)
                 *port_ptr = 70;
 # if 0
-            else if (strcmp(str, "wais") == 0)
+            else if (sgx_strcmp(str, "wais") == 0)
                 *port_ptr = 21;
 # endif
             else {
@@ -315,22 +313,22 @@ static struct hostent *ghbn_dup(struct hostent *a)
         goto err;
     sgx_memset(ret->h_addr_list, 0, i * sizeof(char *));
 
-    j = strlen(a->h_name) + 1;
+    j = sgx_strlen(a->h_name) + 1;
     if ((ret->h_name = OPENSSL_malloc(j)) == NULL)
         goto err;
-    memcpy((char *)ret->h_name, a->h_name, j);
+    sgx_memcpy((char *)ret->h_name, a->h_name, j);
     for (i = 0; a->h_aliases[i] != NULL; i++) {
-        j = strlen(a->h_aliases[i]) + 1;
+        j = sgx_strlen(a->h_aliases[i]) + 1;
         if ((ret->h_aliases[i] = OPENSSL_malloc(j)) == NULL)
             goto err;
-        memcpy(ret->h_aliases[i], a->h_aliases[i], j);
+        sgx_memcpy(ret->h_aliases[i], a->h_aliases[i], j);
     }
     ret->h_length = a->h_length;
     ret->h_addrtype = a->h_addrtype;
     for (i = 0; a->h_addr_list[i] != NULL; i++) {
         if ((ret->h_addr_list[i] = OPENSSL_malloc(a->h_length)) == NULL)
             goto err;
-        memcpy(ret->h_addr_list[i], a->h_addr_list[i], a->h_length);
+        sgx_memcpy(ret->h_addr_list[i], a->h_addr_list[i], a->h_length);
     }
     if (0) {
  err:
@@ -391,7 +389,7 @@ struct hostent *BIO_gethostbyname(const char *name)
      */
     CRYPTO_w_lock(CRYPTO_LOCK_GETHOSTBYNAME);
 #  endif
-    j = strlen(name);
+    j = sgx_strlen(name);
     if (j < 128) {
         for (i = 0; i < GHBN_NUM; i++) {
             if (low > ghbn_cache[i].order) {
@@ -441,7 +439,7 @@ struct hostent *BIO_gethostbyname(const char *name)
             BIOerr(BIO_F_BIO_GETHOSTBYNAME, ERR_R_MALLOC_FAILURE);
             goto end;
         }
-        strncpy(ghbn_cache[lowi].name, name, 128);
+        sgx_strncpy(ghbn_cache[lowi].name, name, 128);
         ghbn_cache[lowi].order = BIO_ghbn_miss + BIO_ghbn_hits;
     } else {
         BIO_ghbn_hits++;
@@ -678,7 +676,7 @@ int BIO_get_accept_socket(char *host, int bind_mode)
         sgx_memset(&hint, 0, sizeof(hint));
         hint.ai_flags = AI_PASSIVE;
         if (h) {
-            if (strchr(h, ':')) {
+            if (sgx_strchr(h, ':')) {
                 if (h[1] == '\0')
                     h = NULL;
 #  if OPENSSL_USE_IPV6
@@ -697,7 +695,7 @@ int BIO_get_accept_socket(char *host, int bind_mode)
 
         addrlen = res->ai_addrlen <= sizeof(server) ?
             res->ai_addrlen : sizeof(server);
-        memcpy(&server, res->ai_addr, addrlen);
+        sgx_memcpy(&server, res->ai_addr, addrlen);
 
         (*p_freeaddrinfo.f) (res);
         goto again;
@@ -712,7 +710,7 @@ int BIO_get_accept_socket(char *host, int bind_mode)
     server.sa_in.sin_port = htons(port);
     addrlen = sizeof(server.sa_in);
 
-    if (h == NULL || strcmp(h, "*") == 0)
+    if (h == NULL || sgx_strcmp(h, "*") == 0)
         server.sa_in.sin_addr.s_addr = INADDR_ANY;
     else {
         if (!BIO_get_host_ip(h, &(ip[0])))
@@ -754,7 +752,7 @@ int BIO_get_accept_socket(char *host, int bind_mode)
 #  endif
         {
             client = server;
-            if (h == NULL || strcmp(h, "*") == 0) {
+            if (h == NULL || sgx_strcmp(h, "*") == 0) {
 #  if OPENSSL_USE_IPV6
                 if (client.sa.sa_family == AF_INET6) {
                     sgx_memset(&client.sa_in6.sin6_addr, 0,
@@ -894,7 +892,7 @@ int BIO_accept(int sock, char **addr)
         if ((*p_getnameinfo.f) (&sa.from.sa, sa.len.i, h, sizeof(h), s,
                                 sizeof(s), NI_NUMERICHOST | NI_NUMERICSERV))
             break;
-        nl = strlen(h) + strlen(s) + 2;
+        nl = sgx_strlen(h) + sgx_strlen(s) + 2;
         p = *addr;
         if (p) {
             *p = '\0';

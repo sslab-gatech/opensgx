@@ -236,7 +236,7 @@ static int padlock_init(ENGINE *e)
 #   ifdef DYNAMIC_ENGINE
 static int padlock_bind_fn(ENGINE *e, const char *id)
 {
-    if (id && (strcmp(id, padlock_id) != 0)) {
+    if (id && (sgx_strcmp(id, padlock_id) != 0)) {
         return 0;
     }
 
@@ -358,7 +358,7 @@ static int padlock_available(void)
                   "movl   %%edx,4(%%edi)\n"
                   "movl   %%ecx,8(%%edi)\n"
                   "popl   %%ebx":"+a" (eax):"D"(vendor_string):"ecx", "edx");
-    if (strcmp(vendor_string, "CentaurHauls") != 0)
+    if (sgx_strcmp(vendor_string, "CentaurHauls") != 0)
         return 0;
 
     /* Check for Centaur Extended Feature Flags presence */

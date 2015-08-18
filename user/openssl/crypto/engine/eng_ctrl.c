@@ -77,7 +77,7 @@ static int int_ctrl_cmd_is_null(const ENGINE_CMD_DEFN *defn)
 static int int_ctrl_cmd_by_name(const ENGINE_CMD_DEFN *defn, const char *s)
 {
     int idx = 0;
-    while (!int_ctrl_cmd_is_null(defn) && (strcmp(defn->cmd_name, s) != 0)) {
+    while (!int_ctrl_cmd_is_null(defn) && (sgx_strcmp(defn->cmd_name, s) != 0)) {
         idx++;
         defn++;
     }
@@ -153,20 +153,20 @@ static int int_ctrl_helper(ENGINE *e, int cmd, long i, void *p,
         else
             return e->cmd_defns[idx].cmd_num;
     case ENGINE_CTRL_GET_NAME_LEN_FROM_CMD:
-        return strlen(e->cmd_defns[idx].cmd_name);
+        return sgx_strlen(e->cmd_defns[idx].cmd_name);
     case ENGINE_CTRL_GET_NAME_FROM_CMD:
-        return BIO_snprintf(s, strlen(e->cmd_defns[idx].cmd_name) + 1,
+        return BIO_snprintf(s, sgx_strlen(e->cmd_defns[idx].cmd_name) + 1,
                             "%s", e->cmd_defns[idx].cmd_name);
     case ENGINE_CTRL_GET_DESC_LEN_FROM_CMD:
         if (e->cmd_defns[idx].cmd_desc)
-            return strlen(e->cmd_defns[idx].cmd_desc);
-        return strlen(int_no_description);
+            return sgx_strlen(e->cmd_defns[idx].cmd_desc);
+        return sgx_strlen(int_no_description);
     case ENGINE_CTRL_GET_DESC_FROM_CMD:
         if (e->cmd_defns[idx].cmd_desc)
             return BIO_snprintf(s,
-                                strlen(e->cmd_defns[idx].cmd_desc) + 1,
+                                sgx_strlen(e->cmd_defns[idx].cmd_desc) + 1,
                                 "%s", e->cmd_defns[idx].cmd_desc);
-        return BIO_snprintf(s, strlen(int_no_description) + 1, "%s",
+        return BIO_snprintf(s, sgx_strlen(int_no_description) + 1, "%s",
                             int_no_description);
     case ENGINE_CTRL_GET_CMD_FLAGS:
         return e->cmd_defns[idx].cmd_flags;

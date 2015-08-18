@@ -296,7 +296,7 @@ const char *RAND_file_name(char *buf, size_t size)
 
     if (OPENSSL_issetugid() == 0)
         s = getenv("RANDFILE");
-    if (s != NULL && *s && strlen(s) + 1 < size) {
+    if (s != NULL && *s && sgx_strlen(s) + 1 < size) {
         if (BUF_strlcpy(buf, s, size) >= size)
             return NULL;
     } else {
@@ -307,7 +307,7 @@ const char *RAND_file_name(char *buf, size_t size)
             s = DEFAULT_HOME;
         }
 #endif
-        if (s && *s && strlen(s) + strlen(RFILE) + 2 < size) {
+        if (s && *s && sgx_strlen(s) + sgx_strlen(RFILE) + 2 < size) {
             BUF_strlcpy(buf, s, size);
 #ifndef OPENSSL_SYS_VMS
             BUF_strlcat(buf, "/", size);

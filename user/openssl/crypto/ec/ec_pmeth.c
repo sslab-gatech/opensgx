@@ -411,7 +411,7 @@ static int pkey_ec_ctrl(EVP_PKEY_CTX *ctx, int type, int p1, void *p2)
 static int pkey_ec_ctrl_str(EVP_PKEY_CTX *ctx,
                             const char *type, const char *value)
 {
-    if (!strcmp(type, "ec_paramgen_curve")) {
+    if (!sgx_strcmp(type, "ec_paramgen_curve")) {
         int nid;
         nid = EC_curve_nist2nid(value);
         if (nid == NID_undef)
@@ -423,23 +423,23 @@ static int pkey_ec_ctrl_str(EVP_PKEY_CTX *ctx,
             return 0;
         }
         return EVP_PKEY_CTX_set_ec_paramgen_curve_nid(ctx, nid);
-    } else if (!strcmp(type, "ec_param_enc")) {
+    } else if (!sgx_strcmp(type, "ec_param_enc")) {
         int param_enc;
-        if (!strcmp(value, "explicit"))
+        if (!sgx_strcmp(value, "explicit"))
             param_enc = 0;
-        else if (!strcmp(value, "named_curve"))
+        else if (!sgx_strcmp(value, "named_curve"))
             param_enc = OPENSSL_EC_NAMED_CURVE;
         else
             return -2;
         return EVP_PKEY_CTX_set_ec_param_enc(ctx, param_enc);
-    } else if (!strcmp(type, "ecdh_kdf_md")) {
+    } else if (!sgx_strcmp(type, "ecdh_kdf_md")) {
         const EVP_MD *md;
         if (!(md = EVP_get_digestbyname(value))) {
             ECerr(EC_F_PKEY_EC_CTRL_STR, EC_R_INVALID_DIGEST);
             return 0;
         }
         return EVP_PKEY_CTX_set_ecdh_kdf_md(ctx, md);
-    } else if (!strcmp(type, "ecdh_cofactor_mode")) {
+    } else if (!sgx_strcmp(type, "ecdh_cofactor_mode")) {
         int co_mode;
         co_mode = atoi(value);
         return EVP_PKEY_CTX_set_ecdh_cofactor_mode(ctx, co_mode);

@@ -56,8 +56,8 @@ size_t CRYPTO_cts128_encrypt_block(const unsigned char *in,
     for (n = 0; n < residue; ++n)
         ivec[n] ^= in[n];
     (*block) (ivec, ivec, key);
-    memcpy(out, out - 16, residue);
-    memcpy(out - 16, ivec, 16);
+    sgx_memcpy(out, out - 16, residue);
+    sgx_memcpy(out - 16, ivec, 16);
 
     return len + residue;
 }
@@ -90,7 +90,7 @@ size_t CRYPTO_nistcts128_encrypt_block(const unsigned char *in,
     for (n = 0; n < residue; ++n)
         ivec[n] ^= in[n];
     (*block) (ivec, ivec, key);
-    memcpy(out - 16 + residue, ivec, 16);
+    sgx_memcpy(out - 16 + residue, ivec, 16);
 
     return len + residue;
 }
@@ -121,13 +121,13 @@ size_t CRYPTO_cts128_encrypt(const unsigned char *in, unsigned char *out,
     out += len;
 
 #if defined(CBC_HANDLES_TRUNCATED_IO)
-    memcpy(tmp.c, out - 16, 16);
+    sgx_memcpy(tmp.c, out - 16, 16);
     (*cbc) (in, out - 16, residue, key, ivec, 1);
-    memcpy(out, tmp.c, residue);
+    sgx_memcpy(out, tmp.c, residue);
 #else
     sgx_memset(tmp.c, 0, sizeof(tmp));
-    memcpy(tmp.c, in, residue);
-    memcpy(out, out - 16, residue);
+    sgx_memcpy(tmp.c, in, residue);
+    sgx_memcpy(out, out - 16, residue);
     (*cbc) (tmp.c, out - 16, 16, key, ivec, 1);
 #endif
     return len + residue;
@@ -164,7 +164,7 @@ size_t CRYPTO_nistcts128_encrypt(const unsigned char *in, unsigned char *out,
     (*cbc) (in, out - 16 + residue, residue, key, ivec, 1);
 #else
     sgx_memset(tmp.c, 0, sizeof(tmp));
-    memcpy(tmp.c, in, residue);
+    sgx_memcpy(tmp.c, in, residue);
     (*cbc) (tmp.c, out - 16 + residue, 16, key, ivec, 1);
 #endif
     return len + residue;
@@ -199,8 +199,8 @@ size_t CRYPTO_cts128_decrypt_block(const unsigned char *in,
 
     (*block) (in, tmp.c + 16, key);
 
-    memcpy(tmp.c, tmp.c + 16, 16);
-    memcpy(tmp.c, in + 16, residue);
+    sgx_memcpy(tmp.c, tmp.c + 16, 16);
+    sgx_memcpy(tmp.c, in + 16, residue);
     (*block) (tmp.c, tmp.c, key);
 
     for (n = 0; n < 16; ++n) {
@@ -248,8 +248,8 @@ size_t CRYPTO_nistcts128_decrypt_block(const unsigned char *in,
 
     (*block) (in + residue, tmp.c + 16, key);
 
-    memcpy(tmp.c, tmp.c + 16, 16);
-    memcpy(tmp.c, in, residue);
+    sgx_memcpy(tmp.c, tmp.c + 16, 16);
+    sgx_memcpy(tmp.c, in, residue);
     (*block) (tmp.c, tmp.c, key);
 
     for (n = 0; n < 16; ++n) {
@@ -296,12 +296,12 @@ size_t CRYPTO_cts128_decrypt(const unsigned char *in, unsigned char *out,
      */
     (*cbc) (in, tmp.c, 16, key, tmp.c + 16, 0);
 
-    memcpy(tmp.c, in + 16, residue);
+    sgx_memcpy(tmp.c, in + 16, residue);
 #if defined(CBC_HANDLES_TRUNCATED_IO)
     (*cbc) (tmp.c, out, 16 + residue, key, ivec, 0);
 #else
     (*cbc) (tmp.c, tmp.c, 32, key, ivec, 0);
-    memcpy(out, tmp.c, 16 + residue);
+    sgx_memcpy(out, tmp.c, 16 + residue);
 #endif
     return 16 + len + residue;
 }
@@ -342,12 +342,12 @@ size_t CRYPTO_nistcts128_decrypt(const unsigned char *in, unsigned char *out,
      */
     (*cbc) (in + residue, tmp.c, 16, key, tmp.c + 16, 0);
 
-    memcpy(tmp.c, in, residue);
+    sgx_memcpy(tmp.c, in, residue);
 #if defined(CBC_HANDLES_TRUNCATED_IO)
     (*cbc) (tmp.c, out, 16 + residue, key, ivec, 0);
 #else
     (*cbc) (tmp.c, tmp.c, 32, key, ivec, 0);
-    memcpy(out, tmp.c, 16 + residue);
+    sgx_memcpy(out, tmp.c, 16 + residue);
 #endif
     return 16 + len + residue;
 }
@@ -429,39 +429,39 @@ void test_vector(const unsigned char *vector, size_t len)
     tail += 16;
 
     /* test block-based encryption */
-    memcpy(iv, test_iv, sizeof(test_iv));
+    sgx_memcpy(iv, test_iv, sizeof(test_iv));
     CRYPTO_cts128_encrypt_block(test_input, ciphertext, len, &encks, iv,
                                 (block128_f) AES_encrypt);
-    if (memcmp(ciphertext, vector, len))
+    if (sgx_memcmp(ciphertext, vector, len))
         fprintf(stderr, "output_%d mismatch\n", len), exit(1);
-    if (memcmp(iv, vector + len - tail, sizeof(iv)))
+    if (sgx_memcmp(iv, vector + len - tail, sizeof(iv)))
         fprintf(stderr, "iv_%d mismatch\n", len), exit(1);
 
     /* test block-based decryption */
-    memcpy(iv, test_iv, sizeof(test_iv));
+    sgx_memcpy(iv, test_iv, sizeof(test_iv));
     CRYPTO_cts128_decrypt_block(ciphertext, cleartext, len, &decks, iv,
                                 (block128_f) AES_decrypt);
-    if (memcmp(cleartext, test_input, len))
+    if (sgx_memcmp(cleartext, test_input, len))
         fprintf(stderr, "input_%d mismatch\n", len), exit(2);
-    if (memcmp(iv, vector + len - tail, sizeof(iv)))
+    if (sgx_memcmp(iv, vector + len - tail, sizeof(iv)))
         fprintf(stderr, "iv_%d mismatch\n", len), exit(2);
 
     /* test streamed encryption */
-    memcpy(iv, test_iv, sizeof(test_iv));
+    sgx_memcpy(iv, test_iv, sizeof(test_iv));
     CRYPTO_cts128_encrypt(test_input, ciphertext, len, &encks, iv,
                           (cbc128_f) AES_cbc_encrypt);
-    if (memcmp(ciphertext, vector, len))
+    if (sgx_memcmp(ciphertext, vector, len))
         fprintf(stderr, "output_%d mismatch\n", len), exit(3);
-    if (memcmp(iv, vector + len - tail, sizeof(iv)))
+    if (sgx_memcmp(iv, vector + len - tail, sizeof(iv)))
         fprintf(stderr, "iv_%d mismatch\n", len), exit(3);
 
     /* test streamed decryption */
-    memcpy(iv, test_iv, sizeof(test_iv));
+    sgx_memcpy(iv, test_iv, sizeof(test_iv));
     CRYPTO_cts128_decrypt(ciphertext, cleartext, len, &decks, iv,
                           (cbc128_f) AES_cbc_encrypt);
-    if (memcmp(cleartext, test_input, len))
+    if (sgx_memcmp(cleartext, test_input, len))
         fprintf(stderr, "input_%d mismatch\n", len), exit(4);
-    if (memcmp(iv, vector + len - tail, sizeof(iv)))
+    if (sgx_memcmp(iv, vector + len - tail, sizeof(iv)))
         fprintf(stderr, "iv_%d mismatch\n", len), exit(4);
 }
 
@@ -478,47 +478,47 @@ void test_nistvector(const unsigned char *vector, size_t len)
         tail = 16;
 
     len -= 16 + tail;
-    memcpy(nistvector, vector, len);
+    sgx_memcpy(nistvector, vector, len);
     /* flip two last blocks */
-    memcpy(nistvector + len, vector + len + 16, tail);
-    memcpy(nistvector + len + tail, vector + len, 16);
+    sgx_memcpy(nistvector + len, vector + len + 16, tail);
+    sgx_memcpy(nistvector + len + tail, vector + len, 16);
     len += 16 + tail;
     tail = 16;
 
     /* test block-based encryption */
-    memcpy(iv, test_iv, sizeof(test_iv));
+    sgx_memcpy(iv, test_iv, sizeof(test_iv));
     CRYPTO_nistcts128_encrypt_block(test_input, ciphertext, len, &encks, iv,
                                     (block128_f) AES_encrypt);
-    if (memcmp(ciphertext, nistvector, len))
+    if (sgx_memcmp(ciphertext, nistvector, len))
         fprintf(stderr, "output_%d mismatch\n", len), exit(1);
-    if (memcmp(iv, nistvector + len - tail, sizeof(iv)))
+    if (sgx_memcmp(iv, nistvector + len - tail, sizeof(iv)))
         fprintf(stderr, "iv_%d mismatch\n", len), exit(1);
 
     /* test block-based decryption */
-    memcpy(iv, test_iv, sizeof(test_iv));
+    sgx_memcpy(iv, test_iv, sizeof(test_iv));
     CRYPTO_nistcts128_decrypt_block(ciphertext, cleartext, len, &decks, iv,
                                     (block128_f) AES_decrypt);
-    if (memcmp(cleartext, test_input, len))
+    if (sgx_memcmp(cleartext, test_input, len))
         fprintf(stderr, "input_%d mismatch\n", len), exit(2);
-    if (memcmp(iv, nistvector + len - tail, sizeof(iv)))
+    if (sgx_memcmp(iv, nistvector + len - tail, sizeof(iv)))
         fprintf(stderr, "iv_%d mismatch\n", len), exit(2);
 
     /* test streamed encryption */
-    memcpy(iv, test_iv, sizeof(test_iv));
+    sgx_memcpy(iv, test_iv, sizeof(test_iv));
     CRYPTO_nistcts128_encrypt(test_input, ciphertext, len, &encks, iv,
                               (cbc128_f) AES_cbc_encrypt);
-    if (memcmp(ciphertext, nistvector, len))
+    if (sgx_memcmp(ciphertext, nistvector, len))
         fprintf(stderr, "output_%d mismatch\n", len), exit(3);
-    if (memcmp(iv, nistvector + len - tail, sizeof(iv)))
+    if (sgx_memcmp(iv, nistvector + len - tail, sizeof(iv)))
         fprintf(stderr, "iv_%d mismatch\n", len), exit(3);
 
     /* test streamed decryption */
-    memcpy(iv, test_iv, sizeof(test_iv));
+    sgx_memcpy(iv, test_iv, sizeof(test_iv));
     CRYPTO_nistcts128_decrypt(ciphertext, cleartext, len, &decks, iv,
                               (cbc128_f) AES_cbc_encrypt);
-    if (memcmp(cleartext, test_input, len))
+    if (sgx_memcmp(cleartext, test_input, len))
         fprintf(stderr, "input_%d mismatch\n", len), exit(4);
-    if (memcmp(iv, nistvector + len - tail, sizeof(iv)))
+    if (sgx_memcmp(iv, nistvector + len - tail, sizeof(iv)))
         fprintf(stderr, "iv_%d mismatch\n", len), exit(4);
 }
 

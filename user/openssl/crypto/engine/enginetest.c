@@ -109,7 +109,7 @@ int main(int argc, char *argv[])
 
     /* enable memory leak checking unless explicitly disabled */
     if (!((getenv("OPENSSL_DEBUG_MEMORY") != NULL)
-          && (0 == strcmp(getenv("OPENSSL_DEBUG_MEMORY"), "off")))) {
+          && (0 == sgx_strcmp(getenv("OPENSSL_DEBUG_MEMORY"), "off")))) {
         CRYPTO_malloc_debug_init();
         CRYPTO_set_mem_debug_options(V_CRYPTO_MDEBUG_ALL);
     } else {
@@ -119,7 +119,7 @@ int main(int argc, char *argv[])
     CRYPTO_mem_ctrl(CRYPTO_MEM_CHECK_ON);
     ERR_load_crypto_strings();
 
-    memset(block, 0, 512 * sizeof(ENGINE *));
+    sgx_memset(block, 0, 512 * sizeof(ENGINE *));
     if (((new_h1 = ENGINE_new()) == NULL) ||
         !ENGINE_set_id(new_h1, "test_id0") ||
         !ENGINE_set_name(new_h1, "First test item") ||

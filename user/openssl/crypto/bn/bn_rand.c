@@ -115,8 +115,6 @@
 #include "bn_lcl.h"
 #include <openssl/rand.h>
 
-#include "../sgx.h"
-
 static int bnrand(int pseudorand, BIGNUM *rnd, int bits, int top, int bottom)
 {
     unsigned char *buf = NULL;
@@ -187,6 +185,7 @@ static int bnrand(int pseudorand, BIGNUM *rnd, int bits, int top, int bottom)
         buf[bytes - 1] |= 1;
     if (!BN_bin2bn(buf, bytes, rnd))
         goto err;
+
     ret = 1;
  err:
     if (buf != NULL) {

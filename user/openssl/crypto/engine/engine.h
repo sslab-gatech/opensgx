@@ -807,7 +807,7 @@ typedef unsigned long (*dynamic_v_check_fn) (unsigned long ossl_version);
  * This function is passed the ENGINE structure to initialise with its own
  * function and command settings. It should not adjust the structural or
  * functional reference counts. If this function returns zero, (a) the load
- * will be aborted, (b) the previous ENGINE state will be memcpy'd back onto
+ * will be aborted, (b) the previous ENGINE state will be sgx_memcpy'd back onto
  * the structure, and (c) the shared library will be unloaded. So
  * implementations should do their own internal cleanup in failure
  * circumstances otherwise they could leak. The 'id' parameter, if non-NULL,

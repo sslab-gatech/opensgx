@@ -293,7 +293,7 @@ static int get_cryptodev_ciphers(const int **cnids)
         *cnids = NULL;
         return (0);
     }
-    memset(&sess, 0, sizeof(sess));
+    sgx_memset(&sess, 0, sizeof(sess));
     sess.key = (caddr_t) "123456789abcdefghijklmno";
 
     for (i = 0; ciphers[i].id && count < CRYPTO_ALGORITHM_MAX; i++) {
@@ -332,7 +332,7 @@ static int get_cryptodev_digests(const int **cnids)
         *cnids = NULL;
         return (0);
     }
-    memset(&sess, 0, sizeof(sess));
+    sgx_memset(&sess, 0, sizeof(sess));
     sess.mackey = (caddr_t) "123456789abcdefghijklmno";
     for (i = 0; digests[i].id && count < CRYPTO_ALGORITHM_MAX; i++) {
         if (digests[i].nid == NID_undef)
@@ -419,7 +419,7 @@ cryptodev_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out,
     if ((inl % ctx->cipher->block_size) != 0)
         return (0);
 
-    memset(&cryp, 0, sizeof(cryp));
+    sgx_memset(&cryp, 0, sizeof(cryp));
 
     cryp.ses = sess->ses;
     cryp.flags = 0;
@@ -434,7 +434,7 @@ cryptodev_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out,
         cryp.iv = (caddr_t) ctx->iv;
         if (!ctx->encrypt) {
             iiv = in + inl - ctx->cipher->iv_len;
-            memcpy(save_iv, iiv, ctx->cipher->iv_len);
+            sgx_memcpy(save_iv, iiv, ctx->cipher->iv_len);
         }
     } else
         cryp.iv = NULL;
@@ -452,7 +452,7 @@ cryptodev_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out,
             iiv = out + inl - ctx->cipher->iv_len;
         else
             iiv = save_iv;
-        memcpy(ctx->iv, iiv, ctx->cipher->iv_len);
+        sgx_memcpy(ctx->iv, iiv, ctx->cipher->iv_len);
     }
     return (1);
 }
@@ -478,7 +478,7 @@ cryptodev_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key,
         return (0);
     }
 
-    memset(sess, 0, sizeof(struct session_op));
+    sgx_memset(sess, 0, sizeof(struct session_op));
 
     if ((state->d_fd = get_dev_crypto()) < 0)
         return (0);
@@ -770,7 +770,7 @@ static int cryptodev_digest_init(EVP_MD_CTX *ctx)
         return (0);
     }
 
-    memset(state, 0, sizeof(struct dev_crypto_state));
+    sgx_memset(state, 0, sizeof(struct dev_crypto_state));
 
     if ((state->d_fd = get_dev_crypto()) < 0) {
         printf("cryptodev_digest_init: Can't get Dev \n");
@@ -817,13 +817,13 @@ static int cryptodev_digest_update(EVP_MD_CTX *ctx, const void *data,
             return (0);
         }
 
-        memcpy(state->mac_data + state->mac_len, data, count);
+        sgx_memcpy(state->mac_data + state->mac_len, data, count);
         state->mac_len += count;
 
         return (1);
     }
 
-    memset(&cryp, 0, sizeof(cryp));
+    sgx_memset(&cryp, 0, sizeof(cryp));
 
     cryp.ses = sess->ses;
     cryp.flags = 0;
@@ -853,7 +853,7 @@ static int cryptodev_digest_final(EVP_MD_CTX *ctx, unsigned char *md)
 
     if (!(ctx->flags & EVP_MD_CTX_FLAG_ONESHOT)) {
         /* if application doesn't support one buffer */
-        memset(&cryp, 0, sizeof(cryp));
+        sgx_memset(&cryp, 0, sizeof(cryp));
         cryp.ses = sess->ses;
         cryp.flags = 0;
         cryp.len = state->mac_len;
@@ -868,7 +868,7 @@ static int cryptodev_digest_final(EVP_MD_CTX *ctx, unsigned char *md)
         return 1;
     }
 
-    memcpy(md, state->digest_res, ctx->digest->md_size);
+    sgx_memcpy(md, state->digest_res, ctx->digest->md_size);
 
     return (ret);
 }
@@ -915,7 +915,7 @@ static int cryptodev_digest_copy(EVP_MD_CTX *to, const EVP_MD_CTX *from)
     if (dstate == NULL || fstate == NULL)
         return 1;
 
-    memcpy(dstate, fstate, sizeof(struct dev_crypto_state));
+    sgx_memcpy(dstate, fstate, sizeof(struct dev_crypto_state));
 
     sess = &dstate->d_sess;
 
@@ -937,7 +937,7 @@ static int cryptodev_digest_copy(EVP_MD_CTX *to, const EVP_MD_CTX *from)
     if (fstate->mac_len != 0) {
         if (fstate->mac_data != NULL) {
             dstate->mac_data = OPENSSL_malloc(fstate->mac_len);
-            memcpy(dstate->mac_data, fstate->mac_data, fstate->mac_len);
+            sgx_memcpy(dstate->mac_data, fstate->mac_data, fstate->mac_len);
             dstate->mac_len = fstate->mac_len;
         }
     }
@@ -1020,7 +1020,7 @@ static int bn2crparam(const BIGNUM *a, struct crparam *crp)
     b = malloc(bytes);
     if (b == NULL)
         return (1);
-    memset(b, 0, bytes);
+    sgx_memset(b, 0, bytes);
 
     crp->crp_p = (caddr_t) b;
     crp->crp_nbits = bits;
@@ -1119,7 +1119,7 @@ cryptodev_bn_mod_exp(BIGNUM *r, const BIGNUM *a, const BIGNUM *p,
         return (ret);
     }
 
-    memset(&kop, 0, sizeof kop);
+    sgx_memset(&kop, 0, sizeof kop);
     kop.crk_op = CRK_MOD_EXP;
 
     /* inputs: a^p % m */
@@ -1170,7 +1170,7 @@ cryptodev_rsa_mod_exp(BIGNUM *r0, const BIGNUM *I, RSA *rsa, BN_CTX *ctx)
         return (0);
     }
 
-    memset(&kop, 0, sizeof kop);
+    sgx_memset(&kop, 0, sizeof kop);
     kop.crk_op = CRK_MOD_EXP_CRT;
     /* inputs: rsa->p rsa->q I rsa->dmp1 rsa->dmq1 rsa->iqmp */
     if (bn2crparam(rsa->p, &kop.crk_param[0]))
@@ -1273,7 +1273,7 @@ static DSA_SIG *cryptodev_dsa_do_sign(const unsigned char *dgst, int dlen,
         goto err;
     }
 
-    memset(&kop, 0, sizeof kop);
+    sgx_memset(&kop, 0, sizeof kop);
     kop.crk_op = CRK_DSA_SIGN;
 
     /* inputs: dgst dsa->p dsa->q dsa->g dsa->priv_key */
@@ -1313,7 +1313,7 @@ cryptodev_dsa_verify(const unsigned char *dgst, int dlen,
     struct crypt_kop kop;
     int dsaret = 1;
 
-    memset(&kop, 0, sizeof kop);
+    sgx_memset(&kop, 0, sizeof kop);
     kop.crk_op = CRK_DSA_VERIFY;
 
     /* inputs: dgst dsa->p dsa->q dsa->g dsa->pub_key sig->r sig->s */
@@ -1386,7 +1386,7 @@ cryptodev_dh_compute_key(unsigned char *key, const BIGNUM *pub_key, DH *dh)
 
     keylen = BN_num_bits(dh->p);
 
-    memset(&kop, 0, sizeof kop);
+    sgx_memset(&kop, 0, sizeof kop);
     kop.crk_op = CRK_DH_COMPUTE_KEY;
 
     /* inputs: dh->priv_key pub_key dh->p key */
@@ -1500,7 +1500,7 @@ void ENGINE_load_cryptodev(void)
     if (ENGINE_set_DSA(engine, &cryptodev_dsa)) {
         const DSA_METHOD *meth = DSA_OpenSSL();
 
-        memcpy(&cryptodev_dsa, meth, sizeof(DSA_METHOD));
+        sgx_memcpy(&cryptodev_dsa, meth, sizeof(DSA_METHOD));
         if (cryptodev_asymfeat & CRF_DSA_SIGN)
             cryptodev_dsa.dsa_do_sign = cryptodev_dsa_do_sign;
         if (cryptodev_asymfeat & CRF_MOD_EXP) {

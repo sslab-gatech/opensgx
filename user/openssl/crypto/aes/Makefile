@@ -151,7 +151,8 @@ aes_ige.o: ../../include/openssl/e_os2.h ../../include/openssl/err.h
 aes_ige.o: ../../include/openssl/lhash.h ../../include/openssl/opensslconf.h
 aes_ige.o: ../../include/openssl/opensslv.h ../../include/openssl/ossl_typ.h
 aes_ige.o: ../../include/openssl/safestack.h ../../include/openssl/stack.h
-aes_ige.o: ../../include/openssl/symhacks.h ../cryptlib.h aes_ige.c aes_locl.h
+aes_ige.o: ../../include/openssl/symhacks.h ../cryptlib.h ../sgx.h aes_ige.c
+aes_ige.o: aes_locl.h
 aes_misc.o: ../../include/openssl/aes.h ../../include/openssl/crypto.h
 aes_misc.o: ../../include/openssl/e_os2.h ../../include/openssl/opensslconf.h
 aes_misc.o: ../../include/openssl/opensslv.h ../../include/openssl/ossl_typ.h
@@ -166,4 +167,4 @@ aes_wrap.o: ../../include/openssl/err.h ../../include/openssl/lhash.h
 aes_wrap.o: ../../include/openssl/modes.h ../../include/openssl/opensslconf.h
 aes_wrap.o: ../../include/openssl/opensslv.h ../../include/openssl/ossl_typ.h
 aes_wrap.o: ../../include/openssl/safestack.h ../../include/openssl/stack.h
-aes_wrap.o: ../../include/openssl/symhacks.h ../cryptlib.h aes_wrap.c
+aes_wrap.o: ../../include/openssl/symhacks.h ../cryptlib.h ../sgx.h aes_wrap.c

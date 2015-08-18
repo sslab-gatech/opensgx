@@ -101,7 +101,7 @@ int main(int argc, char **argv)
     fprintf(stdout, "Testing SHA-512 ");
 
     EVP_Digest("abc", 3, md, NULL, EVP_sha512(), NULL);
-    if (memcmp(md, app_c1, sizeof(app_c1))) {
+    if (sgx_memcmp(md, app_c1, sizeof(app_c1))) {
         fflush(stdout);
         fprintf(stderr, "\nTEST 1 of 3 failed.\n");
         return 1;
@@ -113,7 +113,7 @@ int main(int argc, char **argv)
                "efghijkl" "fghijklm" "ghijklmn" "hijklmno"
                "ijklmnop" "jklmnopq" "klmnopqr" "lmnopqrs"
                "mnopqrst" "nopqrstu", 112, md, NULL, EVP_sha512(), NULL);
-    if (memcmp(md, app_c2, sizeof(app_c2))) {
+    if (sgx_memcmp(md, app_c2, sizeof(app_c2))) {
         fflush(stdout);
         fprintf(stderr, "\nTEST 2 of 3 failed.\n");
         return 1;
@@ -137,7 +137,7 @@ int main(int argc, char **argv)
     EVP_DigestFinal_ex(&evp, md, NULL);
     EVP_MD_CTX_cleanup(&evp);
 
-    if (memcmp(md, app_c3, sizeof(app_c3))) {
+    if (sgx_memcmp(md, app_c3, sizeof(app_c3))) {
         fflush(stdout);
         fprintf(stderr, "\nTEST 3 of 3 failed.\n");
         return 1;
@@ -151,7 +151,7 @@ int main(int argc, char **argv)
     fprintf(stdout, "Testing SHA-384 ");
 
     EVP_Digest("abc", 3, md, NULL, EVP_sha384(), NULL);
-    if (memcmp(md, app_d1, sizeof(app_d1))) {
+    if (sgx_memcmp(md, app_d1, sizeof(app_d1))) {
         fflush(stdout);
         fprintf(stderr, "\nTEST 1 of 3 failed.\n");
         return 1;
@@ -163,7 +163,7 @@ int main(int argc, char **argv)
                "efghijkl" "fghijklm" "ghijklmn" "hijklmno"
                "ijklmnop" "jklmnopq" "klmnopqr" "lmnopqrs"
                "mnopqrst" "nopqrstu", 112, md, NULL, EVP_sha384(), NULL);
-    if (memcmp(md, app_d2, sizeof(app_d2))) {
+    if (sgx_memcmp(md, app_d2, sizeof(app_d2))) {
         fflush(stdout);
         fprintf(stderr, "\nTEST 2 of 3 failed.\n");
         return 1;
@@ -180,7 +180,7 @@ int main(int argc, char **argv)
     EVP_DigestFinal_ex(&evp, md, NULL);
     EVP_MD_CTX_cleanup(&evp);
 
-    if (memcmp(md, app_d3, sizeof(app_d3))) {
+    if (sgx_memcmp(md, app_d3, sizeof(app_d3))) {
         fflush(stdout);
         fprintf(stderr, "\nTEST 3 of 3 failed.\n");
         return 1;

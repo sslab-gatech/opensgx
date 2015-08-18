@@ -119,66 +119,66 @@ int MAIN(int argc, char **argv)
     pad = RSA_PKCS1_PADDING;
 
     while (argc >= 1) {
-        if (!strcmp(*argv, "-in")) {
+        if (!sgx_strcmp(*argv, "-in")) {
             if (--argc < 1)
                 badarg = 1;
             else
                 infile = *(++argv);
-        } else if (!strcmp(*argv, "-out")) {
+        } else if (!sgx_strcmp(*argv, "-out")) {
             if (--argc < 1)
                 badarg = 1;
             else
                 outfile = *(++argv);
-        } else if (!strcmp(*argv, "-inkey")) {
+        } else if (!sgx_strcmp(*argv, "-inkey")) {
             if (--argc < 1)
                 badarg = 1;
             else
                 keyfile = *(++argv);
-        } else if (!strcmp(*argv, "-passin")) {
+        } else if (!sgx_strcmp(*argv, "-passin")) {
             if (--argc < 1)
                 badarg = 1;
             else
                 passargin = *(++argv);
-        } else if (strcmp(*argv, "-keyform") == 0) {
+        } else if (sgx_strcmp(*argv, "-keyform") == 0) {
             if (--argc < 1)
                 badarg = 1;
             else
                 keyform = str2fmt(*(++argv));
 # ifndef OPENSSL_NO_ENGINE
-        } else if (!strcmp(*argv, "-engine")) {
+        } else if (!sgx_strcmp(*argv, "-engine")) {
             if (--argc < 1)
                 badarg = 1;
             else
                 engine = *(++argv);
 # endif
-        } else if (!strcmp(*argv, "-pubin")) {
+        } else if (!sgx_strcmp(*argv, "-pubin")) {
             key_type = KEY_PUBKEY;
-        } else if (!strcmp(*argv, "-certin")) {
+        } else if (!sgx_strcmp(*argv, "-certin")) {
             key_type = KEY_CERT;
-        } else if (!strcmp(*argv, "-asn1parse"))
+        } else if (!sgx_strcmp(*argv, "-asn1parse"))
             asn1parse = 1;
-        else if (!strcmp(*argv, "-hexdump"))
+        else if (!sgx_strcmp(*argv, "-hexdump"))
             hexdump = 1;
-        else if (!strcmp(*argv, "-raw"))
+        else if (!sgx_strcmp(*argv, "-raw"))
             pad = RSA_NO_PADDING;
-        else if (!strcmp(*argv, "-oaep"))
+        else if (!sgx_strcmp(*argv, "-oaep"))
             pad = RSA_PKCS1_OAEP_PADDING;
-        else if (!strcmp(*argv, "-ssl"))
+        else if (!sgx_strcmp(*argv, "-ssl"))
             pad = RSA_SSLV23_PADDING;
-        else if (!strcmp(*argv, "-pkcs"))
+        else if (!sgx_strcmp(*argv, "-pkcs"))
             pad = RSA_PKCS1_PADDING;
-        else if (!strcmp(*argv, "-x931"))
+        else if (!sgx_strcmp(*argv, "-x931"))
             pad = RSA_X931_PADDING;
-        else if (!strcmp(*argv, "-sign")) {
+        else if (!sgx_strcmp(*argv, "-sign")) {
             rsa_mode = RSA_SIGN;
             need_priv = 1;
-        } else if (!strcmp(*argv, "-verify"))
+        } else if (!sgx_strcmp(*argv, "-verify"))
             rsa_mode = RSA_VERIFY;
-        else if (!strcmp(*argv, "-rev"))
+        else if (!sgx_strcmp(*argv, "-rev"))
             rev = 1;
-        else if (!strcmp(*argv, "-encrypt"))
+        else if (!sgx_strcmp(*argv, "-encrypt"))
             rsa_mode = RSA_ENCRYPT;
-        else if (!strcmp(*argv, "-decrypt")) {
+        else if (!sgx_strcmp(*argv, "-decrypt")) {
             rsa_mode = RSA_DECRYPT;
             need_priv = 1;
         } else

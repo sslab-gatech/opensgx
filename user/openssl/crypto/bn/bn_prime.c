@@ -176,6 +176,7 @@ int BN_generate_prime_ex(BIGNUM *ret, int bits, int safe,
     t = BN_CTX_get(ctx);
     if (!t)
         goto err;
+
  loop:
     /* make a random number and set the top and bottom bits */
     if (add == NULL) {
@@ -190,6 +191,7 @@ int BN_generate_prime_ex(BIGNUM *ret, int bits, int safe,
                 goto err;
         }
     }
+
     /* if (BN_mod_word(ret,(BN_ULONG)3) == 1) goto loop; */
     if (!BN_GENCB_call(cb, 0, c1++))
         /* aborted */
@@ -403,6 +405,7 @@ static int probable_prime(BIGNUM *rnd, int bits)
     }
     if (!BN_add_word(rnd, delta))
         return (0);
+
     bn_check_top(rnd);
     return (1);
 }

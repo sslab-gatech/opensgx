@@ -1089,7 +1089,7 @@ static int cswift_rand_status(void)
 #  ifndef OPENSSL_NO_DYNAMIC_ENGINE
 static int bind_fn(ENGINE *e, const char *id)
 {
-    if (id && (strcmp(id, engine_cswift_id) != 0))
+    if (id && (sgx_strcmp(id, engine_cswift_id) != 0))
         return 0;
     if (!bind_helper(e))
         return 0;

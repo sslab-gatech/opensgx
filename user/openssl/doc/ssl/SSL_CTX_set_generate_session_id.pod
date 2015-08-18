@@ -107,7 +107,7 @@ server id given, and will fill the rest with pseudo random bytes:
       const char *version;
 
       version = SSL_get_version(ssl);
-      if (!strcmp(version, "SSLv2"))
+      if (!sgx_strcmp(version, "SSLv2"))
 	  /* we must not change id_len */;
 
       do      {

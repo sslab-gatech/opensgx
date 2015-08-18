@@ -33,8 +33,6 @@
 #include <openssl/ec.h>
 #include "cryptlib.h"
 
-#include "../sgx.h"
-
 #include "ec_lcl.h"
 
 #if BN_BITS2 != 64
@@ -375,9 +373,9 @@ static void ecp_nistz256_point_add(P256_POINT *r,
     copy_conditional(res_y, in1_y, in2infty);
     copy_conditional(res_z, in1_z, in2infty);
 
-    memcpy(r->X, res_x, sizeof(res_x));
-    memcpy(r->Y, res_y, sizeof(res_y));
-    memcpy(r->Z, res_z, sizeof(res_z));
+    sgx_memcpy(r->X, res_x, sizeof(res_x));
+    sgx_memcpy(r->Y, res_y, sizeof(res_y));
+    sgx_memcpy(r->Z, res_z, sizeof(res_z));
 }
 
 /* Point addition when b is known to be affine: r = a+b */
@@ -460,9 +458,9 @@ static void ecp_nistz256_point_add_affine(P256_POINT *r,
     copy_conditional(res_z, ONE, in1infty);
     copy_conditional(res_z, in1_z, in2infty);
 
-    memcpy(r->X, res_x, sizeof(res_x));
-    memcpy(r->Y, res_y, sizeof(res_y));
-    memcpy(r->Z, res_z, sizeof(res_z));
+    sgx_memcpy(r->X, res_x, sizeof(res_x));
+    sgx_memcpy(r->Y, res_y, sizeof(res_y));
+    sgx_memcpy(r->Z, res_z, sizeof(res_z));
 }
 #endif
 
@@ -540,7 +538,7 @@ static void ecp_nistz256_mod_inverse(BN_ULONG r[P256_LIMBS],
     ecp_nistz256_sqr_mont(res, res);
     ecp_nistz256_mul_mont(res, res, in);
 
-    memcpy(r, res, sizeof(res));
+    sgx_memcpy(r, res, sizeof(res));
 }
 
 /*
@@ -554,7 +552,7 @@ static int ecp_nistz256_bignum_to_field_elem(BN_ULONG out[P256_LIMBS],
         return 0;
 
     sgx_memset(out, 0, sizeof(BN_ULONG) * P256_LIMBS);
-    memcpy(out, in->d, sizeof(BN_ULONG) * in->top);
+    sgx_memcpy(out, in->d, sizeof(BN_ULONG) * in->top);
     return 1;
 }
 
@@ -1054,7 +1052,7 @@ static void ecp_nistz256_avx2_mul_g(P256_POINT *r,
                                 preComputedTable[36], digit0);
     ecp_nistz256_neg(tmp, r->Y);
     copy_conditional(r->Y, tmp, sign0);
-    memcpy(r->Z, ONE, sizeof(ONE));
+    sgx_memcpy(r->Z, ONE, sizeof(ONE));
     /* Sum the four windows */
     ecp_nistz256_point_add(r, r, &res_point_arr[0]);
     ecp_nistz256_point_add(r, r, &res_point_arr[1]);
@@ -1072,13 +1070,13 @@ static int ecp_nistz256_set_from_affine(EC_POINT *out, const EC_GROUP *group,
     BN_ULONG d_x[P256_LIMBS], d_y[P256_LIMBS];
     int ret = 0;
 
-    memcpy(d_x, in->X, sizeof(d_x));
+    sgx_memcpy(d_x, in->X, sizeof(d_x));
     x.d = d_x;
     x.dmax = x.top = P256_LIMBS;
     x.neg = 0;
     x.flags = BN_FLG_STATIC_DATA;
 
-    memcpy(d_y, in->Y, sizeof(d_y));
+    sgx_memcpy(d_y, in->Y, sizeof(d_y));
     y.d = d_y;
     y.dmax = y.top = P256_LIMBS;
     y.neg = 0;
@@ -1226,7 +1224,7 @@ static int ecp_nistz256_points_mul(const EC_GROUP *group,
                 ecp_nistz256_neg(p.p.Z, p.p.Y);
                 copy_conditional(p.p.Y, p.p.Z, wvalue & 1);
 
-                memcpy(p.p.Z, ONE, sizeof(ONE));
+                sgx_memcpy(p.p.Z, ONE, sizeof(ONE));
 
                 for (i = 1; i < 37; i++) {
                     unsigned int off = (index - 1) / 8;
@@ -1273,9 +1271,9 @@ static int ecp_nistz256_points_mul(const EC_GROUP *group,
             return 0;
         }
 
-        memcpy(new_scalars, scalars, num * sizeof(BIGNUM *));
+        sgx_memcpy(new_scalars, scalars, num * sizeof(BIGNUM *));
         new_scalars[num] = scalar;
-        memcpy(new_points, points, num * sizeof(EC_POINT *));
+        sgx_memcpy(new_points, points, num * sizeof(EC_POINT *));
         new_points[num] = generator;
 
         scalars = new_scalars;
@@ -1299,9 +1297,9 @@ static int ecp_nistz256_points_mul(const EC_GROUP *group,
         OPENSSL_free(scalars);
     }
 
-    memcpy(r->X.d, p.p.X, sizeof(p.p.X));
-    memcpy(r->Y.d, p.p.Y, sizeof(p.p.Y));
-    memcpy(r->Z.d, p.p.Z, sizeof(p.p.Z));
+    sgx_memcpy(r->X.d, p.p.X, sizeof(p.p.X));
+    sgx_memcpy(r->Y.d, p.p.Y, sizeof(p.p.Y));
+    sgx_memcpy(r->Z.d, p.p.Z, sizeof(p.p.Z));
     bn_correct_top(&r->X);
     bn_correct_top(&r->Y);
     bn_correct_top(&r->Z);

@@ -207,10 +207,10 @@ int SHA512_Update(SHA512_CTX *c, const void *_data, size_t len)
         size_t n = sizeof(c->u) - c->num;
 
         if (len < n) {
-            memcpy(p + c->num, data, len), c->num += (unsigned int)len;
+            sgx_memcpy(p + c->num, data, len), c->num += (unsigned int)len;
             return 1;
         } else {
-            memcpy(p + c->num, data, n), c->num = 0;
+            sgx_memcpy(p + c->num, data, n), c->num = 0;
             len -= n, data += n;
             sha512_block_data_order(c, p, 1);
         }
@@ -220,7 +220,7 @@ int SHA512_Update(SHA512_CTX *c, const void *_data, size_t len)
 # ifndef SHA512_BLOCK_CAN_MANAGE_UNALIGNED_DATA
         if ((size_t)data % sizeof(c->u.d[0]) != 0)
             while (len >= sizeof(c->u))
-                memcpy(p, data, sizeof(c->u)),
+                sgx_memcpy(p, data, sizeof(c->u)),
                     sha512_block_data_order(c, p, 1),
                     len -= sizeof(c->u), data += sizeof(c->u);
         else
@@ -230,7 +230,7 @@ int SHA512_Update(SHA512_CTX *c, const void *_data, size_t len)
     }
 
     if (len != 0)
-        memcpy(p, data, len), c->num = (int)len;
+        sgx_memcpy(p, data, len), c->num = (int)len;
 
     return 1;
 }
@@ -244,7 +244,7 @@ void SHA512_Transform(SHA512_CTX *c, const unsigned char *data)
 {
 # ifndef SHA512_BLOCK_CAN_MANAGE_UNALIGNED_DATA
     if ((size_t)data % sizeof(c->u.d[0]) != 0)
-        memcpy(c->u.p, data, sizeof(c->u.p)), data = c->u.p;
+        sgx_memcpy(c->u.p, data, sizeof(c->u.p)), data = c->u.p;
 # endif
     sha512_block_data_order(c, data, 1);
 }

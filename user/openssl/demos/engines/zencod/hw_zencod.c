@@ -1190,7 +1190,7 @@ static int RAND_zencod_rand_status(void)
 static int bind_fn(ENGINE *e, const char *id)
 {
 
-    if (id && (strcmp(id, engine_zencod_id) != 0)) {
+    if (id && (sgx_strcmp(id, engine_zencod_id) != 0)) {
         return 0;
     }
     if (!bind_helper(e)) {

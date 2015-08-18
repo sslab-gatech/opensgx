@@ -4456,6 +4456,10 @@ static target_ulong disas_insn(CPUX86State *env, DisasContext *s,
     s->vex_l = 0;
     s->vex_v = 0;
  next_byte:
+    //fprintf(stderr, "current PC: %lx [EAX:%lx,EBX:%lx,ECD:%lx,EDX:%lx,ESP:%lx,EBP:%lx,ESI:%lx,EDI:%lx]\n",
+    //                 s->pc, env->regs[R_EAX], env->regs[R_EBX], env->regs[R_ECX], env->regs[R_EDX], env->regs[R_ESP], env->regs[R_ESP], env->regs[R_ESI], env->regs[R_EDI]);
+    //fprintf(stderr, "current PC: %lx \n", s->pc);
+
     b = cpu_ldub_code(env, s->pc);
     s->pc++;
     /* Collect prefixes.  */
@@ -4967,6 +4971,7 @@ static target_ulong disas_insn(CPUX86State *env, DisasContext *s,
             if (dflag == MO_16) {
                 tcg_gen_ext16u_tl(cpu_T[0], cpu_T[0]);
             }
+            gen_helper_mem_execute(cpu_env, cpu_T[0]);  //cpu_T[0] contains the destination address
             next_eip = s->pc - s->cs_base;
             tcg_gen_movi_tl(cpu_T[1], next_eip);
             gen_push_v(s, cpu_T[1]);
@@ -4997,6 +5002,7 @@ static target_ulong disas_insn(CPUX86State *env, DisasContext *s,
             if (dflag == MO_16) {
                 tcg_gen_ext16u_tl(cpu_T[0], cpu_T[0]);
             }
+            gen_helper_mem_execute(cpu_env, cpu_T[0]);
             gen_op_jmp_v(cpu_T[0]);
             gen_eob(s);
             break;
@@ -5013,6 +5019,7 @@ static target_ulong disas_insn(CPUX86State *env, DisasContext *s,
                                           tcg_const_i32(s->pc - pc_start));
             } else {
                 gen_op_movl_seg_T0_vm(R_CS);
+                gen_helper_mem_execute(cpu_env, cpu_T[1]);
                 gen_op_jmp_v(cpu_T[1]);
             }
             gen_eob(s);
@@ -5230,9 +5237,36 @@ static target_ulong disas_insn(CPUX86State *env, DisasContext *s,
             tcg_temp_free(a0);
         }
         break;
-    case 0x1c7: /* cmpxchg8b */
+    case 0x1c7: /* cmpxchg8b */ /* RDRAND for sgx */
         modrm = cpu_ldub_code(env, s->pc++);
         mod = (modrm >> 6) & 3;
+        reg = (modrm >> 3) & 7;
+
+        /* RDRAND local hack for SGX */
+        /* Condition check for rdrand */
+        if ((mod == 3) || reg == 6) {
+            if (prefixes & PREFIX_DATA) {  //16bit operand
+		gen_helper_rdrand(cpu_env, tcg_const_i32(16), tcg_const_i32(modrm));
+                break;
+            }
+            if (rex_w == 1) { //64bit operand
+		gen_helper_rdrand(cpu_env, tcg_const_i32(64), tcg_const_i32(modrm));
+                break;
+
+            }
+            //else 32bit operand 
+	    gen_helper_rdrand(cpu_env, tcg_const_i32(32), tcg_const_i32(modrm));
+            break;
+#if 0
+            /* Prefix & modrm */
+            printf("prefix: %x\n", prefixes);
+            printf("modrm: %x\n", modrm);
+            /* REX prefix */
+            printf("rex_w: %d  rex_r: %d\n", rex_w, rex_r);
+#endif 
+        }
+
+        /* Condition check for cmpxch8b */
         if ((mod == 3) || ((modrm & 0x38) != 0x8))
             goto illegal_op;
 #ifdef TARGET_X86_64
@@ -6429,6 +6463,7 @@ static target_ulong disas_insn(CPUX86State *env, DisasContext *s,
         s->pc += 2;
         ot = gen_pop_T0(s);
         gen_stack_update(s, val + (1 << ot));
+        gen_helper_mem_execute(cpu_env, cpu_T[0]);
         /* Note that gen_pop_T0 uses a zero-extending load.  */
         gen_op_jmp_v(cpu_T[0]);
         gen_eob(s);
@@ -6436,6 +6471,7 @@ static target_ulong disas_insn(CPUX86State *env, DisasContext *s,
     case 0xc3: /* ret */
         ot = gen_pop_T0(s);
         gen_pop_update(s, ot);
+        gen_helper_mem_execute(cpu_env, cpu_T[0]);
         gen_op_jmp_v(cpu_T[0]);
         gen_eob(s);
         break;
@@ -6445,6 +6481,8 @@ static target_ulong disas_insn(CPUX86State *env, DisasContext *s,
     do_lret:
         if (s->pe && !s->vm86) {
             gen_update_cc_op(s);
+            tcg_gen_movi_tl(cpu_T[0], pc_start - s->cs_base);  
+            gen_helper_mem_execute(cpu_env, cpu_T[0]);  
             gen_jmp_im(pc_start - s->cs_base);
             gen_helper_lret_protected(cpu_env, tcg_const_i32(dflag - 1),
                                       tcg_const_i32(val));
@@ -6454,6 +6492,7 @@ static target_ulong disas_insn(CPUX86State *env, DisasContext *s,
             gen_op_ld_v(s, dflag, cpu_T[0], cpu_A0);
             /* NOTE: keeping EIP updated is not a problem in case of
                exception */
+            gen_helper_mem_execute(cpu_env, cpu_T[0]);
             gen_op_jmp_v(cpu_T[0]);
             /* pop selector */
             gen_op_addl_A0_im(1 << dflag);
@@ -6482,6 +6521,8 @@ static target_ulong disas_insn(CPUX86State *env, DisasContext *s,
             }
         } else {
             gen_update_cc_op(s);
+            tcg_gen_movi_tl(cpu_T[0], pc_start - s->cs_base);
+            gen_helper_mem_execute(cpu_env, cpu_T[0]);
             gen_jmp_im(pc_start - s->cs_base);
             gen_helper_iret_protected(cpu_env, tcg_const_i32(dflag - 1),
                                       tcg_const_i32(s->pc - s->cs_base));
@@ -6503,12 +6544,14 @@ static target_ulong disas_insn(CPUX86State *env, DisasContext *s,
                 } else if (!CODE64(s)) {
                     tval &= 0xffffffff;
                 }
+                tcg_gen_movi_tl(cpu_T[0], tval);
+                gen_helper_mem_execute(cpu_env, cpu_T[0]);
                 if (enclave_mode) {
                     sgx_dbg(trace, "In 0xe8(call im), enclave mode, cur env->eip : %lx s-----> PC: %lx", env->eip, s->pc);
                     sgx_dbg(trace, "In 0xe8(call im), enclave mode, target: %lx", tval);
                     jmpOutEnc = true;
                 }
-                   tcg_gen_movi_tl(cpu_T[0], next_eip);
+                tcg_gen_movi_tl(cpu_T[0], next_eip);
                 if(jmpOutEnc) {
                     jmpOutEnc = false;
                 }
@@ -6542,6 +6585,8 @@ static target_ulong disas_insn(CPUX86State *env, DisasContext *s,
         } else if (!CODE64(s)) {
             tval &= 0xffffffff;
         }
+        tcg_gen_movi_tl(cpu_T[0], tval);
+        gen_helper_mem_execute(cpu_env, cpu_T[0]);
         gen_jmp(s, tval);
         break;
     case 0xea: /* ljmp im */
@@ -6563,6 +6608,8 @@ static target_ulong disas_insn(CPUX86State *env, DisasContext *s,
         if (dflag == MO_16) {
             tval &= 0xffff;
         }
+        tcg_gen_movi_tl(cpu_T[0], tval);
+        gen_helper_mem_execute(cpu_env, cpu_T[0]);
         gen_jmp(s, tval);
         break;
     case 0x70 ... 0x7f: /* jcc Jb */

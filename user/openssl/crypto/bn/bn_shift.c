@@ -60,8 +60,6 @@
 #include "cryptlib.h"
 #include "bn_lcl.h"
 
-#include "../sgx.h"
-
 int BN_lshift1(BIGNUM *r, const BIGNUM *a)
 {
     register BN_ULONG *ap, *rp, t, c;
@@ -79,6 +77,7 @@ int BN_lshift1(BIGNUM *r, const BIGNUM *a)
         if (bn_wexpand(r, a->top + 1) == NULL)
             return (0);
     }
+
     ap = a->d;
     rp = r->d;
     c = 0;
@@ -157,10 +156,9 @@ int BN_lshift(BIGNUM *r, const BIGNUM *a, int n)
             t[nw + i + 1] |= (l >> rb) & BN_MASK2;
             t[nw + i] = (l << lb) & BN_MASK2;
         }
+  
     sgx_memset(t, 0, nw * sizeof(t[0]));
-    /*
-     * for (i=0; i<nw; i++) t[i]=0;
-     */
+
     r->top = a->top + nw + 1;
     bn_correct_top(r);
     bn_check_top(r);

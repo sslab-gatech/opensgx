@@ -10,5 +10,5 @@ export ARFLAGS="rv"
   --enable-debug \
   --enable-linux-aio \
   --localstatedir=/var \
-  --target-list=x86_64-linux-user,x86_64-softmmu \
+  --target-list=x86_64-linux-user \
   #--enable-debug-info \

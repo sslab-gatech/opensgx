@@ -102,7 +102,7 @@ given B<id> object.
 
 =item *
 CRYPTO_THREADID_cmp() compares two thread IDs (returning zero for equality, ie.
-the same semantics as memcmp()).
+the same semantics as sgx_memcmp()).
 
 =item *
 CRYPTO_THREADID_cpy() duplicates a thread ID value,

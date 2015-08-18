@@ -103,56 +103,56 @@ int MAIN(int argc, char **argv)
     for (;;) {
         if (argc <= 0)
             break;
-        if (strcmp(*argv, "-out") == 0) {
+        if (sgx_strcmp(*argv, "-out") == 0) {
             if (--argc < 1)
                 goto bad;
             outfile = *(++argv);
-        } else if (strcmp(*argv, "-passout") == 0) {
+        } else if (sgx_strcmp(*argv, "-passout") == 0) {
             if (--argc < 1)
                 goto bad;
             passargout = *(++argv);
         }
 # ifndef OPENSSL_NO_ENGINE
-        else if (strcmp(*argv, "-engine") == 0) {
+        else if (sgx_strcmp(*argv, "-engine") == 0) {
             if (--argc < 1)
                 goto bad;
             engine = *(++argv);
         }
 # endif
-        else if (strcmp(*argv, "-rand") == 0) {
+        else if (sgx_strcmp(*argv, "-rand") == 0) {
             if (--argc < 1)
                 goto bad;
             inrand = *(++argv);
-        } else if (strcmp(*argv, "-") == 0)
+        } else if (sgx_strcmp(*argv, "-") == 0)
             goto bad;
 # ifndef OPENSSL_NO_DES
-        else if (strcmp(*argv, "-des") == 0)
+        else if (sgx_strcmp(*argv, "-des") == 0)
             enc = EVP_des_cbc();
-        else if (strcmp(*argv, "-des3") == 0)
+        else if (sgx_strcmp(*argv, "-des3") == 0)
             enc = EVP_des_ede3_cbc();
 # endif
 # ifndef OPENSSL_NO_IDEA
-        else if (strcmp(*argv, "-idea") == 0)
+        else if (sgx_strcmp(*argv, "-idea") == 0)
             enc = EVP_idea_cbc();
 # endif
 # ifndef OPENSSL_NO_SEED
-        else if (strcmp(*argv, "-seed") == 0)
+        else if (sgx_strcmp(*argv, "-seed") == 0)
             enc = EVP_seed_cbc();
 # endif
 # ifndef OPENSSL_NO_AES
-        else if (strcmp(*argv, "-aes128") == 0)
+        else if (sgx_strcmp(*argv, "-aes128") == 0)
             enc = EVP_aes_128_cbc();
-        else if (strcmp(*argv, "-aes192") == 0)
+        else if (sgx_strcmp(*argv, "-aes192") == 0)
             enc = EVP_aes_192_cbc();
-        else if (strcmp(*argv, "-aes256") == 0)
+        else if (sgx_strcmp(*argv, "-aes256") == 0)
             enc = EVP_aes_256_cbc();
 # endif
 # ifndef OPENSSL_NO_CAMELLIA
-        else if (strcmp(*argv, "-camellia128") == 0)
+        else if (sgx_strcmp(*argv, "-camellia128") == 0)
             enc = EVP_camellia_128_cbc();
-        else if (strcmp(*argv, "-camellia192") == 0)
+        else if (sgx_strcmp(*argv, "-camellia192") == 0)
             enc = EVP_camellia_192_cbc();
-        else if (strcmp(*argv, "-camellia256") == 0)
+        else if (sgx_strcmp(*argv, "-camellia256") == 0)
             enc = EVP_camellia_256_cbc();
 # endif
         else if (**argv != '-' && dsaparams == NULL) {

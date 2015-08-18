@@ -906,7 +906,7 @@ void CRYPTO_gcm128_setiv(GCM128_CONTEXT *ctx, const unsigned char *iv,
     ctx->mres = 0;
 
     if (len == 12) {
-        memcpy(ctx->Yi.c, iv, 12);
+        sgx_memcpy(ctx->Yi.c, iv, 12);
         ctx->Yi.c[15] = 1;
         ctr = 1;
     } else {
@@ -1698,7 +1698,7 @@ int CRYPTO_gcm128_finish(GCM128_CONTEXT *ctx, const unsigned char *tag,
     ctx->Xi.u[1] ^= ctx->EK0.u[1];
 
     if (tag && len <= sizeof(ctx->Xi))
-        return memcmp(ctx->Xi.c, tag, len);
+        return sgx_memcmp(ctx->Xi.c, tag, len);
     else
         return -1;
 }
@@ -1706,7 +1706,7 @@ int CRYPTO_gcm128_finish(GCM128_CONTEXT *ctx, const unsigned char *tag,
 void CRYPTO_gcm128_tag(GCM128_CONTEXT *ctx, unsigned char *tag, size_t len)
 {
     CRYPTO_gcm128_finish(ctx, NULL, 0);
-    memcpy(tag, ctx->Xi.c,
+    sgx_memcpy(tag, ctx->Xi.c,
            len <= sizeof(ctx->Xi.c) ? len : sizeof(ctx->Xi.c));
 }
 
@@ -2275,14 +2275,14 @@ static const u8 T20[] = {
         if (A##n) CRYPTO_gcm128_aad(&ctx,A##n,sizeof(A##n));    \
         if (P##n) CRYPTO_gcm128_encrypt(&ctx,P##n,out,sizeof(out));     \
         if (CRYPTO_gcm128_finish(&ctx,T##n,16) ||               \
-            (C##n && memcmp(out,C##n,sizeof(out))))             \
+            (C##n && sgx_memcmp(out,C##n,sizeof(out))))             \
                 ret++, printf ("encrypt test#%d failed.\n",n);  \
         CRYPTO_gcm128_setiv(&ctx,IV##n,sizeof(IV##n));          \
         sgx_memset(out,0,sizeof(out));                              \
         if (A##n) CRYPTO_gcm128_aad(&ctx,A##n,sizeof(A##n));    \
         if (C##n) CRYPTO_gcm128_decrypt(&ctx,C##n,out,sizeof(out));     \
         if (CRYPTO_gcm128_finish(&ctx,T##n,16) ||               \
-            (P##n && memcmp(out,P##n,sizeof(out))))             \
+            (P##n && sgx_memcmp(out,P##n,sizeof(out))))             \
                 ret++, printf ("decrypt test#%d failed.\n",n);  \
         } while(0)
 

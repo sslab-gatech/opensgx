@@ -30,6 +30,7 @@
 #include <polarssl/sha1.h>
 #include <polarssl/sha256.h>
 #include <polarssl/aes_cmac128.h>
+#include <polarssl/dhm.h>
 
 #define OPENSGX_ABI_VERSION 1
 #define SGX_USERLIB
@@ -79,28 +80,14 @@ typedef struct {
     int keid;
     uint64_t enclave;
     tcs_t *tcs;
+    epc_t *secs;
     // XXX. stats
     unsigned int kin_n;
     unsigned int kout_n;
     unsigned long prealloc_ssa;
+    unsigned long prealloc_stack;
     unsigned long prealloc_heap;
     unsigned long augged_heap;
 
     qstat_t qstat;
 } keid_t;
-
-// user-level libs
-extern void enclu(enclu_cmd_t leaf, uint64_t rbx, uint64_t rcx, uint64_t rdx,
-                  out_regs_t* out_regs);
-tcs_t *run_enclave(void *entry, void *codes, unsigned int n_of_pages, char *conf);
-
-extern tcs_t *test_run_enclave(void *entry, void *codes, unsigned int n_of_code_pages);
-extern void exception_handler(void);
-extern void make_sigstruct_before_sign(sigstruct_t *sig, void *entry, size_t size,
-                                       tcs_t *tcs);
-extern void make_sigstruct_after_sign(sigstruct_t *sig, uint8_t *pubKey, rsa_sig_t signature);
-extern void make_einittoken_before_MAC(uint8_t *pubKey, sigstruct_t *sig);
-extern void make_einittoken_after_MAC(void);
-
-extern void tb_splitter();
-extern void testEnclaveAccess(void);

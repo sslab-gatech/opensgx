@@ -153,7 +153,7 @@ int MAIN(int argc, char **argv)
     num = 0;
     while (argc >= 1) {
 #ifdef undef
-        if (strcmp(*argv, "-p") == 0) {
+        if (sgx_strcmp(*argv, "-p") == 0) {
             if (--argc < 1)
                 goto bad;
             if (!args_from_file(++argv, Nargc, Nargv)) {
@@ -161,72 +161,72 @@ int MAIN(int argc, char **argv)
             }
         */}
 #endif
-        if (strcmp(*argv, "-inform") == 0) {
+        if (sgx_strcmp(*argv, "-inform") == 0) {
             if (--argc < 1)
                 goto bad;
             informat = str2fmt(*(++argv));
-        } else if (strcmp(*argv, "-outform") == 0) {
+        } else if (sgx_strcmp(*argv, "-outform") == 0) {
             if (--argc < 1)
                 goto bad;
             outformat = str2fmt(*(++argv));
-        } else if (strcmp(*argv, "-in") == 0) {
+        } else if (sgx_strcmp(*argv, "-in") == 0) {
             if (--argc < 1)
                 goto bad;
             infile = *(++argv);
-        } else if (strcmp(*argv, "-gendelta") == 0) {
+        } else if (sgx_strcmp(*argv, "-gendelta") == 0) {
             if (--argc < 1)
                 goto bad;
             crldiff = *(++argv);
-        } else if (strcmp(*argv, "-key") == 0) {
+        } else if (sgx_strcmp(*argv, "-key") == 0) {
             if (--argc < 1)
                 goto bad;
             keyfile = *(++argv);
-        } else if (strcmp(*argv, "-keyform") == 0) {
+        } else if (sgx_strcmp(*argv, "-keyform") == 0) {
             if (--argc < 1)
                 goto bad;
             keyformat = str2fmt(*(++argv));
-        } else if (strcmp(*argv, "-out") == 0) {
+        } else if (sgx_strcmp(*argv, "-out") == 0) {
             if (--argc < 1)
                 goto bad;
             outfile = *(++argv);
-        } else if (strcmp(*argv, "-CApath") == 0) {
+        } else if (sgx_strcmp(*argv, "-CApath") == 0) {
             if (--argc < 1)
                 goto bad;
             CApath = *(++argv);
             do_ver = 1;
-        } else if (strcmp(*argv, "-CAfile") == 0) {
+        } else if (sgx_strcmp(*argv, "-CAfile") == 0) {
             if (--argc < 1)
                 goto bad;
             CAfile = *(++argv);
             do_ver = 1;
-        } else if (strcmp(*argv, "-verify") == 0)
+        } else if (sgx_strcmp(*argv, "-verify") == 0)
             do_ver = 1;
-        else if (strcmp(*argv, "-text") == 0)
+        else if (sgx_strcmp(*argv, "-text") == 0)
             text = 1;
-        else if (strcmp(*argv, "-hash") == 0)
+        else if (sgx_strcmp(*argv, "-hash") == 0)
             hash = ++num;
 #ifndef OPENSSL_NO_MD5
-        else if (strcmp(*argv, "-hash_old") == 0)
+        else if (sgx_strcmp(*argv, "-hash_old") == 0)
             hash_old = ++num;
 #endif
-        else if (strcmp(*argv, "-nameopt") == 0) {
+        else if (sgx_strcmp(*argv, "-nameopt") == 0) {
             if (--argc < 1)
                 goto bad;
             if (!set_name_ex(&nmflag, *(++argv)))
                 goto bad;
-        } else if (strcmp(*argv, "-issuer") == 0)
+        } else if (sgx_strcmp(*argv, "-issuer") == 0)
             issuer = ++num;
-        else if (strcmp(*argv, "-lastupdate") == 0)
+        else if (sgx_strcmp(*argv, "-lastupdate") == 0)
             lastupdate = ++num;
-        else if (strcmp(*argv, "-nextupdate") == 0)
+        else if (sgx_strcmp(*argv, "-nextupdate") == 0)
             nextupdate = ++num;
-        else if (strcmp(*argv, "-noout") == 0)
+        else if (sgx_strcmp(*argv, "-noout") == 0)
             noout = ++num;
-        else if (strcmp(*argv, "-fingerprint") == 0)
+        else if (sgx_strcmp(*argv, "-fingerprint") == 0)
             fingerprint = ++num;
-        else if (strcmp(*argv, "-crlnumber") == 0)
+        else if (sgx_strcmp(*argv, "-crlnumber") == 0)
             crlnumber = ++num;
-        else if (strcmp(*argv, "-badsig") == 0)
+        else if (sgx_strcmp(*argv, "-badsig") == 0)
             badsig = 1;
         else if ((md_alg = EVP_get_digestbyname(*argv + 1))) {
             /* ok */

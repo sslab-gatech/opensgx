@@ -1,10 +1,10 @@
 //====-------------------- 'sgx.h' -----------------------------------
-/// @file    
-/// \brief Contains decls and typedefs for data structures 
+/// @file
+/// \brief Contains decls and typedefs for data structures
 /// used by both the qemu internals and the SGX library.
-// 
+//
 //-------------------------------------------------------------------
-// This file is distributed under The MIT License. See LICENSE for 
+// This file is distributed under The MIT License. See LICENSE for
 // details
 //
 //====---------------------------------------------------------------
@@ -47,9 +47,8 @@
 #define MAC_SIZE                 (16)
 #define DSLIMIT                  (4294967295)     //!< 2^32-1 -> 2^32 => overflow
 #define NO_OF_TCS_FLAGS          (64)
-#define STACK_PAGE_FRAMES        (40)             // Need to decide how many required
-#define STACK_PAGE_FRAMES_PER_THREAD (6)
-#define HEAP_PAGE_FRAMES         (6)              // Need to decide how many initial Heap pages are required
+#define STACK_PAGE_FRAMES_PER_THREAD (250)
+#define HEAP_PAGE_FRAMES         (100)              // Need to decide how many initial Heap pages are required
 
 /// custom format
 #define PRIfptr "0x%016"PRIxPTR
@@ -80,6 +79,7 @@ typedef enum {
     PT_TCS  = 0x01,                     //!< Page is TCS
     PT_REG  = 0x02,                     //!< Page is a normal page
     PT_VA   = 0x03,                     //!< Page is a Version Array
+    PT_TRIM = 0x04			//!< Page is in trimmed state
 } page_type_t;
 
 typedef enum {
@@ -102,26 +102,38 @@ typedef enum {
     ENCLS_ELDB         = 0x07,
     ENCLS_ELDU         = 0x08,
     ENCLS_EBLOCK       = 0x09,
-    ENCLS_EAUG         = 0x10,
+    ENCLS_EPA          = 0x0A,
+    ENCLS_EWB          = 0x0B,
+    ENCLS_ETRACK       = 0x0C,
+    ENCLS_EAUG         = 0x0D,
+    ENCLS_EMODPR       = 0x0E,
+    ENCLS_EMODT        = 0x0F,
+
+/* TODO EDBGRD, EDBGWR, ETRACK, EWB, EMODPR
+        ELDB, EDLU ... would be implemented */
 
     // custom hypercalls
-    ENCLS_OSGX_INIT    = 0x0A,          // XXX?
-    ENCLS_OSGX_PUBKEY  = 0x0B,          // XXX?
-    ENCLS_OSGX_EPCM_CLR= 0x0C,          // XXX?
-    ENCLS_OSGX_CPUSVN  = 0x0D,          // XXX?
-    ENCLS_OSGX_STAT    = 0x0E
+    ENCLS_OSGX_INIT      = 0x10,          // XXX?
+    ENCLS_OSGX_PUBKEY    = 0x11,          // XXX?
+    ENCLS_OSGX_EPCM_CLR  = 0x12,          // XXX?
+    ENCLS_OSGX_CPUSVN    = 0x13,          // XXX?
+    ENCLS_OSGX_STAT      = 0x14,
+    ENCLS_OSGX_SET_STACK = 0x15,
 } encls_cmd_t;
 
 // from 5.1.2
 typedef enum {
-    ENCLU_EACCEPT      = 0x00,
-    ENCLU_EACCEPTCOPY  = 0x01,
+    ENCLU_EREPORT      = 0x00,
+    ENCLU_EGETKEY      = 0x01,
     ENCLU_EENTER       = 0x02,
-    ENCLU_EEXIT        = 0x03,
-    ENCLU_EGETKEY      = 0x04,
-    ENCLU_EMODE        = 0x05,
-    ENCLU_EREPORT      = 0x06,
-    ENCLU_ERESUME      = 0x07,
+    ENCLU_ERESUME      = 0x03,
+    ENCLU_EEXIT        = 0x04,
+    ENCLU_EACCEPT      = 0x05,
+    ENCLU_EMODPE       = 0x06,
+    ENCLU_EACCEPTCOPY  = 0x07,
+
+/* TODO EMODEPE, EACCEPTCOPY ... would be implemented */
+
 } enclu_cmd_t;
 
 // from 5.1.3
@@ -129,6 +141,7 @@ typedef enum {
 #define ERR_SGX_INVALID_SIG_STRUCT  (0x01)        //!< EINIT
 #define ERR_SGX_INVALID_ATTRIBUTE   (0x02)        //!< EINIT, EGETKEY
 #define ERR_SGX_BLSTATE             (0x03)        //!< EBLOCK
+#define ERR_SGX_BLKSTATE            (0x03)        //!< EBLOCK
 #define ERR_SGX_INVALID_MEASUREMENT (0x04)        //!< EINIT
 #define ERR_SGX_NOTBLOCKABLE        (0x05)        //!< EBLOCK
 #define ERR_SGX_PG_INVLD            (0x06)        //!< EBLOCK
@@ -145,6 +158,7 @@ typedef enum {
 #define ERR_SGX_PREV_TRK_INCMPL     (0x17)        //!< ETRACK
 #define ERR_SGX_PG_IS_SECS          (0x18)        //!< EBLOCK
 #define ERR_SGX_PAGE_ATTRIBUTES_MISMATCH (0x19)   //!< EACCEPT, EACCEPTCOPY
+#define ERR_SGX_PAGE_NOT_MODIFIABLE (0x20)        //!< EMODPR, EMODT
 #define ERR_SGX_INVALID_CPUSVN      (0x32)        //!< EINIT, EGETKEY
 #define ERR_SGX_INVALID_ISVSVN      (0x64)        //!< EGETKEY
 #define ERR_SGX_UNMASKED_EVENT      (0x128)       //!< EINIT
@@ -181,6 +195,14 @@ typedef struct {
 } epcm_entry_t;
 
 typedef struct {
+    uint8_t vector;
+    unsigned int exit_type : 3;
+    unsigned int reserved : 4;
+    uint8_t reserved2;
+    unsigned int valid : 1;
+} exitinfo_t;
+
+typedef struct {
     uint64_t rax;
     uint64_t rcx;
     uint64_t rdx;
@@ -201,9 +223,30 @@ typedef struct {
     uint64_t rip;                       // Instruction Pointer
     uint64_t ursp;                      //!< Untruster (outside) Stack Pointer. Saved by EENTER, restored on AEX
     uint64_t urbp;                      //!< Untrusted (outside) RBP pointer. Saved by EENTER, restored on AEX
-    uint64_t SAVED_EXIT_EIP;
-    uint32_t exitinfo;                  //!< Contains information about exceptions that cause AEXs, which might be needed by enclave software
+    exitinfo_t exitinfo;                  //!< Contains information about exceptions that cause AEXs, which might be needed by enclave software
     uint32_t reserved;
+    uint64_t fsbase;
+    uint64_t gsbase;
+    // Customized hack.
+    uint64_t SAVED_EXIT_EIP; // Total: 184 + 8 = 192 bytes
+} gprsgx_t;
+
+typedef struct {
+    uint64_t maddr; // Page fault address
+    uint32_t errcd; // exception error code for either #GP or #PF
+    uint32_t reserved;
+} exinfo_t;
+
+typedef struct {
+    exinfo_t exinfo;
+    // Could add for future extension.
+} misc_t;
+
+typedef struct {
+    // TODO: Implement - xsave_t xsave;
+    uint8_t pad[3888]; // padding to one page size
+    misc_t misc;     // 16 bytes
+    gprsgx_t gprsgx; // 192 bytes
 } ssa_t;
 
 typedef struct {
@@ -317,7 +360,7 @@ typedef struct  {
     unsigned int x:1;                   //!< If 1, page can be exec inside enclave.
     unsigned int pending:1;             //!< If 1, page is in the PENDING state.
     unsigned int modified:1;            //!< If 1, page is in the MODIFIED state.
-	unsigned int reserved1:3;
+    unsigned int reserved1:3;
     uint8_t page_type;                  //!< The type of page SECINFO is associated with.
     uint8_t reserved2[6];
 } secinfo_flags_t;
@@ -326,6 +369,13 @@ typedef struct {
     secinfo_flags_t flags;
     uint64_t reserved[7];
 } secinfo_t;
+
+typedef struct {
+    secinfo_t secinfo;
+    uint64_t  enclaveid;
+    uint8_t   reserved[40];
+    uint64_t  mac[2]; 
+} pcmd_t;
 
 // XXX:Separate reserved -> reserved1, reserved2 to remove warning
 typedef struct {
@@ -470,6 +520,14 @@ typedef struct {
     stat_t stat;
 } qeid_t;
 
+
+/* Not defined in the SGX spec sec2.6 but used in ewb & eldb instruction */
+typedef struct { //128 bytes...
+    uint64_t eid;
+    uint64_t linaddr;
+    secinfo_t secinfo; //64 bytes
+    uint8_t padding[48]; // padding bytes to make it 128 byte ...
+}mac_header_t;
 
 
 // XXX: global for launch enclave's sig & token

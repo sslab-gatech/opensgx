@@ -116,22 +116,22 @@ int MAIN(int argc, char **argv)
     OpenSSL_add_all_algorithms();
 
     while (argc >= 1) {
-        if (!strcmp(*argv, "-in")) {
+        if (!sgx_strcmp(*argv, "-in")) {
             if (--argc < 1)
                 badarg = 1;
             else
                 infile = *(++argv);
-        } else if (!strcmp(*argv, "-out")) {
+        } else if (!sgx_strcmp(*argv, "-out")) {
             if (--argc < 1)
                 badarg = 1;
             else
                 outfile = *(++argv);
-        } else if (!strcmp(*argv, "-sigfile")) {
+        } else if (!sgx_strcmp(*argv, "-sigfile")) {
             if (--argc < 1)
                 badarg = 1;
             else
                 sigfile = *(++argv);
-        } else if (!strcmp(*argv, "-inkey")) {
+        } else if (!sgx_strcmp(*argv, "-inkey")) {
             if (--argc < 1)
                 badarg = 1;
             else {
@@ -144,58 +144,58 @@ int MAIN(int argc, char **argv)
                     badarg = 1;
                 }
             }
-        } else if (!strcmp(*argv, "-peerkey")) {
+        } else if (!sgx_strcmp(*argv, "-peerkey")) {
             if (--argc < 1)
                 badarg = 1;
             else if (!setup_peer(bio_err, ctx, peerform, *(++argv)))
                 badarg = 1;
-        } else if (!strcmp(*argv, "-passin")) {
+        } else if (!sgx_strcmp(*argv, "-passin")) {
             if (--argc < 1)
                 badarg = 1;
             else
                 passargin = *(++argv);
-        } else if (strcmp(*argv, "-peerform") == 0) {
+        } else if (sgx_strcmp(*argv, "-peerform") == 0) {
             if (--argc < 1)
                 badarg = 1;
             else
                 peerform = str2fmt(*(++argv));
-        } else if (strcmp(*argv, "-keyform") == 0) {
+        } else if (sgx_strcmp(*argv, "-keyform") == 0) {
             if (--argc < 1)
                 badarg = 1;
             else
                 keyform = str2fmt(*(++argv));
         }
 #ifndef OPENSSL_NO_ENGINE
-        else if (!strcmp(*argv, "-engine")) {
+        else if (!sgx_strcmp(*argv, "-engine")) {
             if (--argc < 1)
                 badarg = 1;
             else
                 e = setup_engine(bio_err, *(++argv), 0);
         }
 #endif
-        else if (!strcmp(*argv, "-pubin"))
+        else if (!sgx_strcmp(*argv, "-pubin"))
             key_type = KEY_PUBKEY;
-        else if (!strcmp(*argv, "-certin"))
+        else if (!sgx_strcmp(*argv, "-certin"))
             key_type = KEY_CERT;
-        else if (!strcmp(*argv, "-asn1parse"))
+        else if (!sgx_strcmp(*argv, "-asn1parse"))
             asn1parse = 1;
-        else if (!strcmp(*argv, "-hexdump"))
+        else if (!sgx_strcmp(*argv, "-hexdump"))
             hexdump = 1;
-        else if (!strcmp(*argv, "-sign"))
+        else if (!sgx_strcmp(*argv, "-sign"))
             pkey_op = EVP_PKEY_OP_SIGN;
-        else if (!strcmp(*argv, "-verify"))
+        else if (!sgx_strcmp(*argv, "-verify"))
             pkey_op = EVP_PKEY_OP_VERIFY;
-        else if (!strcmp(*argv, "-verifyrecover"))
+        else if (!sgx_strcmp(*argv, "-verifyrecover"))
             pkey_op = EVP_PKEY_OP_VERIFYRECOVER;
-        else if (!strcmp(*argv, "-rev"))
+        else if (!sgx_strcmp(*argv, "-rev"))
             rev = 1;
-        else if (!strcmp(*argv, "-encrypt"))
+        else if (!sgx_strcmp(*argv, "-encrypt"))
             pkey_op = EVP_PKEY_OP_ENCRYPT;
-        else if (!strcmp(*argv, "-decrypt"))
+        else if (!sgx_strcmp(*argv, "-decrypt"))
             pkey_op = EVP_PKEY_OP_DECRYPT;
-        else if (!strcmp(*argv, "-derive"))
+        else if (!sgx_strcmp(*argv, "-derive"))
             pkey_op = EVP_PKEY_OP_DERIVE;
-        else if (strcmp(*argv, "-pkeyopt") == 0) {
+        else if (sgx_strcmp(*argv, "-pkeyopt") == 0) {
             if (--argc < 1)
                 badarg = 1;
             else if (!ctx) {

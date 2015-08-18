@@ -186,13 +186,13 @@ int MAIN(int argc, char **argv)
     reqnames = sk_OPENSSL_STRING_new_null();
     ids = sk_OCSP_CERTID_new_null();
     while (!badarg && *args && *args[0] == '-') {
-        if (!strcmp(*args, "-out")) {
+        if (!sgx_strcmp(*args, "-out")) {
             if (args[1]) {
                 args++;
                 outfile = *args;
             } else
                 badarg = 1;
-        } else if (!strcmp(*args, "-timeout")) {
+        } else if (!sgx_strcmp(*args, "-timeout")) {
             if (args[1]) {
                 args++;
                 req_timeout = atol(*args);
@@ -202,7 +202,7 @@ int MAIN(int argc, char **argv)
                 }
             } else
                 badarg = 1;
-        } else if (!strcmp(*args, "-url")) {
+        } else if (!sgx_strcmp(*args, "-url")) {
             if (thost)
                 OPENSSL_free(thost);
             if (tport)
@@ -220,106 +220,106 @@ int MAIN(int argc, char **argv)
                 tpath = path;
             } else
                 badarg = 1;
-        } else if (!strcmp(*args, "-host")) {
+        } else if (!sgx_strcmp(*args, "-host")) {
             if (args[1]) {
                 args++;
                 host = *args;
             } else
                 badarg = 1;
-        } else if (!strcmp(*args, "-port")) {
+        } else if (!sgx_strcmp(*args, "-port")) {
             if (args[1]) {
                 args++;
                 port = *args;
             } else
                 badarg = 1;
-        } else if (!strcmp(*args, "-header")) {
+        } else if (!sgx_strcmp(*args, "-header")) {
             if (args[1] && args[2]) {
                 if (!X509V3_add_value(args[1], args[2], &headers))
                     goto end;
                 args += 2;
             } else
                 badarg = 1;
-        } else if (!strcmp(*args, "-ignore_err"))
+        } else if (!sgx_strcmp(*args, "-ignore_err"))
             ignore_err = 1;
-        else if (!strcmp(*args, "-noverify"))
+        else if (!sgx_strcmp(*args, "-noverify"))
             noverify = 1;
-        else if (!strcmp(*args, "-nonce"))
+        else if (!sgx_strcmp(*args, "-nonce"))
             add_nonce = 2;
-        else if (!strcmp(*args, "-no_nonce"))
+        else if (!sgx_strcmp(*args, "-no_nonce"))
             add_nonce = 0;
-        else if (!strcmp(*args, "-resp_no_certs"))
+        else if (!sgx_strcmp(*args, "-resp_no_certs"))
             rflags |= OCSP_NOCERTS;
-        else if (!strcmp(*args, "-resp_key_id"))
+        else if (!sgx_strcmp(*args, "-resp_key_id"))
             rflags |= OCSP_RESPID_KEY;
-        else if (!strcmp(*args, "-no_certs"))
+        else if (!sgx_strcmp(*args, "-no_certs"))
             sign_flags |= OCSP_NOCERTS;
-        else if (!strcmp(*args, "-no_signature_verify"))
+        else if (!sgx_strcmp(*args, "-no_signature_verify"))
             verify_flags |= OCSP_NOSIGS;
-        else if (!strcmp(*args, "-no_cert_verify"))
+        else if (!sgx_strcmp(*args, "-no_cert_verify"))
             verify_flags |= OCSP_NOVERIFY;
-        else if (!strcmp(*args, "-no_chain"))
+        else if (!sgx_strcmp(*args, "-no_chain"))
             verify_flags |= OCSP_NOCHAIN;
-        else if (!strcmp(*args, "-no_cert_checks"))
+        else if (!sgx_strcmp(*args, "-no_cert_checks"))
             verify_flags |= OCSP_NOCHECKS;
-        else if (!strcmp(*args, "-no_explicit"))
+        else if (!sgx_strcmp(*args, "-no_explicit"))
             verify_flags |= OCSP_NOEXPLICIT;
-        else if (!strcmp(*args, "-trust_other"))
+        else if (!sgx_strcmp(*args, "-trust_other"))
             verify_flags |= OCSP_TRUSTOTHER;
-        else if (!strcmp(*args, "-no_intern"))
+        else if (!sgx_strcmp(*args, "-no_intern"))
             verify_flags |= OCSP_NOINTERN;
-        else if (!strcmp(*args, "-badsig"))
+        else if (!sgx_strcmp(*args, "-badsig"))
             badsig = 1;
-        else if (!strcmp(*args, "-text")) {
+        else if (!sgx_strcmp(*args, "-text")) {
             req_text = 1;
             resp_text = 1;
-        } else if (!strcmp(*args, "-req_text"))
+        } else if (!sgx_strcmp(*args, "-req_text"))
             req_text = 1;
-        else if (!strcmp(*args, "-resp_text"))
+        else if (!sgx_strcmp(*args, "-resp_text"))
             resp_text = 1;
-        else if (!strcmp(*args, "-reqin")) {
+        else if (!sgx_strcmp(*args, "-reqin")) {
             if (args[1]) {
                 args++;
                 reqin = *args;
             } else
                 badarg = 1;
-        } else if (!strcmp(*args, "-respin")) {
+        } else if (!sgx_strcmp(*args, "-respin")) {
             if (args[1]) {
                 args++;
                 respin = *args;
             } else
                 badarg = 1;
-        } else if (!strcmp(*args, "-signer")) {
+        } else if (!sgx_strcmp(*args, "-signer")) {
             if (args[1]) {
                 args++;
                 signfile = *args;
             } else
                 badarg = 1;
-        } else if (!strcmp(*args, "-VAfile")) {
+        } else if (!sgx_strcmp(*args, "-VAfile")) {
             if (args[1]) {
                 args++;
                 verify_certfile = *args;
                 verify_flags |= OCSP_TRUSTOTHER;
             } else
                 badarg = 1;
-        } else if (!strcmp(*args, "-sign_other")) {
+        } else if (!sgx_strcmp(*args, "-sign_other")) {
             if (args[1]) {
                 args++;
                 sign_certfile = *args;
             } else
                 badarg = 1;
-        } else if (!strcmp(*args, "-verify_other")) {
+        } else if (!sgx_strcmp(*args, "-verify_other")) {
             if (args[1]) {
                 args++;
                 verify_certfile = *args;
             } else
                 badarg = 1;
-        } else if (!strcmp(*args, "-CAfile")) {
+        } else if (!sgx_strcmp(*args, "-CAfile")) {
             if (args[1]) {
                 args++;
                 CAfile = *args;
             } else
                 badarg = 1;
-        } else if (!strcmp(*args, "-CApath")) {
+        } else if (!sgx_strcmp(*args, "-CApath")) {
             if (args[1]) {
                 args++;
                 CApath = *args;
@@ -329,7 +329,7 @@ int MAIN(int argc, char **argv)
             if (badarg)
                 goto end;
             continue;
-        } else if (!strcmp(*args, "-validity_period")) {
+        } else if (!sgx_strcmp(*args, "-validity_period")) {
             if (args[1]) {
                 args++;
                 nsec = atol(*args);
@@ -340,7 +340,7 @@ int MAIN(int argc, char **argv)
                 }
             } else
                 badarg = 1;
-        } else if (!strcmp(*args, "-status_age")) {
+        } else if (!sgx_strcmp(*args, "-status_age")) {
             if (args[1]) {
                 args++;
                 maxage = atol(*args);
@@ -350,31 +350,31 @@ int MAIN(int argc, char **argv)
                 }
             } else
                 badarg = 1;
-        } else if (!strcmp(*args, "-signkey")) {
+        } else if (!sgx_strcmp(*args, "-signkey")) {
             if (args[1]) {
                 args++;
                 keyfile = *args;
             } else
                 badarg = 1;
-        } else if (!strcmp(*args, "-reqout")) {
+        } else if (!sgx_strcmp(*args, "-reqout")) {
             if (args[1]) {
                 args++;
                 reqout = *args;
             } else
                 badarg = 1;
-        } else if (!strcmp(*args, "-respout")) {
+        } else if (!sgx_strcmp(*args, "-respout")) {
             if (args[1]) {
                 args++;
                 respout = *args;
             } else
                 badarg = 1;
-        } else if (!strcmp(*args, "-path")) {
+        } else if (!sgx_strcmp(*args, "-path")) {
             if (args[1]) {
                 args++;
                 path = *args;
             } else
                 badarg = 1;
-        } else if (!strcmp(*args, "-issuer")) {
+        } else if (!sgx_strcmp(*args, "-issuer")) {
             if (args[1]) {
                 args++;
                 X509_free(issuer);
@@ -384,7 +384,7 @@ int MAIN(int argc, char **argv)
                     goto end;
             } else
                 badarg = 1;
-        } else if (!strcmp(*args, "-cert")) {
+        } else if (!sgx_strcmp(*args, "-cert")) {
             if (args[1]) {
                 args++;
                 X509_free(cert);
@@ -400,7 +400,7 @@ int MAIN(int argc, char **argv)
                     goto end;
             } else
                 badarg = 1;
-        } else if (!strcmp(*args, "-serial")) {
+        } else if (!sgx_strcmp(*args, "-serial")) {
             if (args[1]) {
                 args++;
                 if (!cert_id_md)
@@ -411,19 +411,19 @@ int MAIN(int argc, char **argv)
                     goto end;
             } else
                 badarg = 1;
-        } else if (!strcmp(*args, "-index")) {
+        } else if (!sgx_strcmp(*args, "-index")) {
             if (args[1]) {
                 args++;
                 ridx_filename = *args;
             } else
                 badarg = 1;
-        } else if (!strcmp(*args, "-CA")) {
+        } else if (!sgx_strcmp(*args, "-CA")) {
             if (args[1]) {
                 args++;
                 rca_filename = *args;
             } else
                 badarg = 1;
-        } else if (!strcmp(*args, "-nmin")) {
+        } else if (!sgx_strcmp(*args, "-nmin")) {
             if (args[1]) {
                 args++;
                 nmin = atol(*args);
@@ -436,7 +436,7 @@ int MAIN(int argc, char **argv)
                 ndays = 0;
             else
                 badarg = 1;
-        } else if (!strcmp(*args, "-nrequest")) {
+        } else if (!sgx_strcmp(*args, "-nrequest")) {
             if (args[1]) {
                 args++;
                 accept_count = atol(*args);
@@ -446,7 +446,7 @@ int MAIN(int argc, char **argv)
                 }
             } else
                 badarg = 1;
-        } else if (!strcmp(*args, "-ndays")) {
+        } else if (!sgx_strcmp(*args, "-ndays")) {
             if (args[1]) {
                 args++;
                 ndays = atol(*args);
@@ -456,25 +456,25 @@ int MAIN(int argc, char **argv)
                 }
             } else
                 badarg = 1;
-        } else if (!strcmp(*args, "-rsigner")) {
+        } else if (!sgx_strcmp(*args, "-rsigner")) {
             if (args[1]) {
                 args++;
                 rsignfile = *args;
             } else
                 badarg = 1;
-        } else if (!strcmp(*args, "-rkey")) {
+        } else if (!sgx_strcmp(*args, "-rkey")) {
             if (args[1]) {
                 args++;
                 rkeyfile = *args;
             } else
                 badarg = 1;
-        } else if (!strcmp(*args, "-rother")) {
+        } else if (!sgx_strcmp(*args, "-rother")) {
             if (args[1]) {
                 args++;
                 rcertfile = *args;
             } else
                 badarg = 1;
-        } else if (!strcmp(*args, "-rmd")) {
+        } else if (!sgx_strcmp(*args, "-rmd")) {
             if (args[1]) {
                 args++;
                 rsign_md = EVP_get_digestbyname(*args);
@@ -599,7 +599,7 @@ int MAIN(int argc, char **argv)
         add_nonce = 0;
 
     if (!req && reqin) {
-        if (!strcmp(reqin, "-"))
+        if (!sgx_strcmp(reqin, "-"))
             derbio = BIO_new_fp(stdin, BIO_NOCLOSE);
         else
             derbio = BIO_new_file(reqin, "rb");
@@ -699,7 +699,7 @@ int MAIN(int argc, char **argv)
         OCSP_REQUEST_print(out, req, 0);
 
     if (reqout) {
-        if (!strcmp(reqout, "-"))
+        if (!sgx_strcmp(reqout, "-"))
             derbio = BIO_new_fp(stdout, BIO_NOCLOSE);
         else
             derbio = BIO_new_file(reqout, "wb");
@@ -742,7 +742,7 @@ int MAIN(int argc, char **argv)
         goto end;
 # endif
     } else if (respin) {
-        if (!strcmp(respin, "-"))
+        if (!sgx_strcmp(respin, "-"))
             derbio = BIO_new_fp(stdin, BIO_NOCLOSE);
         else
             derbio = BIO_new_file(respin, "rb");
@@ -765,7 +765,7 @@ int MAIN(int argc, char **argv)
  done_resp:
 
     if (respout) {
-        if (!strcmp(respout, "-"))
+        if (!sgx_strcmp(respout, "-"))
             derbio = BIO_new_fp(stdout, BIO_NOCLOSE);
         else
             derbio = BIO_new_file(respout, "wb");

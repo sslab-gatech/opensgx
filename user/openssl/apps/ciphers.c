@@ -118,27 +118,27 @@ int MAIN(int argc, char **argv)
     argc--;
     argv++;
     while (argc >= 1) {
-        if (strcmp(*argv, "-v") == 0)
+        if (sgx_strcmp(*argv, "-v") == 0)
             verbose = 1;
-        else if (strcmp(*argv, "-V") == 0)
+        else if (sgx_strcmp(*argv, "-V") == 0)
             verbose = Verbose = 1;
 #ifndef OPENSSL_NO_SSL_TRACE
-        else if (strcmp(*argv, "-stdname") == 0)
+        else if (sgx_strcmp(*argv, "-stdname") == 0)
             stdname = verbose = 1;
 #endif
 #ifndef OPENSSL_NO_SSL2
-        else if (strcmp(*argv, "-ssl2") == 0)
+        else if (sgx_strcmp(*argv, "-ssl2") == 0)
             meth = SSLv2_client_method();
 #endif
 #ifndef OPENSSL_NO_SSL3
-        else if (strcmp(*argv, "-ssl3") == 0)
+        else if (sgx_strcmp(*argv, "-ssl3") == 0)
             meth = SSLv3_client_method();
 #endif
 #ifndef OPENSSL_NO_TLS1
-        else if (strcmp(*argv, "-tls1") == 0)
+        else if (sgx_strcmp(*argv, "-tls1") == 0)
             meth = TLSv1_client_method();
 #endif
-        else if ((strncmp(*argv, "-h", 2) == 0) || (strcmp(*argv, "-?") == 0)) {
+        else if ((strncmp(*argv, "-h", 2) == 0) || (sgx_strcmp(*argv, "-?") == 0)) {
             badops = 1;
             break;
         } else {

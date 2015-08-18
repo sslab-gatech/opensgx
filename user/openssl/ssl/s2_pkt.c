@@ -155,7 +155,7 @@ static int ssl2_read_internal(SSL *s, void *buf, int len, int peek)
         else
             n = len;
 
-        memcpy(buf, s->s2->ract_data, (unsigned int)n);
+        sgx_memcpy(buf, s->s2->ract_data, (unsigned int)n);
         if (!peek) {
             s->s2->ract_data_length -= n;
             s->s2->ract_data += n;
@@ -343,9 +343,9 @@ static int read_n(SSL *s, unsigned int n, unsigned int max,
         if (extend) {
             off = s->packet_length;
             if (s->packet != s->s2->rbuf)
-                memcpy(s->s2->rbuf, s->packet, (unsigned int)newb + off);
+                sgx_memcpy(s->s2->rbuf, s->packet, (unsigned int)newb + off);
         } else if (s->s2->rbuf_offs != 0) {
-            memcpy(s->s2->rbuf, &(s->s2->rbuf[s->s2->rbuf_offs]),
+            sgx_memcpy(s->s2->rbuf, &(s->s2->rbuf[s->s2->rbuf_offs]),
                    (unsigned int)newb);
             s->s2->rbuf_offs = 0;
         }
@@ -577,9 +577,9 @@ static int n_do_ssl_write(SSL *s, const unsigned char *buf, unsigned int len)
     s->s2->mac_data = &(s->s2->wbuf[3]);
     s->s2->wact_data = &(s->s2->wbuf[3 + mac_size]);
     /* we copy the data into s->s2->wbuf */
-    memcpy(s->s2->wact_data, buf, len);
+    sgx_memcpy(s->s2->wact_data, buf, len);
     if (p)
-        memset(&(s->s2->wact_data[len]), 0, p); /* arbitrary padding */
+        sgx_memset(&(s->s2->wact_data[len]), 0, p); /* arbitrary padding */
 
     if (!s->s2->clear_text) {
         s->s2->wact_data_length = len + p;
@@ -647,7 +647,7 @@ int ssl2_part_read(SSL *s, unsigned long f, int i)
                 SSLerr((int)f, ssl_mt_error(j));
                 s->init_num -= 3;
                 if (s->init_num > 0)
-                    memmove(p, p + 3, s->init_num);
+                    sgx_memmove(p, p + 3, s->init_num);
             }
         }
 

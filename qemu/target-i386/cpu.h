@@ -781,25 +781,6 @@ typedef enum TPRAccess {
     TPR_ACCESS_WRITE,
 } TPRAccess;
 
-/* CREGs maintained by the processor */
-
-typedef struct state {
-    uint64_t addr;
-    uint64_t rax;
-    uint64_t rcx;
-    uint64_t rdx;
-    uint64_t rbx;
-    uint64_t rsp;
-    uint64_t rbp;
-    uint64_t rsi;
-    uint64_t rdi;
-    uint64_t rflags;    // Flag register
-    uint64_t rip;       // Instruction Pointer
-    uint64_t ursp;      // Untruster (outside) Stack Pointer. Saved by EENTER, restored on AEX
-    uint64_t urbp;      // Untrusted (outside) RBP pointer. Saved by EENTER, restored on AEX
-    uint32_t exitinfo;  // Contains information about exceptions that cause AEXs, which might be needed by enclave software
-} savedState;
-
 typedef struct CREGS {
     /* added for exception handling */
     bool CR_ENC_INSN_RET;
@@ -819,29 +800,29 @@ typedef struct CREGS {
     uint8_t CR_REPORT_KEYID[32];  // Refer 5-73
 
     /* listed in Internal CREGS */
-    bool CR_ENCLAVE_MODE; 		//1 LP
-    uint64_t CR_TCS_LA;       		//64 LP
-    uint64_t CR_TCS_PH;       		//64 LP
-    uint64_t CR_ACTIVE_SECS;  		//64 LP
-    uint64_t CR_ELRANGE[2];    		//128 LP
-    bool CR_SAVE_TF;   			//1 LP
+    bool CR_ENCLAVE_MODE;               // 1 LP
+    uint64_t CR_TCS_LA;                 // 64 LP
+    uint64_t CR_TCS_PH;                 // 64 LP
+    uint64_t CR_ACTIVE_SECS;            // 64 LP
+    uint64_t CR_ELRANGE[2];             // 128 LP
+    bool CR_SAVE_TF;                    // 1 LP
     SegmentCache CR_SAVE_FS;
-    savedState CR_GPR_PA;     		//64 LP
-    uint64_t CR_XSAVE_PAGE[64];		//64 LP
-    uint64_t CR_SAVE_DR7;    		//64 LP
-    uint64_t CR_SAVE_PERF_GLOBAL_CTRL;	//64 LP
-    uint64_t CR_SAVE_DEBUGCTL; 		//64 LP
-    uint64_t CR_SAVE_PEBS_ENABLE;       //64 LP
-    uint64_t CR_CPUSVN[2]; 		//128 PACKAGE
-    uint64_t CSR_SGX_OWNEREPOCH[2];     //128 PACKAGE
-    uint8_t CSR_INTELPUBKEYHASH[32];       //32 PACKAGE
-    uint64_t CR_SAVE_XCR0; 		//64 LP
-    uint64_t CR_SGX_ATTRIBUTES_MASK[2]; //128 LP
-    uint64_t CR_PAGING_VERSION; 	//64 PACKAGE
-    uint64_t CR_VERSION_THRESHOLD; 	//64 PACKAGE
-    uint64_t CR_NEXT_EID; 		//64 PACKAGE
-    uint64_t CR_BASE_PK; 		//128 PACKAGE
-    uint64_t CR_SEAL_FUSES[2];		//128 PACKAGE
+    uint64_t CR_GPR_PA;
+    uint64_t CR_XSAVE_PAGE[64];         // 64 LP
+    uint64_t CR_SAVE_DR7;               // 64 LP
+    uint64_t CR_SAVE_PERF_GLOBAL_CTRL;  // 64 LP
+    uint64_t CR_SAVE_DEBUGCTL;          // 64 LP
+    uint64_t CR_SAVE_PEBS_ENABLE;       // 64 LP
+    uint64_t CR_CPUSVN[2];              // 128 PACKAGE
+    uint64_t CSR_SGX_OWNEREPOCH[2];     // 128 PACKAGE
+    uint8_t CSR_INTELPUBKEYHASH[32];    // 32 PACKAGE
+    uint64_t CR_SAVE_XCR0;              // 64 LP
+    uint64_t CR_SGX_ATTRIBUTES_MASK[2]; // 128 LP
+    uint64_t CR_PAGING_VERSION;         // 64 PACKAGE
+    uint64_t CR_VERSION_THRESHOLD;      // 64 PACKAGE
+    uint64_t CR_NEXT_EID;               // 64 PACKAGE
+    uint64_t CR_BASE_PK;                // 128 PACKAGE
+    uint64_t CR_SEAL_FUSES[2];          // 128 PACKAGE
 } _cregs;
 
 typedef struct CPUX86State {

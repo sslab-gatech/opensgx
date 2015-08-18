@@ -216,27 +216,27 @@ static int parseArgs(int argc, char **argv)
     argv++;
 
     while (argc >= 1) {
-        if (strcmp(*argv, "-connect") == 0) {
+        if (sgx_strcmp(*argv, "-connect") == 0) {
             if (--argc < 1)
                 goto bad;
             host = *(++argv);
         }
 #if 0
-        else if (strcmp(*argv, "-host") == 0) {
+        else if (sgx_strcmp(*argv, "-host") == 0) {
             if (--argc < 1)
                 goto bad;
             host = *(++argv);
-        } else if (strcmp(*argv, "-port") == 0) {
+        } else if (sgx_strcmp(*argv, "-port") == 0) {
             if (--argc < 1)
                 goto bad;
             port = *(++argv);
         }
 #endif
-        else if (strcmp(*argv, "-reuse") == 0)
+        else if (sgx_strcmp(*argv, "-reuse") == 0)
             perform = 2;
-        else if (strcmp(*argv, "-new") == 0)
+        else if (sgx_strcmp(*argv, "-new") == 0)
             perform = 1;
-        else if (strcmp(*argv, "-verify") == 0) {
+        else if (sgx_strcmp(*argv, "-verify") == 0) {
 
             tm_verify = SSL_VERIFY_PEER | SSL_VERIFY_CLIENT_ONCE;
             if (--argc < 1)
@@ -244,42 +244,42 @@ static int parseArgs(int argc, char **argv)
             verify_depth = atoi(*(++argv));
             BIO_printf(bio_err, "verify depth is %d\n", verify_depth);
 
-        } else if (strcmp(*argv, "-cert") == 0) {
+        } else if (sgx_strcmp(*argv, "-cert") == 0) {
 
             if (--argc < 1)
                 goto bad;
             t_cert_file = *(++argv);
 
-        } else if (strcmp(*argv, "-key") == 0) {
+        } else if (sgx_strcmp(*argv, "-key") == 0) {
 
             if (--argc < 1)
                 goto bad;
             t_key_file = *(++argv);
 
-        } else if (strcmp(*argv, "-CApath") == 0) {
+        } else if (sgx_strcmp(*argv, "-CApath") == 0) {
 
             if (--argc < 1)
                 goto bad;
             CApath = *(++argv);
 
-        } else if (strcmp(*argv, "-CAfile") == 0) {
+        } else if (sgx_strcmp(*argv, "-CAfile") == 0) {
 
             if (--argc < 1)
                 goto bad;
             CAfile = *(++argv);
 
-        } else if (strcmp(*argv, "-cipher") == 0) {
+        } else if (sgx_strcmp(*argv, "-cipher") == 0) {
 
             if (--argc < 1)
                 goto bad;
             tm_cipher = *(++argv);
         }
 #ifdef FIONBIO
-        else if (strcmp(*argv, "-nbio") == 0) {
+        else if (sgx_strcmp(*argv, "-nbio") == 0) {
             t_nbio = 1;
         }
 #endif
-        else if (strcmp(*argv, "-www") == 0) {
+        else if (sgx_strcmp(*argv, "-www") == 0) {
             if (--argc < 1)
                 goto bad;
             s_www_path = *(++argv);
@@ -287,17 +287,17 @@ static int parseArgs(int argc, char **argv)
                 BIO_printf(bio_err, "-www option too long\n");
                 badop = 1;
             }
-        } else if (strcmp(*argv, "-bugs") == 0)
+        } else if (sgx_strcmp(*argv, "-bugs") == 0)
             st_bugs = 1;
 #ifndef OPENSSL_NO_SSL2
-        else if (strcmp(*argv, "-ssl2") == 0)
+        else if (sgx_strcmp(*argv, "-ssl2") == 0)
             s_time_meth = SSLv2_client_method();
 #endif
 #ifndef OPENSSL_NO_SSL3
-        else if (strcmp(*argv, "-ssl3") == 0)
+        else if (sgx_strcmp(*argv, "-ssl3") == 0)
             s_time_meth = SSLv3_client_method();
 #endif
-        else if (strcmp(*argv, "-time") == 0) {
+        else if (sgx_strcmp(*argv, "-time") == 0) {
 
             if (--argc < 1)
                 goto bad;

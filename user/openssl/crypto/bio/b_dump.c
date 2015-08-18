@@ -64,8 +64,6 @@
 #include "cryptlib.h"
 #include "bio_lcl.h"
 
-#include "../sgx.h"
-
 #define TRUNCATE
 #define DUMP_WIDTH      16
 #define DUMP_WIDTH_LESS_INDENT(i) (DUMP_WIDTH-((i-(i>6?6:i)+3)/4))
@@ -141,13 +139,13 @@ int BIO_dump_indent_cb(int (*cb) (const void *data, size_t len, void *u),
          * if this is the last call then update the ddt_dump thing so that we
          * will move the selection point in the debug window
          */
-        ret += cb((void *)buf, strlen(buf), u);
+        ret += cb((void *)buf, sgx_strlen(buf), u);
     }
 #ifdef TRUNCATE
     if (trc > 0) {
         BIO_snprintf(buf, sizeof buf, "%s%04x - <SPACES/NULS>\n", str,
                      len + trc);
-        ret += cb((void *)buf, strlen(buf), u);
+        ret += cb((void *)buf, sgx_strlen(buf), u);
     }
 #endif
     return (ret);

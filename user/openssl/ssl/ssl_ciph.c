@@ -1120,7 +1120,7 @@ static int ssl_cipher_strength_sort(CIPHER_ORDER **head_p,
         SSLerr(SSL_F_SSL_CIPHER_STRENGTH_SORT, ERR_R_MALLOC_FAILURE);
         return (0);
     }
-    memset(number_uses, 0, (max_strength_bits + 1) * sizeof(int));
+    sgx_memset(number_uses, 0, (max_strength_bits + 1) * sizeof(int));
 
     /*
      * Now find the strength_bits values actually used
@@ -1234,19 +1234,19 @@ static int ssl_cipher_process_rulestr(const char *rule_str,
 
             /*
              * Now search for the cipher alias in the ca_list. Be careful
-             * with the strncmp, because the "buflen" limitation
+             * with the sgx_strncmp, because the "buflen" limitation
              * will make the rule "ADH:SOME" and the cipher
              * "ADH-MY-CIPHER" look like a match for buflen=3.
              * So additionally check whether the cipher name found
-             * has the correct length. We can save a strlen() call:
+             * has the correct length. We can save a sgx_strlen() call:
              * just checking for the '\0' at the right place is
-             * sufficient, we have to strncmp() anyway. (We cannot
-             * use strcmp(), because buf is not '\0' terminated.)
+             * sufficient, we have to sgx_strncmp() anyway. (We cannot
+             * use sgx_strcmp(), because buf is not '\0' terminated.)
              */
             j = found = 0;
             cipher_id = 0;
             while (ca_list[j]) {
-                if (!strncmp(buf, ca_list[j]->name, buflen) &&
+                if (!sgx_strncmp(buf, ca_list[j]->name, buflen) &&
                     (ca_list[j]->name[buflen] == '\0')) {
                     found = 1;
                     break;
@@ -1362,7 +1362,7 @@ static int ssl_cipher_process_rulestr(const char *rule_str,
          */
         if (rule == CIPHER_SPECIAL) { /* special command */
             ok = 0;
-            if ((buflen == 8) && !strncmp(buf, "STRENGTH", 8))
+            if ((buflen == 8) && !sgx_strncmp(buf, "STRENGTH", 8))
                 ok = ssl_cipher_strength_sort(head_p, tail_p);
             else
                 SSLerr(SSL_F_SSL_CIPHER_PROCESS_RULESTR,
@@ -1398,14 +1398,14 @@ static int check_suiteb_cipher_list(const SSL_METHOD *meth, CERT *c,
                                     const char **prule_str)
 {
     unsigned int suiteb_flags = 0, suiteb_comb2 = 0;
-    if (!strcmp(*prule_str, "SUITEB128"))
+    if (!sgx_strcmp(*prule_str, "SUITEB128"))
         suiteb_flags = SSL_CERT_FLAG_SUITEB_128_LOS;
-    else if (!strcmp(*prule_str, "SUITEB128ONLY"))
+    else if (!sgx_strcmp(*prule_str, "SUITEB128ONLY"))
         suiteb_flags = SSL_CERT_FLAG_SUITEB_128_LOS_ONLY;
-    else if (!strcmp(*prule_str, "SUITEB128C2")) {
+    else if (!sgx_strcmp(*prule_str, "SUITEB128C2")) {
         suiteb_comb2 = 1;
         suiteb_flags = SSL_CERT_FLAG_SUITEB_128_LOS;
-    } else if (!strcmp(*prule_str, "SUITEB192"))
+    } else if (!sgx_strcmp(*prule_str, "SUITEB192"))
         suiteb_flags = SSL_CERT_FLAG_SUITEB_192_LOS;
 
     if (suiteb_flags) {
@@ -1592,7 +1592,7 @@ STACK_OF(SSL_CIPHER) *ssl_create_cipher_list(const SSL_METHOD *ssl_method, STACK
      */
     ok = 1;
     rule_p = rule_str;
-    if (strncmp(rule_str, "DEFAULT", 7) == 0) {
+    if (sgx_strncmp(rule_str, "DEFAULT", 7) == 0) {
         ok = ssl_cipher_process_rulestr(SSL_DEFAULT_CIPHER_LIST,
                                         &head, &tail, ca_list);
         rule_p += 7;
@@ -1600,7 +1600,7 @@ STACK_OF(SSL_CIPHER) *ssl_create_cipher_list(const SSL_METHOD *ssl_method, STACK
             rule_p++;
     }
 
-    if (ok && (strlen(rule_p) > 0))
+    if (ok && (sgx_strlen(rule_p) > 0))
         ok = ssl_cipher_process_rulestr(rule_p, &head, &tail, ca_list);
 
     OPENSSL_free((void *)ca_list); /* Not needed anymore */

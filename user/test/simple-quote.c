@@ -28,7 +28,7 @@ void enclave_main()
     char port[] = "34444";
     char buf[512] = "";
 
-    sgx_recv(port, buf);
+    //sgx_recv(port, buf);
 
     sgx_exit(NULL);
 }

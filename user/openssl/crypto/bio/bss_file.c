@@ -89,6 +89,8 @@
 # include "bio_lcl.h"
 # include <openssl/err.h>
 
+#include "../sgx.h"
+
 # if defined(OPENSSL_SYS_NETWARE) && defined(NETWARE_CLIB)
 #  include <nwfileio.h>
 # endif
@@ -147,7 +149,7 @@ BIO *BIO_new_file(const char *filename, const char *mode)
 
         if (MultiByteToWideChar(CP_UTF8, flags,
                                 filename, len_0, wfilename, sz) &&
-            MultiByteToWideChar(CP_UTF8, 0, mode, strlen(mode) + 1,
+            MultiByteToWideChar(CP_UTF8, 0, mode, sgx_strlen(mode) + 1,
                                 wmode, sizeof(wmode) / sizeof(wmode[0])) &&
             (file = _wfopen(wfilename, wmode)) == NULL &&
             (errno == ENOENT || errno == EBADF)
@@ -376,15 +378,15 @@ static long MS_CALLBACK file_ctrl(BIO *b, int cmd, long num, void *ptr)
         }
 #  if defined(OPENSSL_SYS_MSDOS) || defined(OPENSSL_SYS_WINDOWS) || defined(OPENSSL_SYS_OS2) || defined(OPENSSL_SYS_WIN32_CYGWIN)
         if (!(num & BIO_FP_TEXT))
-            strcat(p, "b");
+            sgx_strcat(p, "b");
         else
-            strcat(p, "t");
+            sgx_strcat(p, "t");
 #  endif
 #  if defined(OPENSSL_SYS_NETWARE)
         if (!(num & BIO_FP_TEXT))
-            strcat(p, "b");
+            sgx_strcat(p, "b");
         else
-            strcat(p, "t");
+            sgx_strcat(p, "t");
 #  endif
         fp = fopen(ptr, p);
         if (fp == NULL) {
@@ -446,7 +448,7 @@ static int MS_CALLBACK file_gets(BIO *bp, char *buf, int size)
             goto err;
     }
     if (buf[0] != '\0')
-        ret = strlen(buf);
+        ret = sgx_strlen(buf);
  err:
     return (ret);
 }
@@ -455,7 +457,7 @@ static int MS_CALLBACK file_puts(BIO *bp, const char *str)
 {
     int n, ret;
 
-    n = strlen(str);
+    n = sgx_strlen(str);
     ret = file_write(bp, str, n);
     return (ret);
 }

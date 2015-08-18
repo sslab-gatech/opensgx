@@ -76,16 +76,16 @@ size_t CRYPTO_128_wrap(void *key, const unsigned char *iv,
         return 0;
     A = B;
     t = 1;
-    memcpy(out + 8, in, inlen);
+    sgx_memcpy(out + 8, in, inlen);
     if (!iv)
         iv = default_iv;
 
-    memcpy(A, iv, 8);
+    sgx_memcpy(A, iv, 8);
 
     for (j = 0; j < 6; j++) {
         R = out + 8;
         for (i = 0; i < inlen; i += 8, t++, R += 8) {
-            memcpy(B + 8, R, 8);
+            sgx_memcpy(B + 8, R, 8);
             block(B, B, key);
             A[7] ^= (unsigned char)(t & 0xff);
             if (t > 0xff) {
@@ -93,10 +93,10 @@ size_t CRYPTO_128_wrap(void *key, const unsigned char *iv,
                 A[5] ^= (unsigned char)((t >> 16) & 0xff);
                 A[4] ^= (unsigned char)((t >> 24) & 0xff);
             }
-            memcpy(R, B + 8, 8);
+            sgx_memcpy(R, B + 8, 8);
         }
     }
-    memcpy(out, A, 8);
+    sgx_memcpy(out, A, 8);
     return inlen + 8;
 }
 
@@ -112,8 +112,8 @@ size_t CRYPTO_128_unwrap(void *key, const unsigned char *iv,
         return 0;
     A = B;
     t = 6 * (inlen >> 3);
-    memcpy(A, in, 8);
-    memcpy(out, in + 8, inlen);
+    sgx_memcpy(A, in, 8);
+    sgx_memcpy(out, in + 8, inlen);
     for (j = 0; j < 6; j++) {
         R = out + inlen - 8;
         for (i = 0; i < inlen; i += 8, t--, R -= 8) {
@@ -123,14 +123,14 @@ size_t CRYPTO_128_unwrap(void *key, const unsigned char *iv,
                 A[5] ^= (unsigned char)((t >> 16) & 0xff);
                 A[4] ^= (unsigned char)((t >> 24) & 0xff);
             }
-            memcpy(B + 8, R, 8);
+            sgx_memcpy(B + 8, R, 8);
             block(B, B, key);
-            memcpy(R, B + 8, 8);
+            sgx_memcpy(R, B + 8, 8);
         }
     }
     if (!iv)
         iv = default_iv;
-    if (memcmp(A, iv, 8)) {
+    if (sgx_memcmp(A, iv, 8)) {
         OPENSSL_cleanse(out, inlen);
         return 0;
     }

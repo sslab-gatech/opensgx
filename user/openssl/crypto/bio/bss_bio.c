@@ -86,6 +86,8 @@
 
 #include "e_os.h"
 
+#include "../sgx.h"
+
 /* VxWorks defines SSIZE_MAX with an empty value causing compile errors */
 #if defined(OPENSSL_SYS_VXWORKS)
 # undef SSIZE_MAX
@@ -238,7 +240,7 @@ static int bio_read(BIO *bio, char *buf, int size_)
             chunk = peer_b->size - peer_b->offset;
         assert(peer_b->offset + chunk <= peer_b->size);
 
-        memcpy(buf, peer_b->buf + peer_b->offset, chunk);
+        sgx_memcpy(buf, peer_b->buf + peer_b->offset, chunk);
 
         peer_b->len -= chunk;
         if (peer_b->len) {
@@ -394,7 +396,7 @@ static int bio_write(BIO *bio, const char *buf, int num_)
             /* wrap around ring buffer */
             chunk = b->size - write_offset;
 
-        memcpy(b->buf + write_offset, buf, chunk);
+        sgx_memcpy(b->buf + write_offset, buf, chunk);
 
         b->len += chunk;
 
@@ -676,7 +678,7 @@ static long bio_ctrl(BIO *bio, int cmd, long num, void *ptr)
 
 static int bio_puts(BIO *bio, const char *str)
 {
-    return bio_write(bio, str, strlen(str));
+    return bio_write(bio, str, sgx_strlen(str));
 }
 
 static int bio_make_pair(BIO *bio1, BIO *bio2)

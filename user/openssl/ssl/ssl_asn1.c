@@ -231,7 +231,7 @@ int i2d_SSL_SESSION(SSL_SESSION *in, unsigned char **pp)
     }
 #ifndef OPENSSL_NO_TLSEXT
     if (in->tlsext_hostname) {
-        a.tlsext_hostname.length = strlen(in->tlsext_hostname);
+        a.tlsext_hostname.length = sgx_strlen(in->tlsext_hostname);
         a.tlsext_hostname.type = V_ASN1_OCTET_STRING;
         a.tlsext_hostname.data = (unsigned char *)in->tlsext_hostname;
     }
@@ -250,19 +250,19 @@ int i2d_SSL_SESSION(SSL_SESSION *in, unsigned char **pp)
 #endif                          /* OPENSSL_NO_TLSEXT */
 #ifndef OPENSSL_NO_PSK
     if (in->psk_identity_hint) {
-        a.psk_identity_hint.length = strlen(in->psk_identity_hint);
+        a.psk_identity_hint.length = sgx_strlen(in->psk_identity_hint);
         a.psk_identity_hint.type = V_ASN1_OCTET_STRING;
         a.psk_identity_hint.data = (unsigned char *)(in->psk_identity_hint);
     }
     if (in->psk_identity) {
-        a.psk_identity.length = strlen(in->psk_identity);
+        a.psk_identity.length = sgx_strlen(in->psk_identity);
         a.psk_identity.type = V_ASN1_OCTET_STRING;
         a.psk_identity.data = (unsigned char *)(in->psk_identity);
     }
 #endif                          /* OPENSSL_NO_PSK */
 #ifndef OPENSSL_NO_SRP
     if (in->srp_username) {
-        a.srp_username.length = strlen(in->srp_username);
+        a.srp_username.length = sgx_strlen(in->srp_username);
         a.srp_username.type = V_ASN1_OCTET_STRING;
         a.srp_username.data = (unsigned char *)(in->srp_username);
     }
@@ -451,14 +451,14 @@ SSL_SESSION *d2i_SSL_SESSION(SSL_SESSION **a, const unsigned char **pp,
 
     ret->session_id_length = os.length;
     OPENSSL_assert(os.length <= (int)sizeof(ret->session_id));
-    memcpy(ret->session_id, os.data, os.length);
+    sgx_memcpy(ret->session_id, os.data, os.length);
 
     M_ASN1_D2I_get_x(ASN1_OCTET_STRING, osp, d2i_ASN1_OCTET_STRING);
     if (os.length > SSL_MAX_MASTER_KEY_LENGTH)
         ret->master_key_length = SSL_MAX_MASTER_KEY_LENGTH;
     else
         ret->master_key_length = os.length;
-    memcpy(ret->master_key, os.data, ret->master_key_length);
+    sgx_memcpy(ret->master_key, os.data, ret->master_key_length);
 
     os.length = 0;
 
@@ -470,7 +470,7 @@ SSL_SESSION *d2i_SSL_SESSION(SSL_SESSION **a, const unsigned char **pp,
             ret->krb5_client_princ_len = 0;
         else
             ret->krb5_client_princ_len = os.length;
-        memcpy(ret->krb5_client_princ, os.data, ret->krb5_client_princ_len);
+        sgx_memcpy(ret->krb5_client_princ, os.data, ret->krb5_client_princ_len);
         OPENSSL_free(os.data);
         os.data = NULL;
         os.length = 0;
@@ -484,7 +484,7 @@ SSL_SESSION *d2i_SSL_SESSION(SSL_SESSION **a, const unsigned char **pp,
         ret->key_arg_length = SSL_MAX_KEY_ARG_LENGTH;
     else
         ret->key_arg_length = os.length;
-    memcpy(ret->key_arg, os.data, ret->key_arg_length);
+    sgx_memcpy(ret->key_arg, os.data, ret->key_arg_length);
     if (os.data != NULL)
         OPENSSL_free(os.data);
 
@@ -496,7 +496,7 @@ SSL_SESSION *d2i_SSL_SESSION(SSL_SESSION **a, const unsigned char **pp,
         ai.data = NULL;
         ai.length = 0;
     } else
-        ret->time = (unsigned long)time(NULL);
+        ret->time = (unsigned long)sgx_time(NULL);
 
     ai.length = 0;
     M_ASN1_D2I_get_EXP_opt(aip, d2i_ASN1_INTEGER, 2);
@@ -525,7 +525,7 @@ SSL_SESSION *d2i_SSL_SESSION(SSL_SESSION **a, const unsigned char **pp,
             goto err;
         } else {
             ret->sid_ctx_length = os.length;
-            memcpy(ret->sid_ctx, os.data, os.length);
+            sgx_memcpy(ret->sid_ctx, os.data, os.length);
         }
         OPENSSL_free(os.data);
         os.data = NULL;

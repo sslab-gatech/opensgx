@@ -124,7 +124,7 @@ static int old_hmac_encode(const EVP_PKEY *pkey, unsigned char **pder)
         } else
             inc = 1;
 
-        memcpy(*pder, os->data, os->length);
+        sgx_memcpy(*pder, os->data, os->length);
 
         if (inc)
             *pder += os->length;

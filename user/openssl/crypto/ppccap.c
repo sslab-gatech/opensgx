@@ -134,7 +134,7 @@ void OPENSSL_cpuid_setup(void)
     if (sizeof(size_t) == 4) {
 #ifdef __linux
         struct utsname uts;
-        if (uname(&uts) == 0 && strcmp(uts.machine, "ppc64") == 0)
+        if (uname(&uts) == 0 && sgx_strcmp(uts.machine, "ppc64") == 0)
 #endif
             if (sigsetjmp(ill_jmp, 1) == 0) {
                 OPENSSL_ppc64_probe();

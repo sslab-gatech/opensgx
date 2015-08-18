@@ -96,9 +96,9 @@ int PEM_def_callback(char *buf, int num, int w, void *key)
     int i, j;
     const char *prompt;
     if (key) {
-        i = strlen(key);
+        i = sgx_strlen(key);
         i = (i > num) ? num : i;
-        memcpy(buf, key, i);
+        sgx_memcpy(buf, key, i);
         return (i);
     }
 
@@ -113,7 +113,7 @@ int PEM_def_callback(char *buf, int num, int w, void *key)
             sgx_memset(buf, 0, (unsigned int)num);
             return (-1);
         }
-        j = strlen(buf);
+        j = sgx_strlen(buf);
         if (j < MIN_LENGTH) {
             fprintf(stderr,
                     "phrase is too short, needs to be at least %d chars\n",
@@ -152,7 +152,7 @@ void PEM_dek_info(char *buf, const char *type, int len, char *str)
     BUF_strlcat(buf, "DEK-Info: ", PEM_BUFSIZE);
     BUF_strlcat(buf, type, PEM_BUFSIZE);
     BUF_strlcat(buf, ",", PEM_BUFSIZE);
-    j = strlen(buf);
+    j = sgx_strlen(buf);
     if (j + (len * 2) + 1 > PEM_BUFSIZE)
         return;
     for (i = 0; i < len; i++) {
@@ -184,17 +184,17 @@ void *PEM_ASN1_read(d2i_of_void *d2i, const char *name, FILE *fp, void **x,
 static int check_pem(const char *nm, const char *name)
 {
     /* Normal matching nm and name */
-    if (!strcmp(nm, name))
+    if (!sgx_strcmp(nm, name))
         return 1;
 
     /* Make PEM_STRING_EVP_PKEY match any private key */
 
-    if (!strcmp(name, PEM_STRING_EVP_PKEY)) {
+    if (!sgx_strcmp(name, PEM_STRING_EVP_PKEY)) {
         int slen;
         const EVP_PKEY_ASN1_METHOD *ameth;
-        if (!strcmp(nm, PEM_STRING_PKCS8))
+        if (!sgx_strcmp(nm, PEM_STRING_PKCS8))
             return 1;
-        if (!strcmp(nm, PEM_STRING_PKCS8INF))
+        if (!sgx_strcmp(nm, PEM_STRING_PKCS8INF))
             return 1;
         slen = pem_check_suffix(nm, "PRIVATE KEY");
         if (slen > 0) {
@@ -209,7 +209,7 @@ static int check_pem(const char *nm, const char *name)
         return 0;
     }
 
-    if (!strcmp(name, PEM_STRING_PARAMETERS)) {
+    if (!sgx_strcmp(name, PEM_STRING_PARAMETERS)) {
         int slen;
         const EVP_PKEY_ASN1_METHOD *ameth;
         slen = pem_check_suffix(nm, "PARAMETERS");
@@ -232,41 +232,41 @@ static int check_pem(const char *nm, const char *name)
         return 0;
     }
     /* If reading DH parameters handle X9.42 DH format too */
-    if (!strcmp(nm, PEM_STRING_DHXPARAMS) &&
-        !strcmp(name, PEM_STRING_DHPARAMS))
+    if (!sgx_strcmp(nm, PEM_STRING_DHXPARAMS) &&
+        !sgx_strcmp(name, PEM_STRING_DHPARAMS))
         return 1;
 
     /* Permit older strings */
 
-    if (!strcmp(nm, PEM_STRING_X509_OLD) && !strcmp(name, PEM_STRING_X509))
+    if (!sgx_strcmp(nm, PEM_STRING_X509_OLD) && !sgx_strcmp(name, PEM_STRING_X509))
         return 1;
 
-    if (!strcmp(nm, PEM_STRING_X509_REQ_OLD) &&
-        !strcmp(name, PEM_STRING_X509_REQ))
+    if (!sgx_strcmp(nm, PEM_STRING_X509_REQ_OLD) &&
+        !sgx_strcmp(name, PEM_STRING_X509_REQ))
         return 1;
 
     /* Allow normal certs to be read as trusted certs */
-    if (!strcmp(nm, PEM_STRING_X509) &&
-        !strcmp(name, PEM_STRING_X509_TRUSTED))
+    if (!sgx_strcmp(nm, PEM_STRING_X509) &&
+        !sgx_strcmp(name, PEM_STRING_X509_TRUSTED))
         return 1;
 
-    if (!strcmp(nm, PEM_STRING_X509_OLD) &&
-        !strcmp(name, PEM_STRING_X509_TRUSTED))
+    if (!sgx_strcmp(nm, PEM_STRING_X509_OLD) &&
+        !sgx_strcmp(name, PEM_STRING_X509_TRUSTED))
         return 1;
 
     /* Some CAs use PKCS#7 with CERTIFICATE headers */
-    if (!strcmp(nm, PEM_STRING_X509) && !strcmp(name, PEM_STRING_PKCS7))
+    if (!sgx_strcmp(nm, PEM_STRING_X509) && !sgx_strcmp(name, PEM_STRING_PKCS7))
         return 1;
 
-    if (!strcmp(nm, PEM_STRING_PKCS7_SIGNED) &&
-        !strcmp(name, PEM_STRING_PKCS7))
+    if (!sgx_strcmp(nm, PEM_STRING_PKCS7_SIGNED) &&
+        !sgx_strcmp(name, PEM_STRING_PKCS7))
         return 1;
 
 #ifndef OPENSSL_NO_CMS
-    if (!strcmp(nm, PEM_STRING_X509) && !strcmp(name, PEM_STRING_CMS))
+    if (!sgx_strcmp(nm, PEM_STRING_X509) && !sgx_strcmp(name, PEM_STRING_CMS))
         return 1;
     /* Allow CMS to be read from PKCS#7 headers */
-    if (!strcmp(nm, PEM_STRING_PKCS7) && !strcmp(name, PEM_STRING_CMS))
+    if (!sgx_strcmp(nm, PEM_STRING_PKCS7) && !sgx_strcmp(name, PEM_STRING_CMS))
         return 1;
 #endif
 
@@ -302,6 +302,8 @@ int PEM_bytes_read_bio(unsigned char **pdata, long *plen, char **pnm,
 
     *pdata = data;
     *plen = len;
+
+    sgx_print_bytes(*pdata, *plen);
 
     if (pnm)
         *pnm = nm;
@@ -401,7 +403,7 @@ int PEM_ASN1_write_bio(i2d_of_void *i2d, const char *name, BIO *bp,
         if (kstr == (unsigned char *)buf)
             OPENSSL_cleanse(buf, PEM_BUFSIZE);
 
-        OPENSSL_assert(strlen(objstr) + 23 + 2 * enc->iv_len + 13 <=
+        OPENSSL_assert(sgx_strlen(objstr) + 23 + 2 * enc->iv_len + 13 <=
                        sizeof buf);
 
         buf[0] = '\0';
@@ -497,7 +499,7 @@ int PEM_get_EVP_CIPHER_INFO(char *header, EVP_CIPHER_INFO *cipher)
     cipher->cipher = NULL;
     if ((header == NULL) || (*header == '\0') || (*header == '\n'))
         return (1);
-    if (strncmp(header, "Proc-Type: ", 11) != 0) {
+    if (sgx_strncmp(header, "Proc-Type: ", 11) != 0) {
         PEMerr(PEM_F_PEM_GET_EVP_CIPHER_INFO, PEM_R_NOT_PROC_TYPE);
         return (0);
     }
@@ -508,7 +510,7 @@ int PEM_get_EVP_CIPHER_INFO(char *header, EVP_CIPHER_INFO *cipher)
     if (*header != ',')
         return (0);
     header++;
-    if (strncmp(header, "ENCRYPTED", 9) != 0) {
+    if (sgx_strncmp(header, "ENCRYPTED", 9) != 0) {
         PEMerr(PEM_F_PEM_GET_EVP_CIPHER_INFO, PEM_R_NOT_ENCRYPTED);
         return (0);
     }
@@ -518,7 +520,7 @@ int PEM_get_EVP_CIPHER_INFO(char *header, EVP_CIPHER_INFO *cipher)
         return (0);
     }
     header++;
-    if (strncmp(header, "DEK-Info: ", 10) != 0) {
+    if (sgx_strncmp(header, "DEK-Info: ", 10) != 0) {
         PEMerr(PEM_F_PEM_GET_EVP_CIPHER_INFO, PEM_R_NOT_DEK_INFO);
         return (0);
     }
@@ -532,7 +534,7 @@ int PEM_get_EVP_CIPHER_INFO(char *header, EVP_CIPHER_INFO *cipher)
               ((c >= '0') && (c <= '9'))))
             break;
 #else
-        if (!(isupper(c) || (c == '-') || isdigit(c)))
+        if (!(sgx_isupper(c) || (c == '-') || sgx_isdigit(c)))
             break;
 #endif
         header++;
@@ -607,14 +609,14 @@ int PEM_write_bio(BIO *bp, const char *name, const char *header,
     int reason = ERR_R_BUF_LIB;
 
     EVP_EncodeInit(&ctx);
-    nlen = strlen(name);
+    nlen = sgx_strlen(name);
 
     if ((BIO_write(bp, "-----BEGIN ", 11) != 11) ||
         (BIO_write(bp, name, nlen) != nlen) ||
         (BIO_write(bp, "-----\n", 6) != 6))
         goto err;
 
-    i = strlen(header);
+    i = sgx_strlen(header);
     if (i > 0) {
         if ((BIO_write(bp, header, i) != i) || (BIO_write(bp, "\n", 1) != 1))
             goto err;
@@ -709,16 +711,16 @@ int PEM_read_bio(BIO *bp, char **name, char **header, unsigned char **data,
         buf[++i] = '\n';
         buf[++i] = '\0';
 
-        if (strncmp(buf, "-----BEGIN ", 11) == 0) {
-            i = strlen(&(buf[11]));
+        if (sgx_strncmp(buf, "-----BEGIN ", 11) == 0) {
+            i = sgx_strlen(&(buf[11]));
 
-            if (strncmp(&(buf[11 + i - 6]), "-----\n", 6) != 0)
+            if (sgx_strncmp(&(buf[11 + i - 6]), "-----\n", 6) != 0)
                 continue;
             if (!BUF_MEM_grow(nameB, i + 9)) {
                 PEMerr(PEM_F_PEM_READ_BIO, ERR_R_MALLOC_FAILURE);
                 goto err;
             }
-            memcpy(nameB->data, &(buf[11]), i - 6);
+            sgx_memcpy(nameB->data, &(buf[11]), i - 6);
             nameB->data[i - 6] = '\0';
             break;
         }
@@ -745,11 +747,11 @@ int PEM_read_bio(BIO *bp, char **name, char **header, unsigned char **data,
             PEMerr(PEM_F_PEM_READ_BIO, ERR_R_MALLOC_FAILURE);
             goto err;
         }
-        if (strncmp(buf, "-----END ", 9) == 0) {
+        if (sgx_strncmp(buf, "-----END ", 9) == 0) {
             nohead = 1;
             break;
         }
-        memcpy(&(headerB->data[hl]), buf, i);
+        sgx_memcpy(&(headerB->data[hl]), buf, i);
         headerB->data[hl + i] = '\0';
         hl += i;
     }
@@ -773,7 +775,7 @@ int PEM_read_bio(BIO *bp, char **name, char **header, unsigned char **data,
 
             if (i != 65)
                 end = 1;
-            if (strncmp(buf, "-----END ", 9) == 0)
+            if (sgx_strncmp(buf, "-----END ", 9) == 0)
                 break;
             if (i > 65)
                 break;
@@ -781,7 +783,7 @@ int PEM_read_bio(BIO *bp, char **name, char **header, unsigned char **data,
                 PEMerr(PEM_F_PEM_READ_BIO, ERR_R_MALLOC_FAILURE);
                 goto err;
             }
-            memcpy(&(dataB->data[bl]), buf, i);
+            sgx_memcpy(&(dataB->data[bl]), buf, i);
             dataB->data[bl + i] = '\0';
             bl += i;
             if (end) {
@@ -804,10 +806,10 @@ int PEM_read_bio(BIO *bp, char **name, char **header, unsigned char **data,
         dataB = tmpB;
         bl = hl;
     }
-    i = strlen(nameB->data);
-    if ((strncmp(buf, "-----END ", 9) != 0) ||
-        (strncmp(nameB->data, &(buf[9]), i) != 0) ||
-        (strncmp(&(buf[9 + i]), "-----\n", 6) != 0)) {
+    i = sgx_strlen(nameB->data);
+    if ((sgx_strncmp(buf, "-----END ", 9) != 0) ||
+        (sgx_strncmp(nameB->data, &(buf[9]), i) != 0) ||
+        (sgx_strncmp(&(buf[9 + i]), "-----\n", 6) != 0)) {
         PEMerr(PEM_F_PEM_READ_BIO, PEM_R_BAD_END_LINE);
         goto err;
     }
@@ -816,6 +818,7 @@ int PEM_read_bio(BIO *bp, char **name, char **header, unsigned char **data,
     i = EVP_DecodeUpdate(&ctx,
                          (unsigned char *)dataB->data, &bl,
                          (unsigned char *)dataB->data, bl);
+
     if (i < 0) {
         PEMerr(PEM_F_PEM_READ_BIO, PEM_R_BAD_BASE64_DECODE);
         goto err;
@@ -852,13 +855,13 @@ int PEM_read_bio(BIO *bp, char **name, char **header, unsigned char **data,
 
 int pem_check_suffix(const char *pem_str, const char *suffix)
 {
-    int pem_len = strlen(pem_str);
-    int suffix_len = strlen(suffix);
+    int pem_len = sgx_strlen(pem_str);
+    int suffix_len = sgx_strlen(suffix);
     const char *p;
     if (suffix_len + 1 >= pem_len)
         return 0;
     p = pem_str + pem_len - suffix_len;
-    if (strcmp(p, suffix))
+    if (sgx_strcmp(p, suffix))
         return 0;
     p--;
     if (*p != ' ')

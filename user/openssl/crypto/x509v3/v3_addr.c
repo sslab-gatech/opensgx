@@ -149,7 +149,7 @@ static int addr_expand(unsigned char *addr,
     if (bs->length < 0 || bs->length > length)
         return 0;
     if (bs->length > 0) {
-        memcpy(addr, bs->data, bs->length);
+        sgx_memcpy(addr, bs->data, bs->length);
         if ((bs->flags & 7) != 0) {
             unsigned char mask = 0xFF >> (8 - (bs->flags & 7));
             if (fill == 0)
@@ -352,7 +352,7 @@ static int IPAddressOrRange_cmp(const IPAddressOrRange *a,
         break;
     }
 
-    if ((r = memcmp(addr_a, addr_b, length)) != 0)
+    if ((r = sgx_memcmp(addr_a, addr_b, length)) != 0)
         return r;
     else
         return prefixlen_a - prefixlen_b;
@@ -388,7 +388,7 @@ static int range_should_be_prefix(const unsigned char *min,
     unsigned char mask;
     int i, j;
 
-    OPENSSL_assert(memcmp(min, max, length) <= 0);
+    OPENSSL_assert(sgx_memcmp(min, max, length) <= 0);
     for (i = 0; i < length && min[i] == max[i]; i++) ;
     for (j = length - 1; j >= 0 && min[j] == 0x00 && max[j] == 0xFF; j--) ;
     if (i < j)
@@ -546,7 +546,7 @@ static IPAddressFamily *make_IPAddressFamily(IPAddrBlocks *addr,
         f = sk_IPAddressFamily_value(addr, i);
         OPENSSL_assert(f->addressFamily->data != NULL);
         if (f->addressFamily->length == keylen &&
-            !memcmp(f->addressFamily->data, key, keylen))
+            !sgx_memcmp(f->addressFamily->data, key, keylen))
             return f;
     }
 
@@ -719,7 +719,7 @@ static int IPAddressFamily_cmp(const IPAddressFamily *const *a_,
     const ASN1_OCTET_STRING *a = (*a_)->addressFamily;
     const ASN1_OCTET_STRING *b = (*b_)->addressFamily;
     int len = ((a->length <= b->length) ? a->length : b->length);
-    int cmp = memcmp(a->data, b->data, len);
+    int cmp = sgx_memcmp(a->data, b->data, len);
     return cmp ? cmp : a->length - b->length;
 }
 
@@ -788,9 +788,9 @@ int v3_addr_is_canonical(IPAddrBlocks *addr)
             /*
              * Punt misordered list, overlapping start, or inverted range.
              */
-            if (memcmp(a_min, b_min, length) >= 0 ||
-                memcmp(a_min, a_max, length) > 0 ||
-                memcmp(b_min, b_max, length) > 0)
+            if (sgx_memcmp(a_min, b_min, length) >= 0 ||
+                sgx_memcmp(a_min, a_max, length) > 0 ||
+                sgx_memcmp(b_min, b_max, length) > 0)
                 return 0;
 
             /*
@@ -798,7 +798,7 @@ int v3_addr_is_canonical(IPAddrBlocks *addr)
              * subtracting one from b_min first.
              */
             for (k = length - 1; k >= 0 && b_min[k]-- == 0x00; k--) ;
-            if (memcmp(a_max, b_min, length) >= 0)
+            if (sgx_memcmp(a_max, b_min, length) >= 0)
                 return 0;
 
             /*
@@ -819,7 +819,7 @@ int v3_addr_is_canonical(IPAddrBlocks *addr)
             if (a != NULL && a->type == IPAddressOrRange_addressRange) {
                 if (!extract_min_max(a, a_min, a_max, length))
                     return 0;
-                if (memcmp(a_min, a_max, length) > 0 ||
+                if (sgx_memcmp(a_min, a_max, length) > 0 ||
                     range_should_be_prefix(a_min, a_max, length) >= 0)
                     return 0;
             }
@@ -861,14 +861,14 @@ static int IPAddressOrRanges_canonize(IPAddressOrRanges *aors,
         /*
          * Punt inverted ranges.
          */
-        if (memcmp(a_min, a_max, length) > 0 ||
-            memcmp(b_min, b_max, length) > 0)
+        if (sgx_memcmp(a_min, a_max, length) > 0 ||
+            sgx_memcmp(b_min, b_max, length) > 0)
             return 0;
 
         /*
          * Punt overlaps.
          */
-        if (memcmp(a_max, b_min, length) >= 0)
+        if (sgx_memcmp(a_max, b_min, length) >= 0)
             return 0;
 
         /*
@@ -876,7 +876,7 @@ static int IPAddressOrRanges_canonize(IPAddressOrRanges *aors,
          * adjacency by subtracting one from b_min first.
          */
         for (j = length - 1; j >= 0 && b_min[j]-- == 0x00; j--) ;
-        if (memcmp(a_max, b_min, length) == 0) {
+        if (sgx_memcmp(a_max, b_min, length) == 0) {
             IPAddressOrRange *merged;
             if (!make_addressRange(&merged, a_min, b_max, length))
                 return 0;
@@ -898,7 +898,7 @@ static int IPAddressOrRanges_canonize(IPAddressOrRanges *aors,
         if (a != NULL && a->type == IPAddressOrRange_addressRange) {
             unsigned char a_min[ADDR_RAW_BUF_LEN], a_max[ADDR_RAW_BUF_LEN];
             extract_min_max(a, a_min, a_max, length);
-            if (memcmp(a_min, a_max, length) > 0)
+            if (sgx_memcmp(a_min, a_max, length) > 0)
                 return 0;
         }
     }
@@ -1005,7 +1005,7 @@ static void *v2i_IPAddrBlocks(const struct v3_ext_method *method,
          * Check for inheritance.  Not worth additional complexity to
          * optimize this (seldom-used) case.
          */
-        if (!strcmp(s, "inherit")) {
+        if (!sgx_strcmp(s, "inherit")) {
             if (!v3_addr_add_inherit(addr, afi, safi)) {
                 X509V3err(X509V3_F_V2I_IPADDRBLOCKS,
                           X509V3_R_INVALID_INHERITANCE);
@@ -1057,7 +1057,7 @@ static void *v2i_IPAddrBlocks(const struct v3_ext_method *method,
                 X509V3_conf_err(val);
                 goto err;
             }
-            if (memcmp(min, max, length_from_afi(afi)) > 0) {
+            if (sgx_memcmp(min, max, length_from_afi(afi)) > 0) {
                 X509V3err(X509V3_F_V2I_IPADDRBLOCKS,
                           X509V3_R_EXTENSION_VALUE_ERROR);
                 X509V3_conf_err(val);
@@ -1157,9 +1157,9 @@ static int addr_contains(IPAddressOrRanges *parent,
             if (!extract_min_max(sk_IPAddressOrRange_value(parent, p),
                                  p_min, p_max, length))
                 return 0;
-            if (memcmp(p_max, c_max, length) < 0)
+            if (sgx_memcmp(p_max, c_max, length) < 0)
                 continue;
-            if (memcmp(p_min, c_min, length) > 0)
+            if (sgx_memcmp(p_min, c_min, length) > 0)
                 return 0;
             break;
         }

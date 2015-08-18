@@ -143,19 +143,19 @@ int MAIN(int argc, char **argv)
 
     /* first check the program name */
     program_name(argv[0], pname, sizeof pname);
-    if (strcmp(pname, "base64") == 0)
+    if (sgx_strcmp(pname, "base64") == 0)
         base64 = 1;
 #ifdef ZLIB
-    if (strcmp(pname, "zlib") == 0)
+    if (sgx_strcmp(pname, "zlib") == 0)
         do_zlib = 1;
 #endif
 
     cipher = EVP_get_cipherbyname(pname);
 #ifdef ZLIB
     if (!do_zlib && !base64 && (cipher == NULL)
-        && (strcmp(pname, "enc") != 0))
+        && (sgx_strcmp(pname, "enc") != 0))
 #else
-    if (!base64 && (cipher == NULL) && (strcmp(pname, "enc") != 0))
+    if (!base64 && (cipher == NULL) && (sgx_strcmp(pname, "enc") != 0))
 #endif
     {
         BIO_printf(bio_err, "%s is an unknown cipher\n", pname);
@@ -165,63 +165,63 @@ int MAIN(int argc, char **argv)
     argc--;
     argv++;
     while (argc >= 1) {
-        if (strcmp(*argv, "-e") == 0)
+        if (sgx_strcmp(*argv, "-e") == 0)
             enc = 1;
-        else if (strcmp(*argv, "-in") == 0) {
+        else if (sgx_strcmp(*argv, "-in") == 0) {
             if (--argc < 1)
                 goto bad;
             inf = *(++argv);
-        } else if (strcmp(*argv, "-out") == 0) {
+        } else if (sgx_strcmp(*argv, "-out") == 0) {
             if (--argc < 1)
                 goto bad;
             outf = *(++argv);
-        } else if (strcmp(*argv, "-pass") == 0) {
+        } else if (sgx_strcmp(*argv, "-pass") == 0) {
             if (--argc < 1)
                 goto bad;
             passarg = *(++argv);
         }
 #ifndef OPENSSL_NO_ENGINE
-        else if (strcmp(*argv, "-engine") == 0) {
+        else if (sgx_strcmp(*argv, "-engine") == 0) {
             if (--argc < 1)
                 goto bad;
             engine = *(++argv);
         }
 #endif
-        else if (strcmp(*argv, "-d") == 0)
+        else if (sgx_strcmp(*argv, "-d") == 0)
             enc = 0;
-        else if (strcmp(*argv, "-p") == 0)
+        else if (sgx_strcmp(*argv, "-p") == 0)
             printkey = 1;
-        else if (strcmp(*argv, "-v") == 0)
+        else if (sgx_strcmp(*argv, "-v") == 0)
             verbose = 1;
-        else if (strcmp(*argv, "-nopad") == 0)
+        else if (sgx_strcmp(*argv, "-nopad") == 0)
             nopad = 1;
-        else if (strcmp(*argv, "-salt") == 0)
+        else if (sgx_strcmp(*argv, "-salt") == 0)
             nosalt = 0;
-        else if (strcmp(*argv, "-nosalt") == 0)
+        else if (sgx_strcmp(*argv, "-nosalt") == 0)
             nosalt = 1;
-        else if (strcmp(*argv, "-debug") == 0)
+        else if (sgx_strcmp(*argv, "-debug") == 0)
             debug = 1;
-        else if (strcmp(*argv, "-P") == 0)
+        else if (sgx_strcmp(*argv, "-P") == 0)
             printkey = 2;
-        else if (strcmp(*argv, "-A") == 0)
+        else if (sgx_strcmp(*argv, "-A") == 0)
             olb64 = 1;
-        else if (strcmp(*argv, "-a") == 0)
+        else if (sgx_strcmp(*argv, "-a") == 0)
             base64 = 1;
-        else if (strcmp(*argv, "-base64") == 0)
+        else if (sgx_strcmp(*argv, "-base64") == 0)
             base64 = 1;
 #ifdef ZLIB
-        else if (strcmp(*argv, "-z") == 0)
+        else if (sgx_strcmp(*argv, "-z") == 0)
             do_zlib = 1;
 #endif
-        else if (strcmp(*argv, "-bufsize") == 0) {
+        else if (sgx_strcmp(*argv, "-bufsize") == 0) {
             if (--argc < 1)
                 goto bad;
             bufsize = (unsigned char *)*(++argv);
-        } else if (strcmp(*argv, "-k") == 0) {
+        } else if (sgx_strcmp(*argv, "-k") == 0) {
             if (--argc < 1)
                 goto bad;
             str = *(++argv);
-        } else if (strcmp(*argv, "-kfile") == 0) {
+        } else if (sgx_strcmp(*argv, "-kfile") == 0) {
             static char buf[128];
             FILE *infile;
             char *file;
@@ -250,28 +250,28 @@ int MAIN(int argc, char **argv)
                 goto bad;
             }
             str = buf;
-        } else if (strcmp(*argv, "-K") == 0) {
+        } else if (sgx_strcmp(*argv, "-K") == 0) {
             if (--argc < 1)
                 goto bad;
             hkey = *(++argv);
-        } else if (strcmp(*argv, "-S") == 0) {
+        } else if (sgx_strcmp(*argv, "-S") == 0) {
             if (--argc < 1)
                 goto bad;
             hsalt = *(++argv);
-        } else if (strcmp(*argv, "-iv") == 0) {
+        } else if (sgx_strcmp(*argv, "-iv") == 0) {
             if (--argc < 1)
                 goto bad;
             hiv = *(++argv);
-        } else if (strcmp(*argv, "-md") == 0) {
+        } else if (sgx_strcmp(*argv, "-md") == 0) {
             if (--argc < 1)
                 goto bad;
             md = *(++argv);
-        } else if (strcmp(*argv, "-non-fips-allow") == 0)
+        } else if (sgx_strcmp(*argv, "-non-fips-allow") == 0)
             non_fips_allow = 1;
         else if ((argv[0][0] == '-') &&
                  ((c = EVP_get_cipherbyname(&(argv[0][1]))) != NULL)) {
             cipher = c;
-        } else if (strcmp(*argv, "-none") == 0)
+        } else if (sgx_strcmp(*argv, "-none") == 0)
             cipher = NULL;
         else {
             BIO_printf(bio_err, "unknown option '%s'\n", *argv);
@@ -529,7 +529,7 @@ int MAIN(int argc, char **argv)
                                        sizeof salt) != sizeof salt) {
                     BIO_printf(bio_err, "error reading input file\n");
                     goto end;
-                } else if (memcmp(mbuf, magic, sizeof magic - 1)) {
+                } else if (sgx_memcmp(mbuf, magic, sizeof magic - 1)) {
                     BIO_printf(bio_err, "bad magic number\n");
                     goto end;
                 }

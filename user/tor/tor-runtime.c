@@ -1,14 +1,3 @@
-#include <string.h>
-#include <sgx-kern.h>
-#include <sgx-user.h>
-#include <sgx-utils.h>
-#include <sgx-signature.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <unistd.h>
-#include <sgx-malloc.h>
-
 #include <sgx-lib.h>
 
 #define is_aligned(addr, bytes) \
@@ -29,6 +18,7 @@ void enclave_start()
 
 int main(int argc, char **argv)
 {
+/*
     if(!sgx_init_tor())
         err(1, "failed to init sgx");
 
@@ -39,8 +29,8 @@ int main(int argc, char **argv)
     //memory write access to enc_data section could make write access on other EPC page.
     void *entry = (void *)(uintptr_t)enclave_start;
     void *codes = (void *)(uintptr_t)&ENCT_START;
-    unsigned int ecode_size = (unsigned int)&ENCT_END - (unsigned int)&ENCT_START;
-    unsigned int edata_size = (unsigned int)&ENCD_END - (unsigned int)&ENCD_START;
+    unsigned long ecode_size = (unsigned long)&ENCT_END - (unsigned long)&ENCT_START;
+    unsigned long edata_size = (unsigned long)&ENCD_END - (unsigned long)&ENCD_START;
     unsigned int ecode_page_n = ((ecode_size - 1) / PAGE_SIZE) + 1;
     printf("DEBUG n_of_code_pages: %d\n", ecode_page_n);
     unsigned int edata_page_n = ((edata_size - 1) / PAGE_SIZE) + 1;
@@ -49,10 +39,13 @@ int main(int argc, char **argv)
 
     assert(is_aligned((uintptr_t)codes, PAGE_SIZE));
 
-    tcs_t *tcs = test_run_enclave(entry, codes, n_of_pages);
+    // indirect call handling
+    void *edata = (void *)(uintptr_t)&ENCD_START;
+
+    tcs_t *tcs = test_init_enclave(entry, codes, n_of_pages, ecode_size, edata, edata_size);
     if (!tcs)
         err(1, "failed to run enclave");
-
+*/
 //    free(tcs);
         return 0;
 }

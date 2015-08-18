@@ -24,7 +24,7 @@ Version 4.03
 	Gigi Ankeny <Gigi.Ankeny@Eng.Sun.COM> for pointing this one out.
 
 Version 4.02
-	I was doing 'if (memcmp(weak_keys[i],key,sizeof(key)) == 0)'
+	I was doing 'if (sgx_memcmp(weak_keys[i],key,sizeof(key)) == 0)'
 	when checking for weak keys which is wrong :-(, pointed out by
 	Markus F.X.J. Oberhumer <markus.oberhumer@jk.uni-linz.ac.at>.
 

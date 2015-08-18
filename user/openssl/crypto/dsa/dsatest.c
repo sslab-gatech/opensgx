@@ -187,21 +187,21 @@ int main(int argc, char **argv)
 
     i = BN_bn2bin(dsa->q, buf);
     j = sizeof(out_q);
-    if ((i != j) || (memcmp(buf, out_q, i) != 0)) {
+    if ((i != j) || (sgx_memcmp(buf, out_q, i) != 0)) {
         BIO_printf(bio_err, "q value is wrong\n");
         goto end;
     }
 
     i = BN_bn2bin(dsa->p, buf);
     j = sizeof(out_p);
-    if ((i != j) || (memcmp(buf, out_p, i) != 0)) {
+    if ((i != j) || (sgx_memcmp(buf, out_p, i) != 0)) {
         BIO_printf(bio_err, "p value is wrong\n");
         goto end;
     }
 
     i = BN_bn2bin(dsa->g, buf);
     j = sizeof(out_g);
-    if ((i != j) || (memcmp(buf, out_g, i) != 0)) {
+    if ((i != j) || (sgx_memcmp(buf, out_g, i) != 0)) {
         BIO_printf(bio_err, "g value is wrong\n");
         goto end;
     }

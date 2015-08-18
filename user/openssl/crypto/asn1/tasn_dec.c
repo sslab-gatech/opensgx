@@ -65,6 +65,8 @@
 #include <openssl/buffer.h>
 #include <openssl/err.h>
 
+#include "../sgx.h"
+
 static int asn1_check_eoc(const unsigned char **in, long len);
 static int asn1_find_end(const unsigned char **in, long len, char inf);
 
@@ -1097,7 +1099,7 @@ static int collect_data(BUF_MEM *buf, const unsigned char **p, long plen)
             ASN1err(ASN1_F_COLLECT_DATA, ERR_R_MALLOC_FAILURE);
             return 0;
         }
-        memcpy(buf->data + len, *p, plen);
+        sgx_memcpy(buf->data + len, *p, plen);
     }
     *p += plen;
     return 1;

@@ -276,8 +276,8 @@ static int parse_server_mode(const char *s, int *servermode)
 
 static int parse_dh_special(const char *s, const char **dh_special)
 {
-    if ((strcmp(s, "NULL") == 0) || (strcmp(s, "generate") == 0) ||
-        (strcmp(s, "standard") == 0)) {
+    if ((sgx_strcmp(s, "NULL") == 0) || (sgx_strcmp(s, "generate") == 0) ||
+        (sgx_strcmp(s, "standard") == 0)) {
         *dh_special = s;
         return 1;
     }
@@ -352,21 +352,21 @@ int main(int argc, char *argv[])
     argc--;
     argv++;
     if (argc > 0) {
-        if (strcmp(*argv, "-listen") == 0) {
+        if (sgx_strcmp(*argv, "-listen") == 0) {
             if (argc < 2)
                 return usage("-listen requires an argument", 0);
             argc--;
             argv++;
             listenhost = *argv;
             goto next_arg;
-        } else if (strcmp(*argv, "-proxy") == 0) {
+        } else if (sgx_strcmp(*argv, "-proxy") == 0) {
             if (argc < 2)
                 return usage("-proxy requires an argument", 0);
             argc--;
             argv++;
             proxyhost = *argv;
             goto next_arg;
-        } else if (strcmp(*argv, "-maxtunnels") == 0) {
+        } else if (sgx_strcmp(*argv, "-maxtunnels") == 0) {
             if (argc < 2)
                 return usage("-maxtunnels requires an argument", 0);
             argc--;
@@ -374,64 +374,64 @@ int main(int argc, char *argv[])
             if (!parse_max_tunnels(*argv, &max_tunnels))
                 return 1;
             goto next_arg;
-        } else if (strcmp(*argv, "-cacert") == 0) {
+        } else if (sgx_strcmp(*argv, "-cacert") == 0) {
             if (argc < 2)
                 return usage("-cacert requires an argument", 0);
             argc--;
             argv++;
-            if (strcmp(*argv, "NULL") == 0)
+            if (sgx_strcmp(*argv, "NULL") == 0)
                 cacert = NULL;
             else
                 cacert = *argv;
             goto next_arg;
-        } else if (strcmp(*argv, "-cert") == 0) {
+        } else if (sgx_strcmp(*argv, "-cert") == 0) {
             if (argc < 2)
                 return usage("-cert requires an argument", 0);
             argc--;
             argv++;
-            if (strcmp(*argv, "NULL") == 0)
+            if (sgx_strcmp(*argv, "NULL") == 0)
                 cert = NULL;
             else
                 cert = *argv;
             goto next_arg;
-        } else if (strcmp(*argv, "-key") == 0) {
+        } else if (sgx_strcmp(*argv, "-key") == 0) {
             if (argc < 2)
                 return usage("-key requires an argument", 0);
             argc--;
             argv++;
-            if (strcmp(*argv, "NULL") == 0)
+            if (sgx_strcmp(*argv, "NULL") == 0)
                 key = NULL;
             else
                 key = *argv;
             goto next_arg;
-        } else if (strcmp(*argv, "-dcert") == 0) {
+        } else if (sgx_strcmp(*argv, "-dcert") == 0) {
             if (argc < 2)
                 return usage("-dcert requires an argument", 0);
             argc--;
             argv++;
-            if (strcmp(*argv, "NULL") == 0)
+            if (sgx_strcmp(*argv, "NULL") == 0)
                 dcert = NULL;
             else
                 dcert = *argv;
             goto next_arg;
-        } else if (strcmp(*argv, "-dkey") == 0) {
+        } else if (sgx_strcmp(*argv, "-dkey") == 0) {
             if (argc < 2)
                 return usage("-dkey requires an argument", 0);
             argc--;
             argv++;
-            if (strcmp(*argv, "NULL") == 0)
+            if (sgx_strcmp(*argv, "NULL") == 0)
                 dkey = NULL;
             else
                 dkey = *argv;
             goto next_arg;
-        } else if (strcmp(*argv, "-engine") == 0) {
+        } else if (sgx_strcmp(*argv, "-engine") == 0) {
             if (argc < 2)
                 return usage("-engine requires an argument", 0);
             argc--;
             argv++;
             engine_id = *argv;
             goto next_arg;
-        } else if (strcmp(*argv, "-server") == 0) {
+        } else if (sgx_strcmp(*argv, "-server") == 0) {
             if (argc < 2)
                 return usage("-server requires an argument", 0);
             argc--;
@@ -439,7 +439,7 @@ int main(int argc, char *argv[])
             if (!parse_server_mode(*argv, &server_mode))
                 return 1;
             goto next_arg;
-        } else if (strcmp(*argv, "-flipped") == 0) {
+        } else if (sgx_strcmp(*argv, "-flipped") == 0) {
             if (argc < 2)
                 return usage("-flipped requires an argument", 0);
             argc--;
@@ -447,14 +447,14 @@ int main(int argc, char *argv[])
             if (!parse_server_mode(*argv, &flipped))
                 return 1;
             goto next_arg;
-        } else if (strcmp(*argv, "-cipher") == 0) {
+        } else if (sgx_strcmp(*argv, "-cipher") == 0) {
             if (argc < 2)
                 return usage("-cipher requires an argument", 0);
             argc--;
             argv++;
             cipher_list = *argv;
             goto next_arg;
-        } else if (strcmp(*argv, "-dh_file") == 0) {
+        } else if (sgx_strcmp(*argv, "-dh_file") == 0) {
             if (argc < 2)
                 return usage("-dh_file requires an argument", 0);
             if (dh_special)
@@ -463,7 +463,7 @@ int main(int argc, char *argv[])
             argv++;
             dh_file = *argv;
             goto next_arg;
-        } else if (strcmp(*argv, "-dh_special") == 0) {
+        } else if (sgx_strcmp(*argv, "-dh_special") == 0) {
             if (argc < 2)
                 return usage("-dh_special requires an argument", 0);
             if (dh_file)
@@ -473,28 +473,28 @@ int main(int argc, char *argv[])
             if (!parse_dh_special(*argv, &dh_special))
                 return 1;
             goto next_arg;
-        } else if (strcmp(*argv, "-no_tmp_rsa") == 0) {
+        } else if (sgx_strcmp(*argv, "-no_tmp_rsa") == 0) {
             tmp_rsa = 0;
             goto next_arg;
-        } else if (strcmp(*argv, "-no_ssl2") == 0) {
+        } else if (sgx_strcmp(*argv, "-no_ssl2") == 0) {
             ctx_options |= SSL_OP_NO_SSLv2;
             goto next_arg;
-        } else if (strcmp(*argv, "-no_ssl3") == 0) {
+        } else if (sgx_strcmp(*argv, "-no_ssl3") == 0) {
             ctx_options |= SSL_OP_NO_SSLv3;
             goto next_arg;
-        } else if (strcmp(*argv, "-no_tls1") == 0) {
+        } else if (sgx_strcmp(*argv, "-no_tls1") == 0) {
             ctx_options |= SSL_OP_NO_TLSv1;
             goto next_arg;
-        } else if (strcmp(*argv, "-v_peer") == 0) {
+        } else if (sgx_strcmp(*argv, "-v_peer") == 0) {
             verify_mode |= SSL_VERIFY_PEER;
             goto next_arg;
-        } else if (strcmp(*argv, "-v_strict") == 0) {
+        } else if (sgx_strcmp(*argv, "-v_strict") == 0) {
             verify_mode |= SSL_VERIFY_FAIL_IF_NO_PEER_CERT;
             goto next_arg;
-        } else if (strcmp(*argv, "-v_once") == 0) {
+        } else if (sgx_strcmp(*argv, "-v_once") == 0) {
             verify_mode |= SSL_VERIFY_CLIENT_ONCE;
             goto next_arg;
-        } else if (strcmp(*argv, "-v_depth") == 0) {
+        } else if (sgx_strcmp(*argv, "-v_depth") == 0) {
             if (argc < 2)
                 return usage("-v_depth requires an argument", 0);
             argc--;
@@ -502,10 +502,10 @@ int main(int argc, char *argv[])
             if (!parse_verify_depth(*argv, &verify_depth))
                 return 1;
             goto next_arg;
-        } else if (strcmp(*argv, "-out_state") == 0) {
+        } else if (sgx_strcmp(*argv, "-out_state") == 0) {
             out_state = 1;
             goto next_arg;
-        } else if (strcmp(*argv, "-out_verify") == 0) {
+        } else if (sgx_strcmp(*argv, "-out_verify") == 0) {
             if (argc < 2)
                 return usage("-out_verify requires an argument", 0);
             argc--;
@@ -513,15 +513,15 @@ int main(int argc, char *argv[])
             if (!parse_verify_level(*argv, &out_verify))
                 return 1;
             goto next_arg;
-        } else if (strcmp(*argv, "-out_totals") == 0) {
+        } else if (sgx_strcmp(*argv, "-out_totals") == 0) {
             out_totals = 1;
             goto next_arg;
-        } else if (strcmp(*argv, "-out_conns") == 0) {
+        } else if (sgx_strcmp(*argv, "-out_conns") == 0) {
             out_conns = 1;
             goto next_arg;
-        } else if ((strcmp(*argv, "-h") == 0) ||
-                   (strcmp(*argv, "-help") == 0) ||
-                   (strcmp(*argv, "-?") == 0)) {
+        } else if ((sgx_strcmp(*argv, "-h") == 0) ||
+                   (sgx_strcmp(*argv, "-help") == 0) ||
+                   (sgx_strcmp(*argv, "-?") == 0)) {
             fprintf(stderr, "%s\n", helpstring);
             return 0;
         } else
@@ -729,9 +729,9 @@ static int ctx_set_dh(SSL_CTX *ctx, const char *dh_file,
     FILE *fp = NULL;
 
     if (dh_special) {
-        if (strcmp(dh_special, "NULL") == 0)
+        if (sgx_strcmp(dh_special, "NULL") == 0)
             return 1;
-        if (strcmp(dh_special, "standard") == 0) {
+        if (sgx_strcmp(dh_special, "standard") == 0) {
             if ((dh = get_dh512()) == NULL) {
                 fprintf(stderr, "Error, can't parse 'standard'"
                         " DH parameters\n");
@@ -740,7 +740,7 @@ static int ctx_set_dh(SSL_CTX *ctx, const char *dh_file,
             fprintf(stderr, "Info, using 'standard' DH parameters\n");
             goto do_it;
         }
-        if (strcmp(dh_special, "generate") != 0)
+        if (sgx_strcmp(dh_special, "generate") != 0)
             /*
              * This shouldn't happen - screening values is handled in main().
              */

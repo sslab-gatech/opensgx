@@ -151,19 +151,19 @@ int MAIN(int argc, char **argv)
     if (argc == 1)
         version = 1;
     for (i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "-v") == 0)
+        if (sgx_strcmp(argv[i], "-v") == 0)
             version = 1;
-        else if (strcmp(argv[i], "-b") == 0)
+        else if (sgx_strcmp(argv[i], "-b") == 0)
             date = 1;
-        else if (strcmp(argv[i], "-f") == 0)
+        else if (sgx_strcmp(argv[i], "-f") == 0)
             cflags = 1;
-        else if (strcmp(argv[i], "-o") == 0)
+        else if (sgx_strcmp(argv[i], "-o") == 0)
             options = 1;
-        else if (strcmp(argv[i], "-p") == 0)
+        else if (sgx_strcmp(argv[i], "-p") == 0)
             platform = 1;
-        else if (strcmp(argv[i], "-d") == 0)
+        else if (sgx_strcmp(argv[i], "-d") == 0)
             dir = 1;
-        else if (strcmp(argv[i], "-a") == 0)
+        else if (sgx_strcmp(argv[i], "-a") == 0)
             date = version = cflags = options = platform = dir = 1;
         else {
             BIO_printf(bio_err, "usage:version -[avbofpd]\n");

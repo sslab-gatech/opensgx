@@ -120,7 +120,7 @@ static int do_create(char *value, char *name)
         ostr = p + 1;
         if (!*ostr)
             return 0;
-        while (isspace((unsigned char)*ostr))
+        while (sgx_isspace((unsigned char)*ostr))
             ostr++;
     }
 
@@ -131,10 +131,10 @@ static int do_create(char *value, char *name)
 
     if (p) {
         ln = value;
-        while (isspace((unsigned char)*ln))
+        while (sgx_isspace((unsigned char)*ln))
             ln++;
         p--;
-        while (isspace((unsigned char)*p)) {
+        while (sgx_isspace((unsigned char)*p)) {
             if (p == ln)
                 return 0;
             p--;
@@ -143,7 +143,7 @@ static int do_create(char *value, char *name)
         lntmp = OPENSSL_malloc((p - ln) + 1);
         if (lntmp == NULL)
             return 0;
-        memcpy(lntmp, ln, p - ln);
+        sgx_memcpy(lntmp, ln, p - ln);
         lntmp[p - ln] = 0;
         oid = OBJ_nid2obj(nid);
         oid->ln = lntmp;

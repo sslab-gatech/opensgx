@@ -1016,7 +1016,7 @@ int PKCS7_signatureVerify(BIO *bio, PKCS7 *p7, PKCS7_SIGNER_INFO *si,
             goto err;
         }
         if ((message_digest->length != (int)md_len) ||
-            (memcmp(message_digest->data, md_dat, md_len))) {
+            (sgx_memcmp(message_digest->data, md_dat, md_len))) {
 #if 0
             {
                 int ii;

@@ -109,7 +109,7 @@ rc4_enc.o: ../../include/openssl/lhash.h ../../include/openssl/opensslconf.h
 rc4_enc.o: ../../include/openssl/opensslv.h ../../include/openssl/ossl_typ.h
 rc4_enc.o: ../../include/openssl/rc4.h ../../include/openssl/safestack.h
 rc4_enc.o: ../../include/openssl/stack.h ../../include/openssl/symhacks.h
-rc4_enc.o: ../cryptlib.h rc4_enc.c rc4_locl.h
+rc4_enc.o: ../cryptlib.h ../sgx.h rc4_enc.c rc4_locl.h
 rc4_skey.o: ../../e_os.h ../../include/openssl/bio.h
 rc4_skey.o: ../../include/openssl/buffer.h ../../include/openssl/crypto.h
 rc4_skey.o: ../../include/openssl/e_os2.h ../../include/openssl/err.h
@@ -117,7 +117,7 @@ rc4_skey.o: ../../include/openssl/lhash.h ../../include/openssl/opensslconf.h
 rc4_skey.o: ../../include/openssl/opensslv.h ../../include/openssl/ossl_typ.h
 rc4_skey.o: ../../include/openssl/rc4.h ../../include/openssl/safestack.h
 rc4_skey.o: ../../include/openssl/stack.h ../../include/openssl/symhacks.h
-rc4_skey.o: ../cryptlib.h rc4_locl.h rc4_skey.c
+rc4_skey.o: ../cryptlib.h ../sgx.h rc4_locl.h rc4_skey.c
 rc4_utl.o: ../../include/openssl/crypto.h ../../include/openssl/e_os2.h
 rc4_utl.o: ../../include/openssl/opensslconf.h ../../include/openssl/opensslv.h
 rc4_utl.o: ../../include/openssl/ossl_typ.h ../../include/openssl/rc4.h

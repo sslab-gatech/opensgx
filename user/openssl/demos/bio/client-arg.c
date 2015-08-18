@@ -38,7 +38,7 @@ int main(int argc, char **argv)
         if (rv > 0)
             continue;
         /* Otherwise application specific argument processing */
-        if (!strcmp(*args, "-connect")) {
+        if (!sgx_strcmp(*args, "-connect")) {
             connect_str = args[1];
             if (connect_str == NULL) {
                 fprintf(stderr, "Missing -connect argument\n");

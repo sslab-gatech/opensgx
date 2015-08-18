@@ -110,47 +110,47 @@ int MAIN(int argc, char **argv)
     argc--;
     argv++;
     while (argc >= 1) {
-        if (strcmp(*argv, "-in") == 0) {
+        if (sgx_strcmp(*argv, "-in") == 0) {
             if (--argc < 1)
                 goto bad;
             infile = *(++argv);
-        } else if (strcmp(*argv, "-out") == 0) {
+        } else if (sgx_strcmp(*argv, "-out") == 0) {
             if (--argc < 1)
                 goto bad;
             outfile = *(++argv);
-        } else if (strcmp(*argv, "-passin") == 0) {
+        } else if (sgx_strcmp(*argv, "-passin") == 0) {
             if (--argc < 1)
                 goto bad;
             passargin = *(++argv);
-        } else if (strcmp(*argv, "-key") == 0) {
+        } else if (sgx_strcmp(*argv, "-key") == 0) {
             if (--argc < 1)
                 goto bad;
             keyfile = *(++argv);
-        } else if (strcmp(*argv, "-challenge") == 0) {
+        } else if (sgx_strcmp(*argv, "-challenge") == 0) {
             if (--argc < 1)
                 goto bad;
             challenge = *(++argv);
-        } else if (strcmp(*argv, "-spkac") == 0) {
+        } else if (sgx_strcmp(*argv, "-spkac") == 0) {
             if (--argc < 1)
                 goto bad;
             spkac = *(++argv);
-        } else if (strcmp(*argv, "-spksect") == 0) {
+        } else if (sgx_strcmp(*argv, "-spksect") == 0) {
             if (--argc < 1)
                 goto bad;
             spksect = *(++argv);
         }
 #ifndef OPENSSL_NO_ENGINE
-        else if (strcmp(*argv, "-engine") == 0) {
+        else if (sgx_strcmp(*argv, "-engine") == 0) {
             if (--argc < 1)
                 goto bad;
             engine = *(++argv);
         }
 #endif
-        else if (strcmp(*argv, "-noout") == 0)
+        else if (sgx_strcmp(*argv, "-noout") == 0)
             noout = 1;
-        else if (strcmp(*argv, "-pubkey") == 0)
+        else if (sgx_strcmp(*argv, "-pubkey") == 0)
             pubkey = 1;
-        else if (strcmp(*argv, "-verify") == 0)
+        else if (sgx_strcmp(*argv, "-verify") == 0)
             verify = 1;
         else
             badops = 1;
@@ -191,7 +191,7 @@ int MAIN(int argc, char **argv)
 
     if (keyfile) {
         pkey = load_key(bio_err,
-                        strcmp(keyfile, "-") ? keyfile : NULL,
+                        sgx_strcmp(keyfile, "-") ? keyfile : NULL,
                         FORMAT_PEM, 1, passin, e, "private key");
         if (!pkey) {
             goto end;

@@ -128,7 +128,7 @@ fips_md_init(SHA)
 fips_md_init_ctx(SHA1, SHA)
 #endif
 {
-    memset(c, 0, sizeof(*c));
+    sgx_memset(c, 0, sizeof(*c));
     c->h0 = INIT_DATA_h0;
     c->h1 = INIT_DATA_h1;
     c->h2 = INIT_DATA_h2;

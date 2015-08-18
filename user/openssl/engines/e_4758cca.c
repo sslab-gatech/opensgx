@@ -937,8 +937,8 @@ static void cca_ex_free(void *obj, void *item, CRYPTO_EX_DATA *ad, int idx,
 #  ifndef OPENSSL_NO_DYNAMIC_ENGINE
 static int bind_fn(ENGINE *e, const char *id)
 {
-    if (id && (strcmp(id, engine_4758_cca_id) != 0) &&
-        (strcmp(id, engine_4758_cca_id_alt) != 0))
+    if (id && (sgx_strcmp(id, engine_4758_cca_id) != 0) &&
+        (sgx_strcmp(id, engine_4758_cca_id_alt) != 0))
         return 0;
     if (!bind_helper(e))
         return 0;

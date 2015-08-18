@@ -24,6 +24,8 @@
 
 #include "des_locl.h"
 
+#include "../sgx.h"
+
 /*
  * Added more values to handle illegal salt values the way normal crypt()
  * implementations do.  The patch was sent by Bjorn Gronvall <bg@sics.se>
@@ -74,7 +76,7 @@ char *DES_crypt(const char *buf, const char *salt)
         e_salt[1] = salt[1];
 
     /* Copy at most 32 chars of password */
-    strncpy(e_buf, buf, sizeof(e_buf));
+    sgx_strncpy(e_buf, buf, sizeof(e_buf));
 
     /* Make sure we have a delimiter */
     e_salt[sizeof(e_salt) - 1] = e_buf[sizeof(e_buf) - 1] = '\0';
@@ -89,7 +91,7 @@ char *DES_crypt(const char *buf, const char *salt)
     ret = DES_fcrypt(e_buf, e_salt, buff);
 
     /* Convert the result back to EBCDIC */
-    ascii2ebcdic(ret, ret, strlen(ret));
+    ascii2ebcdic(ret, ret, sgx_strlen(ret));
 
     return ret;
 #endif

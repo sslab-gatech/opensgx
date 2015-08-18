@@ -124,7 +124,7 @@ int ASN1_verify(i2d_of_void *i2d, X509_ALGOR *a, ASN1_BIT_STRING *signature,
      * we don't need to zero the 'ctx' because we just checked public
      * information
      */
-    /* memset(&ctx,0,sizeof(ctx)); */
+    /* sgx_memset(&ctx,0,sizeof(ctx)); */
     ret = 1;
  err:
     EVP_MD_CTX_cleanup(&ctx);
@@ -223,7 +223,7 @@ int ASN1_item_verify(const ASN1_ITEM *it, X509_ALGOR *a,
      * we don't need to zero the 'ctx' because we just checked public
      * information
      */
-    /* memset(&ctx,0,sizeof(ctx)); */
+    /* sgx_memset(&ctx,0,sizeof(ctx)); */
     ret = 1;
  err:
     EVP_MD_CTX_cleanup(&ctx);

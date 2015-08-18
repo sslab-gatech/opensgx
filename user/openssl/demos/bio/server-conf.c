@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
             ERR_print_errors_fp(stderr);
             goto err;
         }
-        if (!strcmp(cnf->name, "Port")) {
+        if (!sgx_strcmp(cnf->name, "Port")) {
             port = cnf->value;
         } else {
             fprintf(stderr, "Unknown configuration option %s\n", cnf->name);

@@ -136,53 +136,53 @@ int MAIN(int argc, char **argv)
     argc--;
     argv++;
     while (argc >= 1) {
-        if (strcmp(*argv, "-inform") == 0) {
+        if (sgx_strcmp(*argv, "-inform") == 0) {
             if (--argc < 1)
                 goto bad;
             informat = str2fmt(*(++argv));
-        } else if (strcmp(*argv, "-outform") == 0) {
+        } else if (sgx_strcmp(*argv, "-outform") == 0) {
             if (--argc < 1)
                 goto bad;
             outformat = str2fmt(*(++argv));
-        } else if (strcmp(*argv, "-in") == 0) {
+        } else if (sgx_strcmp(*argv, "-in") == 0) {
             if (--argc < 1)
                 goto bad;
             infile = *(++argv);
-        } else if (strcmp(*argv, "-out") == 0) {
+        } else if (sgx_strcmp(*argv, "-out") == 0) {
             if (--argc < 1)
                 goto bad;
             outfile = *(++argv);
-        } else if (strcmp(*argv, "-passin") == 0) {
+        } else if (sgx_strcmp(*argv, "-passin") == 0) {
             if (--argc < 1)
                 goto bad;
             passargin = *(++argv);
-        } else if (strcmp(*argv, "-passout") == 0) {
+        } else if (sgx_strcmp(*argv, "-passout") == 0) {
             if (--argc < 1)
                 goto bad;
             passargout = *(++argv);
         }
 # ifndef OPENSSL_NO_ENGINE
-        else if (strcmp(*argv, "-engine") == 0) {
+        else if (sgx_strcmp(*argv, "-engine") == 0) {
             if (--argc < 1)
                 goto bad;
             engine = *(++argv);
         }
 # endif
-        else if (strcmp(*argv, "-pvk-strong") == 0)
+        else if (sgx_strcmp(*argv, "-pvk-strong") == 0)
             pvk_encr = 2;
-        else if (strcmp(*argv, "-pvk-weak") == 0)
+        else if (sgx_strcmp(*argv, "-pvk-weak") == 0)
             pvk_encr = 1;
-        else if (strcmp(*argv, "-pvk-none") == 0)
+        else if (sgx_strcmp(*argv, "-pvk-none") == 0)
             pvk_encr = 0;
-        else if (strcmp(*argv, "-noout") == 0)
+        else if (sgx_strcmp(*argv, "-noout") == 0)
             noout = 1;
-        else if (strcmp(*argv, "-text") == 0)
+        else if (sgx_strcmp(*argv, "-text") == 0)
             text = 1;
-        else if (strcmp(*argv, "-modulus") == 0)
+        else if (sgx_strcmp(*argv, "-modulus") == 0)
             modulus = 1;
-        else if (strcmp(*argv, "-pubin") == 0)
+        else if (sgx_strcmp(*argv, "-pubin") == 0)
             pubin = 1;
-        else if (strcmp(*argv, "-pubout") == 0)
+        else if (sgx_strcmp(*argv, "-pubout") == 0)
             pubout = 1;
         else if ((enc = EVP_get_cipherbyname(&(argv[0][1]))) == NULL) {
             BIO_printf(bio_err, "unknown option %s\n", *argv);

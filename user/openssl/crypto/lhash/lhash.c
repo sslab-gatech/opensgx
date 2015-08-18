@@ -125,8 +125,8 @@ _LHASH *lh_new(LHASH_HASH_FN_TYPE h, LHASH_COMP_FN_TYPE c)
         goto err1;
     for (i = 0; i < MIN_NODES; i++)
         ret->b[i] = NULL;
-    ret->comp = ((c == NULL) ? (LHASH_COMP_FN_TYPE)sgx_strcmp : c) + ENCLAVE_OFFSET;
-    ret->hash = ((h == NULL) ? (LHASH_HASH_FN_TYPE)lh_strhash : h) + ENCLAVE_OFFSET;
+    ret->comp = ((c == NULL) ? (LHASH_COMP_FN_TYPE)sgx_strcmp : c);
+    ret->hash = ((h == NULL) ? (LHASH_HASH_FN_TYPE)lh_strhash : h);
     ret->num_nodes = MIN_NODES / 2;
     ret->num_alloc_nodes = MIN_NODES;
     ret->p = 0;

@@ -89,7 +89,7 @@ static int send_mem_chars(void *arg, const void *buf, int len)
     unsigned char **out = arg;
     if (!out)
         return 1;
-    memcpy(*out, buf, len);
+    sgx_memcpy(*out, buf, len);
     *out += len;
     return 1;
 }
@@ -367,7 +367,7 @@ static int do_print_ex(char_io *io_ch, void *arg, unsigned long lflags,
     if (lflags & ASN1_STRFLGS_SHOW_TYPE) {
         const char *tagname;
         tagname = ASN1_tag2str(type);
-        outlen += strlen(tagname);
+        outlen += sgx_strlen(tagname);
         if (!io_ch(arg, tagname, outlen) || !io_ch(arg, ":", 1))
             return -1;
         outlen++;
@@ -548,7 +548,7 @@ static int do_name_ex(char_io *io_ch, void *arg, X509_NAME *n,
                     objbuf = "";
                 }
             }
-            objlen = strlen(objbuf);
+            objlen = sgx_strlen(objbuf);
             if (!io_ch(arg, objbuf, objlen))
                 return -1;
             if ((objlen < fld_len) && (flags & XN_FLAG_FN_ALIGN)) {
@@ -642,8 +642,9 @@ int ASN1_STRING_to_UTF8(unsigned char **out, ASN1_STRING *in)
     ret =
         ASN1_mbstring_copy(&str, in->data, in->length, mbflag,
                            B_ASN1_UTF8STRING);
-    if (ret < 0)
+    if (ret < 0) {
         return ret;
+    }
     *out = stmp.data;
     return stmp.length;
 }

@@ -152,71 +152,71 @@ int MAIN(int argc, char **argv)
     argc--;
     argv++;
     while (argc >= 1) {
-        if (strcmp(*argv, "-inform") == 0) {
+        if (sgx_strcmp(*argv, "-inform") == 0) {
             if (--argc < 1)
                 goto bad;
             informat = str2fmt(*(++argv));
-        } else if (strcmp(*argv, "-outform") == 0) {
+        } else if (sgx_strcmp(*argv, "-outform") == 0) {
             if (--argc < 1)
                 goto bad;
             outformat = str2fmt(*(++argv));
-        } else if (strcmp(*argv, "-in") == 0) {
+        } else if (sgx_strcmp(*argv, "-in") == 0) {
             if (--argc < 1)
                 goto bad;
             infile = *(++argv);
-        } else if (strcmp(*argv, "-out") == 0) {
+        } else if (sgx_strcmp(*argv, "-out") == 0) {
             if (--argc < 1)
                 goto bad;
             outfile = *(++argv);
-        } else if (strcmp(*argv, "-text") == 0)
+        } else if (sgx_strcmp(*argv, "-text") == 0)
             text = 1;
-        else if (strcmp(*argv, "-C") == 0)
+        else if (sgx_strcmp(*argv, "-C") == 0)
             C = 1;
-        else if (strcmp(*argv, "-check") == 0)
+        else if (sgx_strcmp(*argv, "-check") == 0)
             check = 1;
-        else if (strcmp(*argv, "-name") == 0) {
+        else if (sgx_strcmp(*argv, "-name") == 0) {
             if (--argc < 1)
                 goto bad;
             curve_name = *(++argv);
-        } else if (strcmp(*argv, "-list_curves") == 0)
+        } else if (sgx_strcmp(*argv, "-list_curves") == 0)
             list_curves = 1;
-        else if (strcmp(*argv, "-conv_form") == 0) {
+        else if (sgx_strcmp(*argv, "-conv_form") == 0) {
             if (--argc < 1)
                 goto bad;
             ++argv;
             new_form = 1;
-            if (strcmp(*argv, "compressed") == 0)
+            if (sgx_strcmp(*argv, "compressed") == 0)
                 form = POINT_CONVERSION_COMPRESSED;
-            else if (strcmp(*argv, "uncompressed") == 0)
+            else if (sgx_strcmp(*argv, "uncompressed") == 0)
                 form = POINT_CONVERSION_UNCOMPRESSED;
-            else if (strcmp(*argv, "hybrid") == 0)
+            else if (sgx_strcmp(*argv, "hybrid") == 0)
                 form = POINT_CONVERSION_HYBRID;
             else
                 goto bad;
-        } else if (strcmp(*argv, "-param_enc") == 0) {
+        } else if (sgx_strcmp(*argv, "-param_enc") == 0) {
             if (--argc < 1)
                 goto bad;
             ++argv;
             new_asn1_flag = 1;
-            if (strcmp(*argv, "named_curve") == 0)
+            if (sgx_strcmp(*argv, "named_curve") == 0)
                 asn1_flag = OPENSSL_EC_NAMED_CURVE;
-            else if (strcmp(*argv, "explicit") == 0)
+            else if (sgx_strcmp(*argv, "explicit") == 0)
                 asn1_flag = 0;
             else
                 goto bad;
-        } else if (strcmp(*argv, "-no_seed") == 0)
+        } else if (sgx_strcmp(*argv, "-no_seed") == 0)
             no_seed = 1;
-        else if (strcmp(*argv, "-noout") == 0)
+        else if (sgx_strcmp(*argv, "-noout") == 0)
             noout = 1;
-        else if (strcmp(*argv, "-genkey") == 0) {
+        else if (sgx_strcmp(*argv, "-genkey") == 0) {
             genkey = 1;
             need_rand = 1;
-        } else if (strcmp(*argv, "-rand") == 0) {
+        } else if (sgx_strcmp(*argv, "-rand") == 0) {
             if (--argc < 1)
                 goto bad;
             inrand = *(++argv);
             need_rand = 1;
-        } else if (strcmp(*argv, "-engine") == 0) {
+        } else if (sgx_strcmp(*argv, "-engine") == 0) {
             if (--argc < 1)
                 goto bad;
             engine = *(++argv);
@@ -359,11 +359,11 @@ int MAIN(int argc, char **argv)
          * are the same as the curves prime192v1 and prime256v1 defined in
          * X9.62)
          */
-        if (!strcmp(curve_name, "secp192r1")) {
+        if (!sgx_strcmp(curve_name, "secp192r1")) {
             BIO_printf(bio_err, "using curve name prime192v1 "
                        "instead of secp192r1\n");
             nid = NID_X9_62_prime192v1;
-        } else if (!strcmp(curve_name, "secp256r1")) {
+        } else if (!sgx_strcmp(curve_name, "secp256r1")) {
             BIO_printf(bio_err, "using curve name prime256v1 "
                        "instead of secp256r1\n");
             nid = NID_X9_62_prime256v1;

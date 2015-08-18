@@ -71,7 +71,7 @@ void EVP_set_pw_prompt(const char *prompt)
     if (prompt == NULL)
         prompt_string[0] = '\0';
     else {
-        strncpy(prompt_string, prompt, 79);
+        sgx_strncpy(prompt_string, prompt, 79);
         prompt_string[79] = '\0';
     }
 }

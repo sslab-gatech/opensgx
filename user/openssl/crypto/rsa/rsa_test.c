@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
   key->dmp1 = BN_bin2bn(dmp1, sizeof(dmp1)-1, key->dmp1); \
   key->dmq1 = BN_bin2bn(dmq1, sizeof(dmq1)-1, key->dmq1); \
   key->iqmp = BN_bin2bn(iqmp, sizeof(iqmp)-1, key->iqmp); \
-  memcpy(c, ctext_ex, sizeof(ctext_ex) - 1); \
+  sgx_memcpy(c, ctext_ex, sizeof(ctext_ex) - 1); \
   return (sizeof(ctext_ex) - 1);
 
 static int key1(RSA *key, unsigned char *c)
@@ -255,7 +255,7 @@ int main(int argc, char *argv[])
         }
 
         num = RSA_private_decrypt(num, ctext, ptext, key, RSA_PKCS1_PADDING);
-        if (num != plen || memcmp(ptext, ptext_ex, num) != 0) {
+        if (num != plen || sgx_memcmp(ptext, ptext_ex, num) != 0) {
             printf("PKCS#1 v1.5 decryption failed!\n");
             err = 1;
         } else
@@ -277,10 +277,10 @@ int main(int argc, char *argv[])
 
         num = RSA_private_decrypt(num, ctext, ptext, key,
                                   RSA_PKCS1_OAEP_PADDING);
-        if (num != plen || memcmp(ptext, ptext_ex, num) != 0) {
+        if (num != plen || sgx_memcmp(ptext, ptext_ex, num) != 0) {
             printf("OAEP decryption (encrypted data) failed!\n");
             err = 1;
-        } else if (memcmp(ctext, ctext_ex, num) == 0)
+        } else if (sgx_memcmp(ctext, ctext_ex, num) == 0)
             printf("OAEP test vector %d passed!\n", v);
 
         /*
@@ -291,7 +291,7 @@ int main(int argc, char *argv[])
         num = RSA_private_decrypt(clen, ctext_ex, ptext, key,
                                   RSA_PKCS1_OAEP_PADDING);
 
-        if (num != plen || memcmp(ptext, ptext_ex, num) != 0) {
+        if (num != plen || sgx_memcmp(ptext, ptext_ex, num) != 0) {
             printf("OAEP decryption (test vector data) failed!\n");
             err = 1;
         } else

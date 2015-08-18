@@ -160,7 +160,7 @@ static int rc4_hmac_md5_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out,
 
         if (plen != len) {      /* "TLS" mode of operation */
             if (in != out)
-                memcpy(out + rc4_off, in + rc4_off, plen - rc4_off);
+                sgx_memcpy(out + rc4_off, in + rc4_off, plen - rc4_off);
 
             /* calculate HMAC and append it to payload */
             MD5_Final(out + plen, &key->md);
@@ -212,7 +212,7 @@ static int rc4_hmac_md5_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out,
             MD5_Update(&key->md, mac, MD5_DIGEST_LENGTH);
             MD5_Final(mac, &key->md);
 
-            if (memcmp(out + plen, mac, MD5_DIGEST_LENGTH))
+            if (sgx_memcmp(out + plen, mac, MD5_DIGEST_LENGTH))
                 return 0;
         } else {
             MD5_Update(&key->md, out + md5_off, len - md5_off);
@@ -242,7 +242,7 @@ static int rc4_hmac_md5_ctrl(EVP_CIPHER_CTX *ctx, int type, int arg,
                 MD5_Update(&key->head, ptr, arg);
                 MD5_Final(hmac_key, &key->head);
             } else {
-                memcpy(hmac_key, ptr, arg);
+                sgx_memcpy(hmac_key, ptr, arg);
             }
 
             for (i = 0; i < sizeof(hmac_key); i++)

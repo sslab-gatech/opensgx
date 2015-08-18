@@ -75,7 +75,7 @@ int CMS_RecipientInfo_set0_password(CMS_RecipientInfo *ri,
     pwri = ri->d.pwri;
     pwri->pass = pass;
     if (pass && passlen < 0)
-        passlen = strlen((char *)pass);
+        passlen = sgx_strlen((char *)pass);
     pwri->passlen = passlen;
     return 1;
 }
@@ -257,7 +257,7 @@ static int kek_unwrap_key(unsigned char *out, size_t *outlen,
         goto err;
     }
     *outlen = (size_t)tmp[0];
-    memcpy(out, tmp + 4, *outlen);
+    sgx_memcpy(out, tmp + 4, *outlen);
     rv = 1;
  err:
     OPENSSL_cleanse(tmp, inlen);
@@ -293,7 +293,7 @@ static int kek_wrap_key(unsigned char *out, size_t *outlen,
         out[1] = in[0] ^ 0xFF;
         out[2] = in[1] ^ 0xFF;
         out[3] = in[2] ^ 0xFF;
-        memcpy(out + 4, in, inlen);
+        sgx_memcpy(out + 4, in, inlen);
         /* Add random padding to end */
         if (olen > inlen + 4)
             RAND_pseudo_bytes(out + 4 + inlen, olen - 4 - inlen);

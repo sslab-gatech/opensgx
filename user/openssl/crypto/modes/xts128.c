@@ -79,7 +79,7 @@ int CRYPTO_xts128_encrypt(const XTS128_CONTEXT *ctx,
     if (len < 16)
         return -1;
 
-    memcpy(tweak.c, iv, 16);
+    sgx_memcpy(tweak.c, iv, 16);
 
     (*ctx->block2) (tweak.c, tweak.c, ctx->key2);
 
@@ -88,7 +88,7 @@ int CRYPTO_xts128_encrypt(const XTS128_CONTEXT *ctx,
 
     while (len >= 16) {
 #if defined(STRICT_ALIGNMENT)
-        memcpy(scratch.c, inp, 16);
+        sgx_memcpy(scratch.c, inp, 16);
         scratch.u[0] ^= tweak.u[0];
         scratch.u[1] ^= tweak.u[1];
 #else
@@ -99,7 +99,7 @@ int CRYPTO_xts128_encrypt(const XTS128_CONTEXT *ctx,
 #if defined(STRICT_ALIGNMENT)
         scratch.u[0] ^= tweak.u[0];
         scratch.u[1] ^= tweak.u[1];
-        memcpy(out, scratch.c, 16);
+        sgx_memcpy(out, scratch.c, 16);
 #else
         ((u64 *)out)[0] = scratch.u[0] ^= tweak.u[0];
         ((u64 *)out)[1] = scratch.u[1] ^= tweak.u[1];
@@ -143,7 +143,7 @@ int CRYPTO_xts128_encrypt(const XTS128_CONTEXT *ctx,
         (*ctx->block1) (scratch.c, scratch.c, ctx->key1);
         scratch.u[0] ^= tweak.u[0];
         scratch.u[1] ^= tweak.u[1];
-        memcpy(out - 16, scratch.c, 16);
+        sgx_memcpy(out - 16, scratch.c, 16);
     } else {
         union {
             u64 u[2];
@@ -171,7 +171,7 @@ int CRYPTO_xts128_encrypt(const XTS128_CONTEXT *ctx,
             tweak1.c[0] ^= (u8)(0x87 & (0 - c));
         }
 #if defined(STRICT_ALIGNMENT)
-        memcpy(scratch.c, inp, 16);
+        sgx_memcpy(scratch.c, inp, 16);
         scratch.u[0] ^= tweak1.u[0];
         scratch.u[1] ^= tweak1.u[1];
 #else
@@ -193,7 +193,7 @@ int CRYPTO_xts128_encrypt(const XTS128_CONTEXT *ctx,
 #if defined(STRICT_ALIGNMENT)
         scratch.u[0] ^= tweak.u[0];
         scratch.u[1] ^= tweak.u[1];
-        memcpy(out, scratch.c, 16);
+        sgx_memcpy(out, scratch.c, 16);
 #else
         ((u64 *)out)[0] = scratch.u[0] ^ tweak.u[0];
         ((u64 *)out)[1] = scratch.u[1] ^ tweak.u[1];

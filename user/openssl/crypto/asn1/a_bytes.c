@@ -104,7 +104,7 @@ ASN1_STRING *d2i_ASN1_type_bytes(ASN1_STRING **a, const unsigned char **pp,
             i = ERR_R_MALLOC_FAILURE;
             goto err;
         }
-        memcpy(s, p, (int)len);
+        sgx_memcpy(s, p, (int)len);
         s[len] = '\0';
         p += len;
     } else
@@ -148,7 +148,7 @@ int i2d_ASN1_bytes(ASN1_STRING *a, unsigned char **pp, int tag, int xclass)
     else
         constructed = 0;
     ASN1_put_object(&p, constructed, ret, tag, xclass);
-    memcpy(p, a->data, a->length);
+    sgx_memcpy(p, a->data, a->length);
     p += a->length;
     *pp = p;
     return (r);
@@ -209,7 +209,7 @@ ASN1_STRING *d2i_ASN1_bytes(ASN1_STRING **a, const unsigned char **pp,
                 }
             } else
                 s = ret->data;
-            memcpy(s, p, (int)len);
+            sgx_memcpy(s, p, (int)len);
             s[len] = '\0';
             p += len;
         } else {
@@ -280,7 +280,7 @@ static int asn1_collate_primitive(ASN1_STRING *a, ASN1_const_CTX *c)
             c->error = ERR_R_BUF_LIB;
             goto err;
         }
-        memcpy(&(b.data[num]), os->data, os->length);
+        sgx_memcpy(&(b.data[num]), os->data, os->length);
         if (!(c->inf & 1))
             c->slen -= (c->p - c->q);
         num += os->length;

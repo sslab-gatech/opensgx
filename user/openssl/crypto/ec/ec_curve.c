@@ -79,6 +79,8 @@
 #include <openssl/obj_mac.h>
 #include <openssl/opensslconf.h>
 
+#include "../sgx.h"
+
 typedef struct {
     int field_type,             /* either NID_X9_62_prime_field or
                                  * NID_X9_62_characteristic_two_field */
@@ -3241,7 +3243,7 @@ int EC_curve_nist2nid(const char *name)
 {
     size_t i;
     for (i = 0; i < sizeof(nist_curves) / sizeof(EC_NIST_NAME); i++) {
-        if (!strcmp(nist_curves[i].name, name))
+        if (!sgx_strcmp(nist_curves[i].name, name))
             return nist_curves[i].nid;
     }
     return NID_undef;

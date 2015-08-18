@@ -57,6 +57,8 @@
 #include <openssl/asn1.h>
 #include <openssl/cms.h>
 
+#include "../sgx.h"
+
 /* Key derivation from X9.42/RFC2631 */
 
 #define DH_KDF_MAX      (1L << 30)
@@ -173,7 +175,7 @@ int DH_KDF_X9_42(unsigned char *out, size_t outlen,
         } else {
             if (!EVP_DigestFinal(&mctx, mtmp, NULL))
                 goto err;
-            memcpy(out, mtmp, outlen);
+            sgx_memcpy(out, mtmp, outlen);
             OPENSSL_cleanse(mtmp, mdlen);
             break;
         }

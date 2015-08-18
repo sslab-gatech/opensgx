@@ -200,7 +200,7 @@ static int ssl3_generate_key_block(SSL *s, unsigned char *km, int num)
         EVP_DigestUpdate(&m5, smd, SHA_DIGEST_LENGTH);
         if ((int)(i + MD5_DIGEST_LENGTH) > num) {
             EVP_DigestFinal_ex(&m5, smd, NULL);
-            memcpy(km, smd, (num - i));
+            sgx_memcpy(km, smd, (num - i));
         } else
             EVP_DigestFinal_ex(&m5, km, NULL);
 
@@ -274,7 +274,7 @@ int ssl3_change_cipher_state(SSL *s, int which)
                 goto err;
         }
 #endif
-        memset(&(s->s3->read_sequence[0]), 0, 8);
+        sgx_memset(&(s->s3->read_sequence[0]), 0, 8);
         mac_secret = &(s->s3->read_mac_secret[0]);
     } else {
         if (s->enc_write_ctx != NULL)
@@ -304,7 +304,7 @@ int ssl3_change_cipher_state(SSL *s, int which)
             }
         }
 #endif
-        memset(&(s->s3->write_sequence[0]), 0, 8);
+        sgx_memset(&(s->s3->write_sequence[0]), 0, 8);
         mac_secret = &(s->s3->write_mac_secret[0]);
     }
 
@@ -348,7 +348,7 @@ int ssl3_change_cipher_state(SSL *s, int which)
     }
 
     EVP_MD_CTX_init(&md);
-    memcpy(mac_secret, ms, i);
+    sgx_memcpy(mac_secret, ms, i);
     if (is_exp) {
         /*
          * In here I set both the read and write key/iv to the same value
@@ -513,7 +513,7 @@ int ssl3_enc(SSL *s, int send)
     }
 
     if ((s->session == NULL) || (ds == NULL) || (enc == NULL)) {
-        memmove(rec->data, rec->input, rec->length);
+        sgx_memmove(rec->data, rec->input, rec->length);
         rec->input = rec->data;
     } else {
         l = rec->length;
@@ -530,7 +530,7 @@ int ssl3_enc(SSL *s, int send)
              * the last of these zero bytes will be overwritten with the
              * padding length.
              */
-            memset(&rec->input[rec->length], 0, i);
+            sgx_memset(&rec->input[rec->length], 0, i);
             rec->length += i;
             rec->input[l - 1] = (i - 1);
         }
@@ -601,7 +601,7 @@ int ssl3_digest_cached_records(SSL *s)
     ssl3_free_digest_list(s);
     s->s3->handshake_dgst =
         OPENSSL_malloc(SSL_MAX_DIGEST * sizeof(EVP_MD_CTX *));
-    memset(s->s3->handshake_dgst, 0, SSL_MAX_DIGEST * sizeof(EVP_MD_CTX *));
+    sgx_memset(s->s3->handshake_dgst, 0, SSL_MAX_DIGEST * sizeof(EVP_MD_CTX *));
     hdatalen = BIO_get_mem_data(s->s3->handshake_buffer, &hdata);
     if (hdatalen <= 0) {
         SSLerr(SSL_F_SSL3_DIGEST_CACHED_RECORDS, SSL_R_BAD_HANDSHAKE_LENGTH);
@@ -764,11 +764,11 @@ int n_ssl3_mac(SSL *ssl, unsigned char *md, int send)
          */
         unsigned char header[75];
         unsigned j = 0;
-        memcpy(header + j, mac_sec, md_size);
+        sgx_memcpy(header + j, mac_sec, md_size);
         j += md_size;
-        memcpy(header + j, ssl3_pad_1, npad);
+        sgx_memcpy(header + j, ssl3_pad_1, npad);
         j += npad;
-        memcpy(header + j, seq, 8);
+        sgx_memcpy(header + j, seq, 8);
         j += 8;
         header[j++] = rec->type;
         header[j++] = rec->length >> 8;
@@ -847,7 +847,7 @@ int ssl3_generate_master_secret(SSL *s, unsigned char *out, unsigned char *p,
     EVP_MD_CTX_init(&ctx);
     for (i = 0; i < 3; i++) {
         EVP_DigestInit_ex(&ctx, s->ctx->sha1, NULL);
-        EVP_DigestUpdate(&ctx, salt[i], strlen((const char *)salt[i]));
+        EVP_DigestUpdate(&ctx, salt[i], sgx_strlen((const char *)salt[i]));
         EVP_DigestUpdate(&ctx, p, len);
         EVP_DigestUpdate(&ctx, &(s->s3->client_random[0]), SSL3_RANDOM_SIZE);
         EVP_DigestUpdate(&ctx, &(s->s3->server_random[0]), SSL3_RANDOM_SIZE);

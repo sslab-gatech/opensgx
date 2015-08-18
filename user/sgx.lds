@@ -61,7 +61,7 @@ SECTIONS
     *(.text.exit .text.exit.*)
     *(.text.startup .text.startup.*)
     *(.text.hot .text.hot.*)
-    *(EXCLUDE_FILE(test/*.o demo/*.o *Lib* ssl_*).text .stub .text.* .gnu.linkonce.t.*)
+    *(EXCLUDE_FILE(test/*.o demo/*.o *Lib.o polarssl_sgx/*.o lib/*.o).stub .text.* .gnu.linkonce.t.*)
     /* .gnu.warning sections are handled specially by elf32.em.  */
     *(.gnu.warning)
   } =0x90909090
@@ -72,8 +72,6 @@ SECTIONS
   PROVIDE (__etext = .);
   PROVIDE (_etext = .);
   PROVIDE (etext = .);
-  .rodata         : { *(EXCLUDE_FILE(test/*.o demo/*.o *Lib* ssl_*).rodata .rodata.* .gnu.linkonce.r.*) }
-  .rodata1        : { *(.rodata1) }
   .eh_frame_hdr : { *(.eh_frame_hdr) }
   .eh_frame       : ONLY_IF_RO { KEEP (*(.eh_frame)) }
   .gcc_except_table   : ONLY_IF_RO { *(.gcc_except_table
@@ -148,19 +146,37 @@ SECTIONS
   .got            : { *(.got) *(.igot) }
   . = DATA_SEGMENT_RELRO_END (24, .);
   .got.plt        : { *(.got.plt)  *(.igot.plt) }
-  .data           :
-  {
-    *(EXCLUDE_FILE(test/*.o demo/*.o *Lib* ssl_*).data .data.* .gnu.linkonce.d.*)
-    SORT(CONSTRUCTORS)
-  }
-  .data1          : { *(.data1) }
-  _edata = .; PROVIDE (edata = .);
+
+  . = 0x20008000;
+  .enc_text   : ALIGN(0x1000)
+    {
+      ENCT_START = .;
+      test/*.o(.text)
+      demo/*.o(.text)
+      polarssl_sgx/*.o(.text)
+      lib/*.o(.text)
+      *(.enc_text)
+      *Lib.o(.text)
+      ENCT_END = ALIGN(0x1000);
+    } =0x90909090
+  .enc_data   : ALIGN(0x1000)
+    {
+      ENCD_START = .;
+      test/*.o(.data .data.rel.local .bss .rodata COMMON)
+      demo/*.o(.data .data.rel.local .bss .rodata COMMON)
+      polarssl_sgx/*.o(.data .data.rel.local .bss .rodata COMMON)
+      lib/*.o(.data .data.rel.local .bss .rodata COMMON)
+      *(.enc_data)
+      *Lib.o(.data .data.rel.local .bss .rodata COMMON)
+      ENCD_END = ALIGN(0x1000);
+    } =0x90909090
+
   __bss_start = .;
   .bss            :
   {
    *(.dynbss)
-   *(EXCLUDE_FILE(test/*.o demo/*.o *Lib* ssl_*).bss .bss.* .gnu.linkonce.b.*)
-   *(EXCLUDE_FILE(test/*.o *Lib* ssl_*)COMMON)
+   *(EXCLUDE_FILE(test/*.o demo/*.o polarssl_sgx/*.o lib/*.o *Lib.o).bss.* .gnu.linkonce.b.*)
+/*   *(EXCLUDE_FILE(test/*.o *Lib.o polarssl_sgx/*.o)COMMON) */
    /* Align here to ensure that the .bss section occupies space up to
       _end.  Align after .bss to ensure correct alignment even if the
       .bss section disappears because there are no input sections.
@@ -169,27 +185,16 @@ SECTIONS
    . = ALIGN(. != 0 ? 64 / 8 : 1);
   }
 
-  . = 0x20008000;
-  .enc_text   : ALIGN(0x1000)
-    {
-      ENCT_START = .;
-      test/*.o(.text)
-      demo/*.o(.text)
-      *(.enc_text) 
-      *Lib*(.text)
-      ssl_*(.text)
-      ENCT_END = ALIGN(0x1000);
-    } =0x90909090
-  .enc_data   : ALIGN(0x1000)
-    {
-      ENCD_START = .;
-      test/*.o(.data .bss .rodata .rodata.* COMMON)
-      demo/*.o(.data .bss .rodata .rodata.* COMMON)
-      *(.enc_data)
-      *Lib*(.data .bss .rodata .rodata.* COMMON)
-      ssl_*(.data .bss .rodata .rodata.* COMMON)
-      ENCD_END = ALIGN(0x1000);
-    } =0x90909090
+  .data           :
+  {
+    *(EXCLUDE_FILE(test/*.o demo/*.o polarssl_sgx/*.o lib/*.o *Lib.o).data.* .gnu.linkonce.d.*)
+    SORT(CONSTRUCTORS)
+  }
+  .data1          : { *(.data1) }
+  _edata = .; PROVIDE (edata = .);
+
+  .rodata         : { *(EXCLUDE_FILE(test/*.o demo/*.o polarssl_sgx/*.o lib/*.o *Lib.o).rodata.* .gnu.linkonce.r.*) }
+  .rodata1        : { *(.rodata1) }
 
   .lbss   :
   {

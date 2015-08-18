@@ -215,7 +215,7 @@ static STACK_OF(SCT) *d2i_SCT_LIST(STACK_OF(SCT) **a,
         sct->sct = OPENSSL_malloc(sctlen);
         if (!sct->sct)
             goto err;
-        memcpy(sct->sct, p, sctlen);
+        sgx_memcpy(sct->sct, p, sctlen);
         sct->sctlen = sctlen;
         p += sctlen;
         p2 = sct->sct;

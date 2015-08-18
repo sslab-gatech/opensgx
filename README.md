@@ -19,7 +19,9 @@ $ cd qemu
 $ ./configure-arch
 $ make -j $(nproc)
 
-$ cd ..
+$ cd ../user/polarssl_sgx
+$ make
+$ cd ../..
 $ make
 ~~~~~
 
@@ -48,6 +50,8 @@ $ ./opensgx -s user/demo/hello.sgx --key sign.key
 generate hello.conf
 $ ./opensgx user/demo/hello.conf
 run the program
+$ ./opensgx -i user/demo/hello.conf
+run the program with counting the number of executed guest instructions
 ~~~~~
 
 Testing

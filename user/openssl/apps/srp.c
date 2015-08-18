@@ -127,14 +127,14 @@ static int get_index(CA_DB *db, char *id, char type)
         for (i = 0; i < sk_OPENSSL_PSTRING_num(db->db->data); i++) {
             pp = sk_OPENSSL_PSTRING_value(db->db->data, i);
             if (pp[DB_srptype][0] == DB_SRP_INDEX
-                && !strcmp(id, pp[DB_srpid]))
+                && !sgx_strcmp(id, pp[DB_srpid]))
                 return i;
     } else
         for (i = 0; i < sk_OPENSSL_PSTRING_num(db->db->data); i++) {
             pp = sk_OPENSSL_PSTRING_value(db->db->data, i);
 
             if (pp[DB_srptype][0] != DB_SRP_INDEX
-                && !strcmp(id, pp[DB_srpid]))
+                && !sgx_strcmp(id, pp[DB_srpid]))
                 return i;
         }
 
@@ -227,7 +227,7 @@ static char *srp_verify_user(const char *user, const char *srp_verifier,
                                  g))) {
             BIO_printf(bio, "Internal error validating SRP verifier\n");
         } else {
-            if (strcmp(verifier, srp_verifier))
+            if (sgx_strcmp(verifier, srp_verifier))
                 gNid = NULL;
             OPENSSL_free(verifier);
         }
@@ -317,47 +317,47 @@ int MAIN(int argc, char **argv)
     argc--;
     argv++;
     while (argc >= 1 && badops == 0) {
-        if (strcmp(*argv, "-verbose") == 0)
+        if (sgx_strcmp(*argv, "-verbose") == 0)
             verbose++;
-        else if (strcmp(*argv, "-config") == 0) {
+        else if (sgx_strcmp(*argv, "-config") == 0) {
             if (--argc < 1)
                 goto bad;
             configfile = *(++argv);
-        } else if (strcmp(*argv, "-name") == 0) {
+        } else if (sgx_strcmp(*argv, "-name") == 0) {
             if (--argc < 1)
                 goto bad;
             section = *(++argv);
-        } else if (strcmp(*argv, "-srpvfile") == 0) {
+        } else if (sgx_strcmp(*argv, "-srpvfile") == 0) {
             if (--argc < 1)
                 goto bad;
             dbfile = *(++argv);
-        } else if (strcmp(*argv, "-add") == 0)
+        } else if (sgx_strcmp(*argv, "-add") == 0)
             add_user = 1;
-        else if (strcmp(*argv, "-delete") == 0)
+        else if (sgx_strcmp(*argv, "-delete") == 0)
             delete_user = 1;
-        else if (strcmp(*argv, "-modify") == 0)
+        else if (sgx_strcmp(*argv, "-modify") == 0)
             modify_user = 1;
-        else if (strcmp(*argv, "-list") == 0)
+        else if (sgx_strcmp(*argv, "-list") == 0)
             list_user = 1;
-        else if (strcmp(*argv, "-gn") == 0) {
+        else if (sgx_strcmp(*argv, "-gn") == 0) {
             if (--argc < 1)
                 goto bad;
             gN = *(++argv);
-        } else if (strcmp(*argv, "-userinfo") == 0) {
+        } else if (sgx_strcmp(*argv, "-userinfo") == 0) {
             if (--argc < 1)
                 goto bad;
             userinfo = *(++argv);
-        } else if (strcmp(*argv, "-passin") == 0) {
+        } else if (sgx_strcmp(*argv, "-passin") == 0) {
             if (--argc < 1)
                 goto bad;
             passargin = *(++argv);
-        } else if (strcmp(*argv, "-passout") == 0) {
+        } else if (sgx_strcmp(*argv, "-passout") == 0) {
             if (--argc < 1)
                 goto bad;
             passargout = *(++argv);
         }
 # ifndef OPENSSL_NO_ENGINE
-        else if (strcmp(*argv, "-engine") == 0) {
+        else if (sgx_strcmp(*argv, "-engine") == 0) {
             if (--argc < 1)
                 goto bad;
             engine = *(++argv);
@@ -510,7 +510,7 @@ int MAIN(int argc, char **argv)
 
         if (pp[DB_srptype][0] == DB_SRP_INDEX) {
             maxgN = i;
-            if (gNindex < 0 && gN != NULL && !strcmp(gN, pp[DB_srpid]))
+            if (gNindex < 0 && gN != NULL && !sgx_strcmp(gN, pp[DB_srpid]))
                 gNindex = i;
 
             print_index(db, bio_err, i, verbose > 1);

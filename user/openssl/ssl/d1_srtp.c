@@ -150,7 +150,7 @@ static int find_profile_by_name(char *profile_name,
 
     p = srtp_known_profiles;
     while (p->name) {
-        if ((len == strlen(p->name)) && !strncmp(p->name, profile_name, len)) {
+        if ((len == sgx_strlen(p->name)) && !sgx_strncmp(p->name, profile_name, len)) {
             *pptr = p;
             return 0;
         }
@@ -178,10 +178,10 @@ static int ssl_ctx_make_profiles(const char *profiles_string,
     }
 
     do {
-        col = strchr(ptr, ':');
+        col = sgx_strchr(ptr, ':');
 
         if (!find_profile_by_name(ptr, &p,
-                                  col ? col - ptr : (int)strlen(ptr))) {
+                                  col ? col - ptr : (int)sgx_strlen(ptr))) {
             if (sk_SRTP_PROTECTION_PROFILE_find(profiles, p) >= 0) {
                 SSLerr(SSL_F_SSL_CTX_MAKE_PROFILES,
                        SSL_R_BAD_SRTP_PROTECTION_PROFILE_LIST);

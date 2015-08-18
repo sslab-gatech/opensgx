@@ -152,11 +152,13 @@ int EVP_DigestSignFinal(EVP_MD_CTX *ctx, unsigned char *sigret,
         EVP_MD_CTX_init(&tmp_ctx);
         if (!EVP_MD_CTX_copy_ex(&tmp_ctx, ctx))
             return 0;
-        if (sctx)
+        if (sctx) {
             r = tmp_ctx.pctx->pmeth->signctx(tmp_ctx.pctx,
                                              sigret, siglen, &tmp_ctx);
-        else
+        }
+        else {
             r = EVP_DigestFinal_ex(&tmp_ctx, md, &mdlen);
+        }
         EVP_MD_CTX_cleanup(&tmp_ctx);
         if (sctx || !r)
             return r;

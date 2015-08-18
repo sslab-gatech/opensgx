@@ -87,7 +87,7 @@ int ASN1_PRINTABLE_type(const unsigned char *s, int len)
         if (c & 0x80)
             t61 = 1;
 #else
-        if (!isalnum(c) && (c != ' ') && strchr("'()+,-./:=?", c) == NULL)
+        if (!sgx_isalnum(c) && (c != ' ') && sgx_strchr("'()+,-./:=?", c) == NULL)
             ia5 = 1;
         if (os_toascii[c] & 0x80)
             t61 = 1;

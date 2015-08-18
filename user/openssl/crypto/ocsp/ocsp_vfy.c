@@ -205,7 +205,7 @@ static X509 *ocsp_find_signer_sk(STACK_OF(X509) *certs, OCSP_RESPID *id)
     for (i = 0; i < sk_X509_num(certs); i++) {
         x = sk_X509_value(certs, i);
         X509_pubkey_digest(x, EVP_sha1(), tmphash, NULL);
-        if (!memcmp(keyhash, tmphash, SHA_DIGEST_LENGTH))
+        if (!sgx_memcmp(keyhash, tmphash, SHA_DIGEST_LENGTH))
             return x;
     }
     return NULL;
@@ -316,10 +316,10 @@ static int ocsp_match_issuerid(X509 *cert, OCSP_CERTID *cid,
         iname = X509_get_subject_name(cert);
         if (!X509_NAME_digest(iname, dgst, md, NULL))
             return -1;
-        if (memcmp(md, cid->issuerNameHash->data, mdlen))
+        if (sgx_memcmp(md, cid->issuerNameHash->data, mdlen))
             return 0;
         X509_pubkey_digest(cert, dgst, md, NULL);
-        if (memcmp(md, cid->issuerKeyHash->data, mdlen))
+        if (sgx_memcmp(md, cid->issuerKeyHash->data, mdlen))
             return 0;
 
         return 1;

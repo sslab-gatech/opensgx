@@ -339,7 +339,7 @@ static int BN_STACK_push(BN_STACK *st, unsigned int idx)
         if (!newitems)
             return 0;
         if (st->depth)
-            memcpy(newitems, st->indexes, st->depth * sizeof(unsigned int));
+            sgx_memcpy(newitems, st->indexes, st->depth * sizeof(unsigned int));
         if (st->size)
             OPENSSL_free(st->indexes);
         st->indexes = newitems;

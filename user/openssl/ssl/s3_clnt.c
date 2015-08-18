@@ -763,7 +763,7 @@ int ssl3_client_hello(SSL *s)
 #endif
 
         /* Random stuff */
-        memcpy(p, s->s3->client_random, SSL3_RANDOM_SIZE);
+        sgx_memcpy(p, s->s3->client_random, SSL3_RANDOM_SIZE);
         p += SSL3_RANDOM_SIZE;
 
         /* Session ID */
@@ -777,7 +777,7 @@ int ssl3_client_hello(SSL *s)
                 SSLerr(SSL_F_SSL3_CLIENT_HELLO, ERR_R_INTERNAL_ERROR);
                 goto err;
             }
-            memcpy(p, s->session->session_id, i);
+            sgx_memcpy(p, s->session->session_id, i);
             p += i;
         }
 
@@ -788,7 +788,7 @@ int ssl3_client_hello(SSL *s)
                 goto err;
             }
             *(p++) = s->d1->cookie_len;
-            memcpy(p, s->d1->cookie, s->d1->cookie_len);
+            sgx_memcpy(p, s->d1->cookie, s->d1->cookie_len);
             p += s->d1->cookie_len;
         }
 
@@ -936,7 +936,7 @@ int ssl3_get_server_hello(SSL *s)
 
     /* load the server hello data */
     /* load the server random */
-    memcpy(s->s3->server_random, p, SSL3_RANDOM_SIZE);
+    sgx_memcpy(s->s3->server_random, p, SSL3_RANDOM_SIZE);
     p += SSL3_RANDOM_SIZE;
 
     s->hit = 0;
@@ -969,9 +969,9 @@ int ssl3_get_server_hello(SSL *s)
 #endif                          /* OPENSSL_NO_TLSEXT */
 
     if (!s->hit && j != 0 && j == s->session->session_id_length
-        && memcmp(p, s->session->session_id, j) == 0) {
+        && sgx_memcmp(p, s->session->session_id, j) == 0) {
         if (s->sid_ctx_length != s->session->sid_ctx_length
-            || memcmp(s->session->sid_ctx, s->sid_ctx, s->sid_ctx_length)) {
+            || sgx_memcmp(s->session->sid_ctx, s->sid_ctx, s->sid_ctx_length)) {
             /* actually a client application bug */
             al = SSL_AD_ILLEGAL_PARAMETER;
             SSLerr(SSL_F_SSL3_GET_SERVER_HELLO,
@@ -992,7 +992,7 @@ int ssl3_get_server_hello(SSL *s)
             }
         }
         s->session->session_id_length = j;
-        memcpy(s->session->session_id, p, j); /* j could be 0 */
+        sgx_memcpy(s->session->session_id, p, j); /* j could be 0 */
     }
     p += j;
     c = ssl_get_cipher_by_char(s, p);
@@ -1437,8 +1437,8 @@ int ssl3_get_key_exchange(SSL *s)
          * is truncated from the first NULL. p may not be ending with NULL,
          * so create a NULL-terminated string.
          */
-        memcpy(tmp_id_hint, p, i);
-        memset(tmp_id_hint + i, 0, PSK_MAX_IDENTITY_LEN + 1 - i);
+        sgx_memcpy(tmp_id_hint, p, i);
+        sgx_memset(tmp_id_hint + i, 0, PSK_MAX_IDENTITY_LEN + 1 - i);
         if (s->ctx->psk_identity_hint != NULL)
             OPENSSL_free(s->ctx->psk_identity_hint);
         s->ctx->psk_identity_hint = BUF_strdup(tmp_id_hint);
@@ -2032,7 +2032,7 @@ int ssl3_get_certificate_request(SSL *s)
     if (ctype_num > SSL3_CT_NUMBER) {
         /* If we exceed static buffer copy all to cert structure */
         s->cert->ctypes = OPENSSL_malloc(ctype_num);
-        memcpy(s->cert->ctypes, p, ctype_num);
+        sgx_memcpy(s->cert->ctypes, p, ctype_num);
         s->cert->ctype_num = (size_t)ctype_num;
         ctype_num = SSL3_CT_NUMBER;
     }
@@ -2191,7 +2191,7 @@ int ssl3_get_new_session_ticket(SSL *s)
         SSLerr(SSL_F_SSL3_GET_NEW_SESSION_TICKET, ERR_R_MALLOC_FAILURE);
         goto err;
     }
-    memcpy(s->session->tlsext_tick, p, ticklen);
+    sgx_memcpy(s->session->tlsext_tick, p, ticklen);
     s->session->tlsext_ticklen = ticklen;
     /*
      * There are two ways to detect a resumed ticket session. One is to set
@@ -2455,7 +2455,7 @@ int ssl3_send_client_key_exchange(SSL *s)
              *
              * Send ticket (copy to *p, set n = length)
              * n = krb5_ap_req.length;
-             * memcpy(p, krb5_ap_req.data, krb5_ap_req.length);
+             * sgx_memcpy(p, krb5_ap_req.data, krb5_ap_req.length);
              * if (krb5_ap_req.data)
              *   kssl_krb5_free_data_contents(NULL,&krb5_ap_req);
              *
@@ -2471,14 +2471,14 @@ int ssl3_send_client_key_exchange(SSL *s)
 
             /*  KerberosWrapper.Ticket              */
             s2n(enc_ticket->length, p);
-            memcpy(p, enc_ticket->data, enc_ticket->length);
+            sgx_memcpy(p, enc_ticket->data, enc_ticket->length);
             p += enc_ticket->length;
             n = enc_ticket->length + 2;
 
             /*  KerberosWrapper.Authenticator       */
             if (authp && authp->length) {
                 s2n(authp->length, p);
-                memcpy(p, authp->data, authp->length);
+                sgx_memcpy(p, authp->data, authp->length);
                 p += authp->length;
                 n += authp->length + 2;
 
@@ -2503,7 +2503,7 @@ int ssl3_send_client_key_exchange(SSL *s)
              *      EVP_EncryptInit_ex(&ciph_ctx,NULL, key,iv);
              */
 
-            memset(iv, 0, sizeof iv); /* per RFC 1510 */
+            sgx_memset(iv, 0, sizeof iv); /* per RFC 1510 */
             EVP_EncryptInit_ex(&ciph_ctx, enc, NULL, kssl_ctx->key, iv);
             EVP_EncryptUpdate(&ciph_ctx, epms, &outl, tmp_buf,
                               sizeof tmp_buf);
@@ -2518,7 +2518,7 @@ int ssl3_send_client_key_exchange(SSL *s)
 
             /*  KerberosWrapper.EncryptedPreMasterSecret    */
             s2n(outl, p);
-            memcpy(p, epms, outl);
+            sgx_memcpy(p, epms, outl);
             p += outl;
             n += outl + 2;
 
@@ -2610,7 +2610,7 @@ int ssl3_send_client_key_exchange(SSL *s)
                                                             session->master_key,
                                                             p, n);
             /* clean up */
-            memset(p, 0, n);
+            sgx_memset(p, 0, n);
 
             if (s->s3->flags & TLS1_FLAGS_SKIP_CERT_VERIFY)
                 n = 0;
@@ -2757,7 +2757,7 @@ int ssl3_send_client_key_exchange(SSL *s)
                                                             session->master_key,
                                                             p, n);
 
-            memset(p, 0, n);    /* clean up */
+            sgx_memset(p, 0, n);    /* clean up */
 
             if (ecdh_clnt_cert) {
                 /* Send empty client key exch message */
@@ -2792,7 +2792,7 @@ int ssl3_send_client_key_exchange(SSL *s)
                 /* Encoded point will be copied here */
                 p += 1;
                 /* copy the point */
-                memcpy((unsigned char *)p, encodedPoint, n);
+                sgx_memcpy((unsigned char *)p, encodedPoint, n);
                 /* increment n to account for length field */
                 n += 1;
             }
@@ -2900,7 +2900,7 @@ int ssl3_send_client_key_exchange(SSL *s)
                 *(p++) = msglen & 0xff;
                 n = msglen + 2;
             }
-            memcpy(p, tmp, msglen);
+            sgx_memcpy(p, tmp, msglen);
             /* Check if pubkey from client certificate was used */
             if (EVP_PKEY_CTX_ctrl
                 (pkey_ctx, -1, -1, EVP_PKEY_CTRL_PEER_KEY, 2, NULL) > 0) {
@@ -2970,7 +2970,7 @@ int ssl3_send_client_key_exchange(SSL *s)
                 goto err;
             }
 
-            memset(identity, 0, sizeof(identity));
+            sgx_memset(identity, 0, sizeof(identity));
             psk_len = s->psk_client_callback(s, s->ctx->psk_identity_hint,
                                              identity, sizeof(identity) - 1,
                                              psk_or_pre_ms,
@@ -2985,7 +2985,7 @@ int ssl3_send_client_key_exchange(SSL *s)
                 goto psk_err;
             }
             identity[PSK_MAX_IDENTITY_LEN + 1] = '\0';
-            identity_len = strlen(identity);
+            identity_len = sgx_strlen(identity);
             if (identity_len > PSK_MAX_IDENTITY_LEN) {
                 SSLerr(SSL_F_SSL3_SEND_CLIENT_KEY_EXCHANGE,
                        ERR_R_INTERNAL_ERROR);
@@ -2994,9 +2994,9 @@ int ssl3_send_client_key_exchange(SSL *s)
             /* create PSK pre_master_secret */
             pre_ms_len = 2 + psk_len + 2 + psk_len;
             t = psk_or_pre_ms;
-            memmove(psk_or_pre_ms + psk_len + 4, psk_or_pre_ms, psk_len);
+            sgx_memmove(psk_or_pre_ms + psk_len + 4, psk_or_pre_ms, psk_len);
             s2n(psk_len, t);
-            memset(t, 0, psk_len);
+            sgx_memset(t, 0, psk_len);
             t += psk_len;
             s2n(psk_len, t);
 
@@ -3027,7 +3027,7 @@ int ssl3_send_client_key_exchange(SSL *s)
                                                             psk_or_pre_ms,
                                                             pre_ms_len);
             s2n(identity_len, p);
-            memcpy(p, identity, identity_len);
+            sgx_memcpy(p, identity, identity_len);
             n = 2 + identity_len;
             psk_err = 0;
  psk_err:
@@ -3466,9 +3466,9 @@ int ssl3_send_next_proto(SSL *s)
         padding_len = 32 - ((len + 2) % 32);
         d = (unsigned char *)s->init_buf->data;
         d[4] = len;
-        memcpy(d + 5, s->next_proto_negotiated, len);
+        sgx_memcpy(d + 5, s->next_proto_negotiated, len);
         d[5 + len] = padding_len;
-        memset(d + 6 + len, 0, padding_len);
+        sgx_memset(d + 6 + len, 0, padding_len);
         *(d++) = SSL3_MT_NEXT_PROTO;
         l2n3(2 + len + padding_len, d);
         s->state = SSL3_ST_CW_NEXT_PROTO_B;

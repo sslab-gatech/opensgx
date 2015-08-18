@@ -123,7 +123,7 @@ int PKCS12_verify_mac(PKCS12 *p12, const char *pass, int passlen)
         return 0;
     }
     if ((maclen != (unsigned int)p12->mac->dinfo->digest->length)
-        || memcmp(mac, p12->mac->dinfo->digest->data, maclen))
+        || sgx_memcmp(mac, p12->mac->dinfo->digest->data, maclen))
         return 0;
     return 1;
 }
@@ -181,7 +181,7 @@ int PKCS12_setup_mac(PKCS12 *p12, int iter, unsigned char *salt, int saltlen,
         if (RAND_pseudo_bytes(p12->mac->salt->data, saltlen) < 0)
             return 0;
     } else
-        memcpy(p12->mac->salt->data, salt, saltlen);
+        sgx_memcpy(p12->mac->salt->data, salt, saltlen);
     p12->mac->dinfo->algor->algorithm = OBJ_nid2obj(EVP_MD_type(md_type));
     if (!(p12->mac->dinfo->algor->parameter = ASN1_TYPE_new())) {
         PKCS12err(PKCS12_F_PKCS12_SETUP_MAC, ERR_R_MALLOC_FAILURE);

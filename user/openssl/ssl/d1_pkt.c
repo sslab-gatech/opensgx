@@ -208,11 +208,11 @@ static int dtls1_copy_record(SSL *s, pitem *item)
 
     s->packet = rdata->packet;
     s->packet_length = rdata->packet_length;
-    memcpy(&(s->s3->rbuf), &(rdata->rbuf), sizeof(SSL3_BUFFER));
-    memcpy(&(s->s3->rrec), &(rdata->rrec), sizeof(SSL3_RECORD));
+    sgx_memcpy(&(s->s3->rbuf), &(rdata->rbuf), sizeof(SSL3_BUFFER));
+    sgx_memcpy(&(s->s3->rrec), &(rdata->rrec), sizeof(SSL3_RECORD));
 
     /* Set proper sequence number for mac calculation */
-    memcpy(&(s->s3->read_sequence[2]), &(rdata->packet[5]), 6);
+    sgx_memcpy(&(s->s3->read_sequence[2]), &(rdata->packet[5]), 6);
 
     return (1);
 }
@@ -241,8 +241,8 @@ dtls1_buffer_record(SSL *s, record_pqueue *queue, unsigned char *priority)
 
     rdata->packet = s->packet;
     rdata->packet_length = s->packet_length;
-    memcpy(&(rdata->rbuf), &(s->s3->rbuf), sizeof(SSL3_BUFFER));
-    memcpy(&(rdata->rrec), &(s->s3->rrec), sizeof(SSL3_RECORD));
+    sgx_memcpy(&(rdata->rbuf), &(s->s3->rbuf), sizeof(SSL3_BUFFER));
+    sgx_memcpy(&(rdata->rrec), &(s->s3->rrec), sizeof(SSL3_RECORD));
 
     item->data = rdata;
 
@@ -258,8 +258,8 @@ dtls1_buffer_record(SSL *s, record_pqueue *queue, unsigned char *priority)
 
     s->packet = NULL;
     s->packet_length = 0;
-    memset(&(s->s3->rbuf), 0, sizeof(SSL3_BUFFER));
-    memset(&(s->s3->rrec), 0, sizeof(SSL3_RECORD));
+    sgx_memset(&(s->s3->rbuf), 0, sizeof(SSL3_BUFFER));
+    sgx_memset(&(s->s3->rrec), 0, sizeof(SSL3_RECORD));
 
     if (!ssl3_setup_buffers(s)) {
         SSLerr(SSL_F_DTLS1_BUFFER_RECORD, ERR_R_INTERNAL_ERROR);
@@ -376,8 +376,8 @@ static int dtls1_get_buffered_record(SSL *s)
 
         s->packet = rdata->packet;
         s->packet_length = rdata->packet_length;
-        memcpy(&(s->s3->rbuf), &(rdata->rbuf), sizeof(SSL3_BUFFER));
-        memcpy(&(s->s3->rrec), &(rdata->rrec), sizeof(SSL3_RECORD));
+        sgx_memcpy(&(s->s3->rbuf), &(rdata->rbuf), sizeof(SSL3_BUFFER));
+        sgx_memcpy(&(s->s3->rrec), &(rdata->rrec), sizeof(SSL3_RECORD));
 
         OPENSSL_free(item->data);
         pitem_free(item);
@@ -625,7 +625,7 @@ int dtls1_get_record(SSL *s)
         /* sequence number is 64 bits, with top 2 bytes = epoch */
         n2s(p, rr->epoch);
 
-        memcpy(&(s->s3->read_sequence[2]), p, 6);
+        sgx_memcpy(&(s->s3->read_sequence[2]), p, 6);
         p += 6;
 
         n2s(p, rr->length);
@@ -928,7 +928,7 @@ int dtls1_read_bytes(SSL *s, int type, unsigned char *buf, int len, int peek)
         else
             n = (unsigned int)len;
 
-        memcpy(buf, &(rr->data[rr->off]), n);
+        sgx_memcpy(buf, &(rr->data[rr->off]), n);
         if (!peek) {
             rr->length -= n;
             rr->off += n;
@@ -1623,7 +1623,7 @@ int do_dtls1_write(SSL *s, int type, const unsigned char *buf,
             goto err;
         }
     } else {
-        memcpy(wr->data, wr->input, wr->length);
+        sgx_memcpy(wr->data, wr->input, wr->length);
         wr->input = wr->data;
     }
 
@@ -1664,7 +1664,7 @@ int do_dtls1_write(SSL *s, int type, const unsigned char *buf,
      * else s2n(s->d1->handshake_epoch, pseq);
      */
 
-    memcpy(pseq, &(s->s3->write_sequence[2]), 6);
+    sgx_memcpy(pseq, &(s->s3->write_sequence[2]), 6);
     pseq += 6;
     s2n(wr->length, pseq);
 
@@ -1723,7 +1723,7 @@ static int dtls1_record_replay_check(SSL *s, DTLS1_BITMAP *bitmap)
 
     cmp = satsub64be(seq, bitmap->max_seq_num);
     if (cmp > 0) {
-        memcpy(s->s3->rrec.seq_num, seq, 8);
+        sgx_memcpy(s->s3->rrec.seq_num, seq, 8);
         return 1;               /* this record in new */
     }
     shift = -cmp;
@@ -1732,7 +1732,7 @@ static int dtls1_record_replay_check(SSL *s, DTLS1_BITMAP *bitmap)
     else if (bitmap->map & (1UL << shift))
         return 0;               /* record previously received */
 
-    memcpy(s->s3->rrec.seq_num, seq, 8);
+    sgx_memcpy(s->s3->rrec.seq_num, seq, 8);
     return 1;
 }
 
@@ -1749,7 +1749,7 @@ static void dtls1_record_bitmap_update(SSL *s, DTLS1_BITMAP *bitmap)
             bitmap->map <<= shift, bitmap->map |= 1UL;
         else
             bitmap->map = 1UL;
-        memcpy(bitmap->max_seq_num, seq, 8);
+        sgx_memcpy(bitmap->max_seq_num, seq, 8);
     } else {
         shift = -cmp;
         if (shift < sizeof(bitmap->map) * 8)
@@ -1766,7 +1766,7 @@ int dtls1_dispatch_alert(SSL *s)
 
     s->s3->alert_dispatch = 0;
 
-    memset(buf, 0x00, sizeof(buf));
+    sgx_memset(buf, 0x00, sizeof(buf));
     *ptr++ = s->s3->send_alert[0];
     *ptr++ = s->s3->send_alert[1];
 
@@ -1908,14 +1908,14 @@ void dtls1_reset_seq_numbers(SSL *s, int rw)
     if (rw & SSL3_CC_READ) {
         seq = s->s3->read_sequence;
         s->d1->r_epoch++;
-        memcpy(&(s->d1->bitmap), &(s->d1->next_bitmap), sizeof(DTLS1_BITMAP));
-        memset(&(s->d1->next_bitmap), 0x00, sizeof(DTLS1_BITMAP));
+        sgx_memcpy(&(s->d1->bitmap), &(s->d1->next_bitmap), sizeof(DTLS1_BITMAP));
+        sgx_memset(&(s->d1->next_bitmap), 0x00, sizeof(DTLS1_BITMAP));
     } else {
         seq = s->s3->write_sequence;
-        memcpy(s->d1->last_write_sequence, seq,
+        sgx_memcpy(s->d1->last_write_sequence, seq,
                sizeof(s->s3->write_sequence));
         s->d1->w_epoch++;
     }
 
-    memset(seq, 0x00, seq_bytes);
+    sgx_memset(seq, 0x00, seq_bytes);
 }

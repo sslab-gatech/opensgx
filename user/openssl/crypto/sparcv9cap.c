@@ -134,9 +134,9 @@ static int walk_nodename(di_node_t node, di_node_name_t di_node_name)
     char *name = (*di_node_name) (node);
 
     /* This is expected to catch all UltraSPARC flavors prior T1 */
-    if (!strcmp(name, "SUNW,UltraSPARC") ||
+    if (!sgx_strcmp(name, "SUNW,UltraSPARC") ||
         /* covers II,III,IV */
-        !strncmp(name, "SUNW,UltraSPARC-I", 17)) {
+        !sgx_strncmp(name, "SUNW,UltraSPARC-I", 17)) {
         OPENSSL_sparcv9cap_P[0] |= SPARCV9_PREFER_FPU | SPARCV9_VIS1;
 
         /* %tick is privileged only on UltraSPARC-I/II, but not IIe */
@@ -146,7 +146,7 @@ static int walk_nodename(di_node_t node, di_node_name_t di_node_name)
         return DI_WALK_TERMINATE;
     }
     /* This is expected to catch remaining UltraSPARCs, such as T1 */
-    else if (!strncmp(name, "SUNW,UltraSPARC", 15)) {
+    else if (!sgx_strncmp(name, "SUNW,UltraSPARC", 15)) {
         OPENSSL_sparcv9cap_P[0] &= ~SPARCV9_TICK_PRIVILEGED;
 
         return DI_WALK_TERMINATE;
@@ -171,7 +171,7 @@ void OPENSSL_cpuid_setup(void)
     }
 
     if (sysinfo(SI_MACHINE, si, sizeof(si)) > 0) {
-        if (strcmp(si, "sun4v"))
+        if (sgx_strcmp(si, "sun4v"))
             /* FPU is preferred for all CPUs, but US-T1/2 */
             OPENSSL_sparcv9cap_P[0] |= SPARCV9_PREFER_FPU;
     }
@@ -252,7 +252,7 @@ void OPENSSL_cpuid_setup(void)
 
     if ((e = getenv("OPENSSL_sparcv9cap"))) {
         OPENSSL_sparcv9cap_P[0] = strtoul(e, NULL, 0);
-        if ((e = strchr(e, ':')))
+        if ((e = sgx_strchr(e, ':')))
             OPENSSL_sparcv9cap_P[1] = strtoul(e + 1, NULL, 0);
         return;
     }

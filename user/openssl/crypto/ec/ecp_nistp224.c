@@ -1178,7 +1178,7 @@ static void batch_mul(felem x_out, felem y_out, felem z_out,
                 point_add(nq[0], nq[1], nq[2],
                           nq[0], nq[1], nq[2], 1, tmp[0], tmp[1], tmp[2]);
             } else {
-                memcpy(nq, tmp, 3 * sizeof(felem));
+                sgx_memcpy(nq, tmp, 3 * sizeof(felem));
                 skip = 0;
             }
 
@@ -1217,7 +1217,7 @@ static void batch_mul(felem x_out, felem y_out, felem z_out,
                               nq[0], nq[1], nq[2],
                               mixed, tmp[0], tmp[1], tmp[2]);
                 } else {
-                    memcpy(nq, tmp, 3 * sizeof(felem));
+                    sgx_memcpy(nq, tmp, 3 * sizeof(felem));
                     skip = 0;
                 }
             }
@@ -1658,7 +1658,7 @@ int ec_GFp_nistp224_precompute_mult(EC_GROUP *group, BN_CTX *ctx)
      * if the generator is the standard one, use built-in precomputation
      */
     if (0 == EC_POINT_cmp(group, generator, group->generator, ctx)) {
-        memcpy(pre->g_pre_comp, gmul, sizeof(pre->g_pre_comp));
+        sgx_memcpy(pre->g_pre_comp, gmul, sizeof(pre->g_pre_comp));
         ret = 1;
         goto err;
     }

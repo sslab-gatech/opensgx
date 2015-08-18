@@ -69,7 +69,7 @@ int main(int argc, char **argv)
     fprintf(stdout, "Testing SHA-256 ");
 
     EVP_Digest("abc", 3, md, NULL, EVP_sha256(), NULL);
-    if (memcmp(md, app_b1, sizeof(app_b1))) {
+    if (sgx_memcmp(md, app_b1, sizeof(app_b1))) {
         fflush(stdout);
         fprintf(stderr, "\nTEST 1 of 3 failed.\n");
         return 1;
@@ -80,7 +80,7 @@ int main(int argc, char **argv)
     EVP_Digest("abcdbcde" "cdefdefg" "efghfghi" "ghijhijk"
                "ijkljklm" "klmnlmno" "mnopnopq", 56, md, NULL, EVP_sha256(),
                NULL);
-    if (memcmp(md, app_b2, sizeof(app_b2))) {
+    if (sgx_memcmp(md, app_b2, sizeof(app_b2))) {
         fflush(stdout);
         fprintf(stderr, "\nTEST 2 of 3 failed.\n");
         return 1;
@@ -100,7 +100,7 @@ int main(int argc, char **argv)
     EVP_DigestFinal_ex(&evp, md, NULL);
     EVP_MD_CTX_cleanup(&evp);
 
-    if (memcmp(md, app_b3, sizeof(app_b3))) {
+    if (sgx_memcmp(md, app_b3, sizeof(app_b3))) {
         fflush(stdout);
         fprintf(stderr, "\nTEST 3 of 3 failed.\n");
         return 1;
@@ -114,7 +114,7 @@ int main(int argc, char **argv)
     fprintf(stdout, "Testing SHA-224 ");
 
     EVP_Digest("abc", 3, md, NULL, EVP_sha224(), NULL);
-    if (memcmp(md, addenum_1, sizeof(addenum_1))) {
+    if (sgx_memcmp(md, addenum_1, sizeof(addenum_1))) {
         fflush(stdout);
         fprintf(stderr, "\nTEST 1 of 3 failed.\n");
         return 1;
@@ -125,7 +125,7 @@ int main(int argc, char **argv)
     EVP_Digest("abcdbcde" "cdefdefg" "efghfghi" "ghijhijk"
                "ijkljklm" "klmnlmno" "mnopnopq", 56, md, NULL, EVP_sha224(),
                NULL);
-    if (memcmp(md, addenum_2, sizeof(addenum_2))) {
+    if (sgx_memcmp(md, addenum_2, sizeof(addenum_2))) {
         fflush(stdout);
         fprintf(stderr, "\nTEST 2 of 3 failed.\n");
         return 1;
@@ -142,7 +142,7 @@ int main(int argc, char **argv)
     EVP_DigestFinal_ex(&evp, md, NULL);
     EVP_MD_CTX_cleanup(&evp);
 
-    if (memcmp(md, addenum_3, sizeof(addenum_3))) {
+    if (sgx_memcmp(md, addenum_3, sizeof(addenum_3))) {
         fflush(stdout);
         fprintf(stderr, "\nTEST 3 of 3 failed.\n");
         return 1;

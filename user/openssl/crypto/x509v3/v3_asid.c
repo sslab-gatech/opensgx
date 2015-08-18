@@ -571,7 +571,7 @@ static void *v2i_ASIdentifiers(const struct v3_ext_method *method,
         /*
          * Handle inheritance.
          */
-        if (!strcmp(val->value, "inherit")) {
+        if (!sgx_strcmp(val->value, "inherit")) {
             if (v3_asid_add_inherit(asid, which))
                 continue;
             X509V3err(X509V3_F_V2I_ASIDENTIFIERS,

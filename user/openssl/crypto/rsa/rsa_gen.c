@@ -155,8 +155,10 @@ static int rsa_builtin_keygen(RSA *rsa, int bits, BIGNUM *e_value,
         if (!BN_GENCB_call(cb, 2, n++))
             goto err;
     }
+
     if (!BN_GENCB_call(cb, 3, 0))
         goto err;
+
     for (;;) {
         /*
          * When generating ridiculously small keys, we can get stuck
@@ -182,6 +184,7 @@ static int rsa_builtin_keygen(RSA *rsa, int bits, BIGNUM *e_value,
         if (!BN_GENCB_call(cb, 2, n++))
             goto err;
     }
+
     if (!BN_GENCB_call(cb, 3, 1))
         goto err;
     if (BN_cmp(rsa->p, rsa->q) < 0) {

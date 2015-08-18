@@ -79,7 +79,7 @@ static int process_pci_value(CONF_VALUE *val,
 {
     int free_policy = 0;
 
-    if (strcmp(val->name, "language") == 0) {
+    if (sgx_strcmp(val->name, "language") == 0) {
         if (*language) {
             X509V3err(X509V3_F_PROCESS_PCI_VALUE,
                       X509V3_R_POLICY_LANGUAGE_ALREADY_DEFINED);
@@ -92,7 +92,7 @@ static int process_pci_value(CONF_VALUE *val,
             X509V3_conf_err(val);
             return 0;
         }
-    } else if (strcmp(val->name, "pathlen") == 0) {
+    } else if (sgx_strcmp(val->name, "pathlen") == 0) {
         if (*pathlen) {
             X509V3err(X509V3_F_PROCESS_PCI_VALUE,
                       X509V3_R_POLICY_PATH_LENGTH_ALREADY_DEFINED);
@@ -105,7 +105,7 @@ static int process_pci_value(CONF_VALUE *val,
             X509V3_conf_err(val);
             return 0;
         }
-    } else if (strcmp(val->name, "policy") == 0) {
+    } else if (sgx_strcmp(val->name, "policy") == 0) {
         unsigned char *tmp_data = NULL;
         long val_len;
         if (!*policy) {
@@ -132,7 +132,7 @@ static int process_pci_value(CONF_VALUE *val,
                                        (*policy)->length + val_len + 1);
             if (tmp_data) {
                 (*policy)->data = tmp_data;
-                memcpy(&(*policy)->data[(*policy)->length],
+                sgx_memcpy(&(*policy)->data[(*policy)->length],
                        tmp_data2, val_len);
                 (*policy)->length += val_len;
                 (*policy)->data[(*policy)->length] = '\0';
@@ -170,7 +170,7 @@ static int process_pci_value(CONF_VALUE *val,
                     break;
 
                 (*policy)->data = tmp_data;
-                memcpy(&(*policy)->data[(*policy)->length], buf, n);
+                sgx_memcpy(&(*policy)->data[(*policy)->length], buf, n);
                 (*policy)->length += n;
                 (*policy)->data[(*policy)->length] = '\0';
             }
@@ -181,13 +181,13 @@ static int process_pci_value(CONF_VALUE *val,
                 X509V3_conf_err(val);
                 goto err;
             }
-        } else if (strncmp(val->value, "text:", 5) == 0) {
-            val_len = strlen(val->value + 5);
+        } else if (sgx_strncmp(val->value, "text:", 5) == 0) {
+            val_len = sgx_strlen(val->value + 5);
             tmp_data = OPENSSL_realloc((*policy)->data,
                                        (*policy)->length + val_len + 1);
             if (tmp_data) {
                 (*policy)->data = tmp_data;
-                memcpy(&(*policy)->data[(*policy)->length],
+                sgx_memcpy(&(*policy)->data[(*policy)->length],
                        val->value + 5, val_len);
                 (*policy)->length += val_len;
                 (*policy)->data[(*policy)->length] = '\0';

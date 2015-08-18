@@ -715,11 +715,11 @@ int MAIN(int argc, char **argv)
     argc--;
     argv++;
     while (argc) {
-        if ((argc > 0) && (strcmp(*argv, "-elapsed") == 0)) {
+        if ((argc > 0) && (sgx_strcmp(*argv, "-elapsed") == 0)) {
             usertime = 0;
             j--;                /* Otherwise, -elapsed gets confused with an
                                  * algorithm. */
-        } else if ((argc > 0) && (strcmp(*argv, "-evp") == 0)) {
+        } else if ((argc > 0) && (sgx_strcmp(*argv, "-evp") == 0)) {
             argc--;
             argv++;
             if (argc == 0) {
@@ -736,13 +736,13 @@ int MAIN(int argc, char **argv)
                 goto end;
             }
             doit[D_EVP] = 1;
-        } else if (argc > 0 && !strcmp(*argv, "-decrypt")) {
+        } else if (argc > 0 && !sgx_strcmp(*argv, "-decrypt")) {
             decrypt = 1;
             j--;                /* Otherwise, -elapsed gets confused with an
                                  * algorithm. */
         }
 # ifndef OPENSSL_NO_ENGINE
-        else if ((argc > 0) && (strcmp(*argv, "-engine") == 0)) {
+        else if ((argc > 0) && (sgx_strcmp(*argv, "-engine") == 0)) {
             argc--;
             argv++;
             if (argc == 0) {
@@ -759,7 +759,7 @@ int MAIN(int argc, char **argv)
         }
 # endif
 # ifndef NO_FORK
-        else if ((argc > 0) && (strcmp(*argv, "-multi") == 0)) {
+        else if ((argc > 0) && (sgx_strcmp(*argv, "-multi") == 0)) {
             argc--;
             argv++;
             if (argc == 0) {
@@ -775,205 +775,205 @@ int MAIN(int argc, char **argv)
                                  * algorithm. */
         }
 # endif
-        else if (argc > 0 && !strcmp(*argv, "-mr")) {
+        else if (argc > 0 && !sgx_strcmp(*argv, "-mr")) {
             mr = 1;
             j--;                /* Otherwise, -mr gets confused with an
                                  * algorithm. */
-        } else if (argc > 0 && !strcmp(*argv, "-mb")) {
+        } else if (argc > 0 && !sgx_strcmp(*argv, "-mb")) {
             multiblock = 1;
             j--;
         } else
 # ifndef OPENSSL_NO_MD2
-        if (strcmp(*argv, "md2") == 0)
+        if (sgx_strcmp(*argv, "md2") == 0)
             doit[D_MD2] = 1;
         else
 # endif
 # ifndef OPENSSL_NO_MDC2
-        if (strcmp(*argv, "mdc2") == 0)
+        if (sgx_strcmp(*argv, "mdc2") == 0)
             doit[D_MDC2] = 1;
         else
 # endif
 # ifndef OPENSSL_NO_MD4
-        if (strcmp(*argv, "md4") == 0)
+        if (sgx_strcmp(*argv, "md4") == 0)
             doit[D_MD4] = 1;
         else
 # endif
 # ifndef OPENSSL_NO_MD5
-        if (strcmp(*argv, "md5") == 0)
+        if (sgx_strcmp(*argv, "md5") == 0)
             doit[D_MD5] = 1;
         else
 # endif
 # ifndef OPENSSL_NO_MD5
-        if (strcmp(*argv, "hmac") == 0)
+        if (sgx_strcmp(*argv, "hmac") == 0)
             doit[D_HMAC] = 1;
         else
 # endif
 # ifndef OPENSSL_NO_SHA
-        if (strcmp(*argv, "sha1") == 0)
+        if (sgx_strcmp(*argv, "sha1") == 0)
             doit[D_SHA1] = 1;
-        else if (strcmp(*argv, "sha") == 0)
+        else if (sgx_strcmp(*argv, "sha") == 0)
             doit[D_SHA1] = 1, doit[D_SHA256] = 1, doit[D_SHA512] = 1;
         else
 #  ifndef OPENSSL_NO_SHA256
-        if (strcmp(*argv, "sha256") == 0)
+        if (sgx_strcmp(*argv, "sha256") == 0)
             doit[D_SHA256] = 1;
         else
 #  endif
 #  ifndef OPENSSL_NO_SHA512
-        if (strcmp(*argv, "sha512") == 0)
+        if (sgx_strcmp(*argv, "sha512") == 0)
             doit[D_SHA512] = 1;
         else
 #  endif
 # endif
 # ifndef OPENSSL_NO_WHIRLPOOL
-        if (strcmp(*argv, "whirlpool") == 0)
+        if (sgx_strcmp(*argv, "whirlpool") == 0)
             doit[D_WHIRLPOOL] = 1;
         else
 # endif
 # ifndef OPENSSL_NO_RIPEMD
-        if (strcmp(*argv, "ripemd") == 0)
+        if (sgx_strcmp(*argv, "ripemd") == 0)
             doit[D_RMD160] = 1;
-        else if (strcmp(*argv, "rmd160") == 0)
+        else if (sgx_strcmp(*argv, "rmd160") == 0)
             doit[D_RMD160] = 1;
-        else if (strcmp(*argv, "ripemd160") == 0)
+        else if (sgx_strcmp(*argv, "ripemd160") == 0)
             doit[D_RMD160] = 1;
         else
 # endif
 # ifndef OPENSSL_NO_RC4
-        if (strcmp(*argv, "rc4") == 0)
+        if (sgx_strcmp(*argv, "rc4") == 0)
             doit[D_RC4] = 1;
         else
 # endif
 # ifndef OPENSSL_NO_DES
-        if (strcmp(*argv, "des-cbc") == 0)
+        if (sgx_strcmp(*argv, "des-cbc") == 0)
             doit[D_CBC_DES] = 1;
-        else if (strcmp(*argv, "des-ede3") == 0)
+        else if (sgx_strcmp(*argv, "des-ede3") == 0)
             doit[D_EDE3_DES] = 1;
         else
 # endif
 # ifndef OPENSSL_NO_AES
-        if (strcmp(*argv, "aes-128-cbc") == 0)
+        if (sgx_strcmp(*argv, "aes-128-cbc") == 0)
             doit[D_CBC_128_AES] = 1;
-        else if (strcmp(*argv, "aes-192-cbc") == 0)
+        else if (sgx_strcmp(*argv, "aes-192-cbc") == 0)
             doit[D_CBC_192_AES] = 1;
-        else if (strcmp(*argv, "aes-256-cbc") == 0)
+        else if (sgx_strcmp(*argv, "aes-256-cbc") == 0)
             doit[D_CBC_256_AES] = 1;
-        else if (strcmp(*argv, "aes-128-ige") == 0)
+        else if (sgx_strcmp(*argv, "aes-128-ige") == 0)
             doit[D_IGE_128_AES] = 1;
-        else if (strcmp(*argv, "aes-192-ige") == 0)
+        else if (sgx_strcmp(*argv, "aes-192-ige") == 0)
             doit[D_IGE_192_AES] = 1;
-        else if (strcmp(*argv, "aes-256-ige") == 0)
+        else if (sgx_strcmp(*argv, "aes-256-ige") == 0)
             doit[D_IGE_256_AES] = 1;
         else
 # endif
 # ifndef OPENSSL_NO_CAMELLIA
-        if (strcmp(*argv, "camellia-128-cbc") == 0)
+        if (sgx_strcmp(*argv, "camellia-128-cbc") == 0)
             doit[D_CBC_128_CML] = 1;
-        else if (strcmp(*argv, "camellia-192-cbc") == 0)
+        else if (sgx_strcmp(*argv, "camellia-192-cbc") == 0)
             doit[D_CBC_192_CML] = 1;
-        else if (strcmp(*argv, "camellia-256-cbc") == 0)
+        else if (sgx_strcmp(*argv, "camellia-256-cbc") == 0)
             doit[D_CBC_256_CML] = 1;
         else
 # endif
 # ifndef OPENSSL_NO_RSA
 #  if 0                         /* was: #ifdef RSAref */
-        if (strcmp(*argv, "rsaref") == 0) {
+        if (sgx_strcmp(*argv, "rsaref") == 0) {
             RSA_set_default_openssl_method(RSA_PKCS1_RSAref());
             j--;
         } else
 #  endif
 #  ifndef RSA_NULL
-        if (strcmp(*argv, "openssl") == 0) {
+        if (sgx_strcmp(*argv, "openssl") == 0) {
             RSA_set_default_method(RSA_PKCS1_SSLeay());
             j--;
         } else
 #  endif
 # endif                         /* !OPENSSL_NO_RSA */
-        if (strcmp(*argv, "dsa512") == 0)
+        if (sgx_strcmp(*argv, "dsa512") == 0)
             dsa_doit[R_DSA_512] = 2;
-        else if (strcmp(*argv, "dsa1024") == 0)
+        else if (sgx_strcmp(*argv, "dsa1024") == 0)
             dsa_doit[R_DSA_1024] = 2;
-        else if (strcmp(*argv, "dsa2048") == 0)
+        else if (sgx_strcmp(*argv, "dsa2048") == 0)
             dsa_doit[R_DSA_2048] = 2;
-        else if (strcmp(*argv, "rsa512") == 0)
+        else if (sgx_strcmp(*argv, "rsa512") == 0)
             rsa_doit[R_RSA_512] = 2;
-        else if (strcmp(*argv, "rsa1024") == 0)
+        else if (sgx_strcmp(*argv, "rsa1024") == 0)
             rsa_doit[R_RSA_1024] = 2;
-        else if (strcmp(*argv, "rsa2048") == 0)
+        else if (sgx_strcmp(*argv, "rsa2048") == 0)
             rsa_doit[R_RSA_2048] = 2;
-        else if (strcmp(*argv, "rsa4096") == 0)
+        else if (sgx_strcmp(*argv, "rsa4096") == 0)
             rsa_doit[R_RSA_4096] = 2;
         else
 # ifndef OPENSSL_NO_RC2
-        if (strcmp(*argv, "rc2-cbc") == 0)
+        if (sgx_strcmp(*argv, "rc2-cbc") == 0)
             doit[D_CBC_RC2] = 1;
-        else if (strcmp(*argv, "rc2") == 0)
+        else if (sgx_strcmp(*argv, "rc2") == 0)
             doit[D_CBC_RC2] = 1;
         else
 # endif
 # ifndef OPENSSL_NO_RC5
-        if (strcmp(*argv, "rc5-cbc") == 0)
+        if (sgx_strcmp(*argv, "rc5-cbc") == 0)
             doit[D_CBC_RC5] = 1;
-        else if (strcmp(*argv, "rc5") == 0)
+        else if (sgx_strcmp(*argv, "rc5") == 0)
             doit[D_CBC_RC5] = 1;
         else
 # endif
 # ifndef OPENSSL_NO_IDEA
-        if (strcmp(*argv, "idea-cbc") == 0)
+        if (sgx_strcmp(*argv, "idea-cbc") == 0)
             doit[D_CBC_IDEA] = 1;
-        else if (strcmp(*argv, "idea") == 0)
+        else if (sgx_strcmp(*argv, "idea") == 0)
             doit[D_CBC_IDEA] = 1;
         else
 # endif
 # ifndef OPENSSL_NO_SEED
-        if (strcmp(*argv, "seed-cbc") == 0)
+        if (sgx_strcmp(*argv, "seed-cbc") == 0)
             doit[D_CBC_SEED] = 1;
-        else if (strcmp(*argv, "seed") == 0)
+        else if (sgx_strcmp(*argv, "seed") == 0)
             doit[D_CBC_SEED] = 1;
         else
 # endif
 # ifndef OPENSSL_NO_BF
-        if (strcmp(*argv, "bf-cbc") == 0)
+        if (sgx_strcmp(*argv, "bf-cbc") == 0)
             doit[D_CBC_BF] = 1;
-        else if (strcmp(*argv, "blowfish") == 0)
+        else if (sgx_strcmp(*argv, "blowfish") == 0)
             doit[D_CBC_BF] = 1;
-        else if (strcmp(*argv, "bf") == 0)
+        else if (sgx_strcmp(*argv, "bf") == 0)
             doit[D_CBC_BF] = 1;
         else
 # endif
 # ifndef OPENSSL_NO_CAST
-        if (strcmp(*argv, "cast-cbc") == 0)
+        if (sgx_strcmp(*argv, "cast-cbc") == 0)
             doit[D_CBC_CAST] = 1;
-        else if (strcmp(*argv, "cast") == 0)
+        else if (sgx_strcmp(*argv, "cast") == 0)
             doit[D_CBC_CAST] = 1;
-        else if (strcmp(*argv, "cast5") == 0)
+        else if (sgx_strcmp(*argv, "cast5") == 0)
             doit[D_CBC_CAST] = 1;
         else
 # endif
 # ifndef OPENSSL_NO_DES
-        if (strcmp(*argv, "des") == 0) {
+        if (sgx_strcmp(*argv, "des") == 0) {
             doit[D_CBC_DES] = 1;
             doit[D_EDE3_DES] = 1;
         } else
 # endif
 # ifndef OPENSSL_NO_AES
-        if (strcmp(*argv, "aes") == 0) {
+        if (sgx_strcmp(*argv, "aes") == 0) {
             doit[D_CBC_128_AES] = 1;
             doit[D_CBC_192_AES] = 1;
             doit[D_CBC_256_AES] = 1;
-        } else if (strcmp(*argv, "ghash") == 0) {
+        } else if (sgx_strcmp(*argv, "ghash") == 0) {
             doit[D_GHASH] = 1;
         } else
 # endif
 # ifndef OPENSSL_NO_CAMELLIA
-        if (strcmp(*argv, "camellia") == 0) {
+        if (sgx_strcmp(*argv, "camellia") == 0) {
             doit[D_CBC_128_CML] = 1;
             doit[D_CBC_192_CML] = 1;
             doit[D_CBC_256_CML] = 1;
         } else
 # endif
 # ifndef OPENSSL_NO_RSA
-        if (strcmp(*argv, "rsa") == 0) {
+        if (sgx_strcmp(*argv, "rsa") == 0) {
             rsa_doit[R_RSA_512] = 1;
             rsa_doit[R_RSA_1024] = 1;
             rsa_doit[R_RSA_2048] = 1;
@@ -981,84 +981,84 @@ int MAIN(int argc, char **argv)
         } else
 # endif
 # ifndef OPENSSL_NO_DSA
-        if (strcmp(*argv, "dsa") == 0) {
+        if (sgx_strcmp(*argv, "dsa") == 0) {
             dsa_doit[R_DSA_512] = 1;
             dsa_doit[R_DSA_1024] = 1;
             dsa_doit[R_DSA_2048] = 1;
         } else
 # endif
 # ifndef OPENSSL_NO_ECDSA
-        if (strcmp(*argv, "ecdsap160") == 0)
+        if (sgx_strcmp(*argv, "ecdsap160") == 0)
             ecdsa_doit[R_EC_P160] = 2;
-        else if (strcmp(*argv, "ecdsap192") == 0)
+        else if (sgx_strcmp(*argv, "ecdsap192") == 0)
             ecdsa_doit[R_EC_P192] = 2;
-        else if (strcmp(*argv, "ecdsap224") == 0)
+        else if (sgx_strcmp(*argv, "ecdsap224") == 0)
             ecdsa_doit[R_EC_P224] = 2;
-        else if (strcmp(*argv, "ecdsap256") == 0)
+        else if (sgx_strcmp(*argv, "ecdsap256") == 0)
             ecdsa_doit[R_EC_P256] = 2;
-        else if (strcmp(*argv, "ecdsap384") == 0)
+        else if (sgx_strcmp(*argv, "ecdsap384") == 0)
             ecdsa_doit[R_EC_P384] = 2;
-        else if (strcmp(*argv, "ecdsap521") == 0)
+        else if (sgx_strcmp(*argv, "ecdsap521") == 0)
             ecdsa_doit[R_EC_P521] = 2;
-        else if (strcmp(*argv, "ecdsak163") == 0)
+        else if (sgx_strcmp(*argv, "ecdsak163") == 0)
             ecdsa_doit[R_EC_K163] = 2;
-        else if (strcmp(*argv, "ecdsak233") == 0)
+        else if (sgx_strcmp(*argv, "ecdsak233") == 0)
             ecdsa_doit[R_EC_K233] = 2;
-        else if (strcmp(*argv, "ecdsak283") == 0)
+        else if (sgx_strcmp(*argv, "ecdsak283") == 0)
             ecdsa_doit[R_EC_K283] = 2;
-        else if (strcmp(*argv, "ecdsak409") == 0)
+        else if (sgx_strcmp(*argv, "ecdsak409") == 0)
             ecdsa_doit[R_EC_K409] = 2;
-        else if (strcmp(*argv, "ecdsak571") == 0)
+        else if (sgx_strcmp(*argv, "ecdsak571") == 0)
             ecdsa_doit[R_EC_K571] = 2;
-        else if (strcmp(*argv, "ecdsab163") == 0)
+        else if (sgx_strcmp(*argv, "ecdsab163") == 0)
             ecdsa_doit[R_EC_B163] = 2;
-        else if (strcmp(*argv, "ecdsab233") == 0)
+        else if (sgx_strcmp(*argv, "ecdsab233") == 0)
             ecdsa_doit[R_EC_B233] = 2;
-        else if (strcmp(*argv, "ecdsab283") == 0)
+        else if (sgx_strcmp(*argv, "ecdsab283") == 0)
             ecdsa_doit[R_EC_B283] = 2;
-        else if (strcmp(*argv, "ecdsab409") == 0)
+        else if (sgx_strcmp(*argv, "ecdsab409") == 0)
             ecdsa_doit[R_EC_B409] = 2;
-        else if (strcmp(*argv, "ecdsab571") == 0)
+        else if (sgx_strcmp(*argv, "ecdsab571") == 0)
             ecdsa_doit[R_EC_B571] = 2;
-        else if (strcmp(*argv, "ecdsa") == 0) {
+        else if (sgx_strcmp(*argv, "ecdsa") == 0) {
             for (i = 0; i < EC_NUM; i++)
                 ecdsa_doit[i] = 1;
         } else
 # endif
 # ifndef OPENSSL_NO_ECDH
-        if (strcmp(*argv, "ecdhp160") == 0)
+        if (sgx_strcmp(*argv, "ecdhp160") == 0)
             ecdh_doit[R_EC_P160] = 2;
-        else if (strcmp(*argv, "ecdhp192") == 0)
+        else if (sgx_strcmp(*argv, "ecdhp192") == 0)
             ecdh_doit[R_EC_P192] = 2;
-        else if (strcmp(*argv, "ecdhp224") == 0)
+        else if (sgx_strcmp(*argv, "ecdhp224") == 0)
             ecdh_doit[R_EC_P224] = 2;
-        else if (strcmp(*argv, "ecdhp256") == 0)
+        else if (sgx_strcmp(*argv, "ecdhp256") == 0)
             ecdh_doit[R_EC_P256] = 2;
-        else if (strcmp(*argv, "ecdhp384") == 0)
+        else if (sgx_strcmp(*argv, "ecdhp384") == 0)
             ecdh_doit[R_EC_P384] = 2;
-        else if (strcmp(*argv, "ecdhp521") == 0)
+        else if (sgx_strcmp(*argv, "ecdhp521") == 0)
             ecdh_doit[R_EC_P521] = 2;
-        else if (strcmp(*argv, "ecdhk163") == 0)
+        else if (sgx_strcmp(*argv, "ecdhk163") == 0)
             ecdh_doit[R_EC_K163] = 2;
-        else if (strcmp(*argv, "ecdhk233") == 0)
+        else if (sgx_strcmp(*argv, "ecdhk233") == 0)
             ecdh_doit[R_EC_K233] = 2;
-        else if (strcmp(*argv, "ecdhk283") == 0)
+        else if (sgx_strcmp(*argv, "ecdhk283") == 0)
             ecdh_doit[R_EC_K283] = 2;
-        else if (strcmp(*argv, "ecdhk409") == 0)
+        else if (sgx_strcmp(*argv, "ecdhk409") == 0)
             ecdh_doit[R_EC_K409] = 2;
-        else if (strcmp(*argv, "ecdhk571") == 0)
+        else if (sgx_strcmp(*argv, "ecdhk571") == 0)
             ecdh_doit[R_EC_K571] = 2;
-        else if (strcmp(*argv, "ecdhb163") == 0)
+        else if (sgx_strcmp(*argv, "ecdhb163") == 0)
             ecdh_doit[R_EC_B163] = 2;
-        else if (strcmp(*argv, "ecdhb233") == 0)
+        else if (sgx_strcmp(*argv, "ecdhb233") == 0)
             ecdh_doit[R_EC_B233] = 2;
-        else if (strcmp(*argv, "ecdhb283") == 0)
+        else if (sgx_strcmp(*argv, "ecdhb283") == 0)
             ecdh_doit[R_EC_B283] = 2;
-        else if (strcmp(*argv, "ecdhb409") == 0)
+        else if (sgx_strcmp(*argv, "ecdhb409") == 0)
             ecdh_doit[R_EC_B409] = 2;
-        else if (strcmp(*argv, "ecdhb571") == 0)
+        else if (sgx_strcmp(*argv, "ecdhb571") == 0)
             ecdh_doit[R_EC_B571] = 2;
-        else if (strcmp(*argv, "ecdh") == 0) {
+        else if (sgx_strcmp(*argv, "ecdh") == 0) {
             for (i = 0; i < EC_NUM; i++)
                 ecdh_doit[i] = 1;
         } else

@@ -340,7 +340,7 @@ static int TS_find_cert(STACK_OF(ESS_CERT_ID) *cert_ids, X509 *cert)
 
         /* Check the SHA-1 hash first. */
         if (cid->hash->length == sizeof(cert->sha1_hash)
-            && !memcmp(cid->hash->data, cert->sha1_hash,
+            && !sgx_memcmp(cid->hash->data, cert->sha1_hash,
                        sizeof(cert->sha1_hash))) {
             /* Check the issuer/serial as well if specified. */
             ESS_ISSUER_SERIAL *is = cid->issuer_serial;
@@ -522,15 +522,15 @@ static int TS_check_status_info(TS_RESP *response)
             if (ASN1_BIT_STRING_get_bit(info->failure_info,
                                         TS_failure_info[i].code)) {
                 if (!first)
-                    strcpy(failure_text, ",");
+                    sgx_strcpy(failure_text, ",");
                 else
                     first = 0;
-                strcat(failure_text, TS_failure_info[i].text);
+                sgx_strcat(failure_text, TS_failure_info[i].text);
             }
         }
     }
     if (failure_text[0] == '\0')
-        strcpy(failure_text, "unspecified");
+        sgx_strcpy(failure_text, "unspecified");
 
     /* Making up the error string. */
     TSerr(TS_F_TS_CHECK_STATUS_INFO, TS_R_NO_TIME_STAMP_TOKEN);
@@ -568,7 +568,7 @@ static char *TS_get_status_text(STACK_OF(ASN1_UTF8STRING) *text)
         length = ASN1_STRING_length(current);
         if (i > 0)
             *p++ = '/';
-        strncpy(p, (const char *)ASN1_STRING_data(current), length);
+        sgx_strncpy(p, (const char *)ASN1_STRING_data(current), length);
         p += length;
     }
     /* We do have space for this, too. */
@@ -665,7 +665,7 @@ static int TS_check_imprints(X509_ALGOR *algor_a,
 
     /* Compare octet strings. */
     ret = len_a == (unsigned)ASN1_STRING_length(b->hashed_msg) &&
-        memcmp(imprint_a, ASN1_STRING_data(b->hashed_msg), len_a) == 0;
+        sgx_memcmp(imprint_a, ASN1_STRING_data(b->hashed_msg), len_a) == 0;
  err:
     if (!ret)
         TSerr(TS_F_TS_CHECK_IMPRINTS, TS_R_MESSAGE_IMPRINT_MISMATCH);

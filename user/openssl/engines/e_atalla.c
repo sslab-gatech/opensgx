@@ -612,7 +612,7 @@ static int atalla_mod_exp_dh(const DH *dh, BIGNUM *r,
 #  ifndef OPENSSL_NO_DYNAMIC_ENGINE
 static int bind_fn(ENGINE *e, const char *id)
 {
-    if (id && (strcmp(id, engine_atalla_id) != 0))
+    if (id && (sgx_strcmp(id, engine_atalla_id) != 0))
         return 0;
     if (!bind_helper(e))
         return 0;

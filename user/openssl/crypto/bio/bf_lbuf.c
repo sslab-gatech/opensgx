@@ -185,13 +185,13 @@ static int linebuffer_write(BIO *b, const char *in, int inl)
             i = ctx->obuf_size - ctx->obuf_len;
             if (p - in > 0) {
                 if (i >= p - in) {
-                    memcpy(&(ctx->obuf[ctx->obuf_len]), in, p - in);
+                    sgx_memcpy(&(ctx->obuf[ctx->obuf_len]), in, p - in);
                     ctx->obuf_len += p - in;
                     inl -= p - in;
                     num += p - in;
                     in = p;
                 } else {
-                    memcpy(&(ctx->obuf[ctx->obuf_len]), in, i);
+                    sgx_memcpy(&(ctx->obuf[ctx->obuf_len]), in, i);
                     ctx->obuf_len += i;
                     inl -= i;
                     in += i;
@@ -218,7 +218,7 @@ static int linebuffer_write(BIO *b, const char *in, int inl)
             BIO_write(b->next_bio, ">*>", 3);
 #endif
             if (i < ctx->obuf_len)
-                memmove(ctx->obuf, ctx->obuf + i, ctx->obuf_len - i);
+                sgx_memmove(ctx->obuf, ctx->obuf + i, ctx->obuf_len - i);
             ctx->obuf_len -= i;
         }
 
@@ -256,7 +256,7 @@ static int linebuffer_write(BIO *b, const char *in, int inl)
      * saved for the next trip.
      */
     if (inl > 0) {
-        memcpy(&(ctx->obuf[ctx->obuf_len]), in, inl);
+        sgx_memcpy(&(ctx->obuf[ctx->obuf_len]), in, inl);
         ctx->obuf_len += inl;
         num += inl;
     }
@@ -304,7 +304,7 @@ static long linebuffer_ctrl(BIO *b, int cmd, long num, void *ptr)
             if (ctx->obuf_len > obs) {
                 ctx->obuf_len = obs;
             }
-            memcpy(p, ctx->obuf, ctx->obuf_len);
+            sgx_memcpy(p, ctx->obuf, ctx->obuf_len);
             OPENSSL_free(ctx->obuf);
             ctx->obuf = p;
             ctx->obuf_size = obs;
@@ -337,7 +337,7 @@ static long linebuffer_ctrl(BIO *b, int cmd, long num, void *ptr)
                 if (r <= 0)
                     return ((long)r);
                 if (r < ctx->obuf_len)
-                    memmove(ctx->obuf, ctx->obuf + r, ctx->obuf_len - r);
+                    sgx_memmove(ctx->obuf, ctx->obuf + r, ctx->obuf_len - r);
                 ctx->obuf_len -= r;
             } else {
                 ctx->obuf_len = 0;
@@ -387,5 +387,5 @@ static int linebuffer_gets(BIO *b, char *buf, int size)
 
 static int linebuffer_puts(BIO *b, const char *str)
 {
-    return (linebuffer_write(b, str, strlen(str)));
+    return (linebuffer_write(b, str, sgx_strlen(str)));
 }

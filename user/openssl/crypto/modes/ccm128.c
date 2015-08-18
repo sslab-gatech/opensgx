@@ -100,7 +100,7 @@ int CRYPTO_ccm128_setiv(CCM128_CONTEXT *ctx,
     ctx->nonce.c[15] = (u8)mlen;
 
     ctx->nonce.c[0] &= ~0x40;   /* clear Adata flag */
-    memcpy(&ctx->nonce.c[1], nonce, 14 - L);
+    sgx_memcpy(&ctx->nonce.c[1], nonce, 14 - L);
 
     return 0;
 }
@@ -215,7 +215,7 @@ int CRYPTO_ccm128_encrypt(CCM128_CONTEXT *ctx,
             u8 c[16];
         } temp;
 
-        memcpy(temp.c, inp, 16);
+        sgx_memcpy(temp.c, inp, 16);
         ctx->cmac.u[0] ^= temp.u[0];
         ctx->cmac.u[1] ^= temp.u[1];
 #else
@@ -228,7 +228,7 @@ int CRYPTO_ccm128_encrypt(CCM128_CONTEXT *ctx,
 #if defined(STRICT_ALIGNMENT)
         temp.u[0] ^= scratch.u[0];
         temp.u[1] ^= scratch.u[1];
-        memcpy(out, temp.c, 16);
+        sgx_memcpy(out, temp.c, 16);
 #else
         ((u64 *)out)[0] = scratch.u[0] ^ ((u64 *)inp)[0];
         ((u64 *)out)[1] = scratch.u[1] ^ ((u64 *)inp)[1];
@@ -298,10 +298,10 @@ int CRYPTO_ccm128_decrypt(CCM128_CONTEXT *ctx,
         (*block) (ctx->nonce.c, scratch.c, key);
         ctr64_inc(ctx->nonce.c);
 #if defined(STRICT_ALIGNMENT)
-        memcpy(temp.c, inp, 16);
+        sgx_memcpy(temp.c, inp, 16);
         ctx->cmac.u[0] ^= (scratch.u[0] ^= temp.u[0]);
         ctx->cmac.u[1] ^= (scratch.u[1] ^= temp.u[1]);
-        memcpy(out, scratch.c, 16);
+        sgx_memcpy(out, scratch.c, 16);
 #else
         ctx->cmac.u[0] ^= (((u64 *)out)[0] = scratch.u[0] ^ ((u64 *)inp)[0]);
         ctx->cmac.u[1] ^= (((u64 *)out)[1] = scratch.u[1] ^ ((u64 *)inp)[1]);
@@ -476,6 +476,6 @@ size_t CRYPTO_ccm128_tag(CCM128_CONTEXT *ctx, unsigned char *tag, size_t len)
     M += 2;
     if (len < M)
         return 0;
-    memcpy(tag, ctx->cmac.c, M);
+    sgx_memcpy(tag, ctx->cmac.c, M);
     return M;
 }

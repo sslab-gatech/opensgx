@@ -260,6 +260,7 @@ vhost_scsi="no"
 kvm="no"
 rdma=""
 gprof="no"
+tcg_plugin="yes"
 debug_tcg="no"
 debug="no"
 strip_opt="yes"
@@ -290,7 +291,7 @@ oss_lib=""
 bsd="no"
 linux="no"
 solaris="no"
-profiler="no"
+profiler="yes"
 cocoa="no"
 softmmu="yes"
 linux_user="no"
@@ -407,6 +408,10 @@ QEMU_CFLAGS="-Wall -Wundef -Wwrite-strings -Wmissing-prototypes $QEMU_CFLAGS"
 QEMU_CFLAGS="-Wstrict-prototypes -Wredundant-decls $QEMU_CFLAGS"
 QEMU_CFLAGS="-D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE $QEMU_CFLAGS"
 QEMU_INCLUDES="-I. -I\$(SRC_PATH) -I\$(SRC_PATH)/include"
+#local hack for openssl
+QEMU_INCLUDES="-I\$(SRC_PATH)/include/openssl $QEMU_INCLUDES"
+LIBS="-lcrypto $LIBS"
+
 if test "$debug_info" = "yes"; then
     CFLAGS="-g $CFLAGS"
     LDFLAGS="-g $LDFLAGS"
@@ -850,6 +855,10 @@ for opt do
   --block-drv-rw-whitelist=*|--block-drv-whitelist=*) block_drv_rw_whitelist=`echo "$optarg" | sed -e 's/,/ /g'`
   ;;
   --block-drv-ro-whitelist=*) block_drv_ro_whitelist=`echo "$optarg" | sed -e 's/,/ /g'`
+  ;;
+  --enable-tcg-plugin) tcg_plugin="yes"
+  ;;
+  --disable-tcg-plugin) tcg_plugin="no"
   ;;
   --enable-debug-tcg) debug_tcg="yes"
   ;;
@@ -4173,6 +4182,7 @@ echo "module support    $modules"
 echo "host CPU          $cpu"
 echo "host big endian   $bigendian"
 echo "target list       $target_list"
+echo "tcg plugin support $tcg_plugin"
 echo "tcg debug enabled $debug_tcg"
 echo "gprof enabled     $gprof"
 echo "sparse enabled    $sparse"
@@ -4297,6 +4307,12 @@ echo "qemu_localedir=$qemu_localedir" >> $config_host_mak
 echo "libs_softmmu=$libs_softmmu" >> $config_host_mak
 
 echo "ARCH=$ARCH" >> $config_host_mak
+
+if test "$tcg_plugin" = "yes" ; then
+  echo "CONFIG_TCG_PLUGIN=y" >> $config_host_mak
+  LIBS="-ldl $LIBS"
+  LDFLAGS="-rdynamic $LDFLAGS"
+fi
 
 if test "$debug_tcg" = "yes" ; then
   echo "CONFIG_DEBUG_TCG=y" >> $config_host_mak

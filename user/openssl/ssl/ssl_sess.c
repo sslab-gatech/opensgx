@@ -198,12 +198,12 @@ SSL_SESSION *SSL_SESSION_new(void)
         SSLerr(SSL_F_SSL_SESSION_NEW, ERR_R_MALLOC_FAILURE);
         return (0);
     }
-    memset(ss, 0, sizeof(SSL_SESSION));
+    sgx_memset(ss, 0, sizeof(SSL_SESSION));
 
     ss->verify_result = 1;      /* avoid 0 (= X509_V_OK) just in case */
     ss->references = 1;
     ss->timeout = 60 * 5 + 4;   /* 5 minute timeout by default */
-    ss->time = (unsigned long)time(NULL);
+    ss->time = (unsigned long)sgx_time(NULL);
     ss->prev = NULL;
     ss->next = NULL;
     ss->compress_meth = 0;
@@ -378,7 +378,7 @@ int ssl_get_new_session(SSL *s, int session)
         }
         /* If the session length was shrunk and we're SSLv2, pad it */
         if ((tmp < ss->session_id_length) && (s->version == SSL2_VERSION))
-            memset(ss->session_id + tmp, 0, ss->session_id_length - tmp);
+            sgx_memset(ss->session_id + tmp, 0, ss->session_id_length - tmp);
         else
             ss->session_id_length = tmp;
         /* Finally, check for a conflict */
@@ -408,7 +408,7 @@ int ssl_get_new_session(SSL *s, int session)
         SSL_SESSION_free(ss);
         return 0;
     }
-    memcpy(ss->sid_ctx, s->sid_ctx, s->sid_ctx_length);
+    sgx_memcpy(ss->sid_ctx, s->sid_ctx, s->sid_ctx_length);
     ss->sid_ctx_length = s->sid_ctx_length;
     s->session = ss;
     ss->ssl_version = s->version;
@@ -483,7 +483,7 @@ int ssl_get_prev_session(SSL *s, unsigned char *session_id, int len,
         data.session_id_length = len;
         if (len == 0)
             return 0;
-        memcpy(data.session_id, session_id, len);
+        sgx_memcpy(data.session_id, session_id, len);
         CRYPTO_r_lock(CRYPTO_LOCK_SSL_CTX);
         ret = lh_SSL_SESSION_retrieve(s->session_ctx->sessions, &data);
         if (ret != NULL) {
@@ -533,7 +533,7 @@ int ssl_get_prev_session(SSL *s, unsigned char *session_id, int len,
     /* Now ret is non-NULL and we own one of its reference counts. */
 
     if (ret->sid_ctx_length != s->sid_ctx_length
-        || memcmp(ret->sid_ctx, s->sid_ctx, ret->sid_ctx_length)) {
+        || sgx_memcmp(ret->sid_ctx, s->sid_ctx, ret->sid_ctx_length)) {
         /*
          * We have the session requested by the client, but we don't want to
          * use it in this context.
@@ -573,7 +573,7 @@ int ssl_get_prev_session(SSL *s, unsigned char *session_id, int len,
             goto err;
     }
 
-    if (ret->timeout < (long)(time(NULL) - ret->time)) { /* timeout */
+    if (ret->timeout < (long)(sgx_time(NULL) - ret->time)) { /* timeout */
         s->session_ctx->stats.sess_timeout++;
         if (try_session_cache) {
             /* session was from the cache, so remove it */
@@ -793,7 +793,7 @@ int SSL_set_session(SSL *s, SSL_SESSION *session)
             session->krb5_client_princ_len > 0) {
             s->kssl_ctx->client_princ =
                 (char *)OPENSSL_malloc(session->krb5_client_princ_len + 1);
-            memcpy(s->kssl_ctx->client_princ, session->krb5_client_princ,
+            sgx_memcpy(s->kssl_ctx->client_princ, session->krb5_client_princ,
                    session->krb5_client_princ_len);
             s->kssl_ctx->client_princ[session->krb5_client_princ_len] = '\0';
         }
@@ -867,7 +867,7 @@ int SSL_SESSION_set1_id_context(SSL_SESSION *s, const unsigned char *sid_ctx,
         return 0;
     }
     s->sid_ctx_length = sid_ctx_len;
-    memcpy(s->sid_ctx, sid_ctx, sid_ctx_len);
+    sgx_memcpy(s->sid_ctx, sid_ctx, sid_ctx_len);
 
     return 1;
 }
@@ -936,7 +936,7 @@ int SSL_set_session_ticket_ext(SSL *s, void *ext_data, int ext_len)
         if (ext_data) {
             s->tlsext_session_ticket->length = ext_len;
             s->tlsext_session_ticket->data = s->tlsext_session_ticket + 1;
-            memcpy(s->tlsext_session_ticket->data, ext_data, ext_len);
+            sgx_memcpy(s->tlsext_session_ticket->data, ext_data, ext_len);
         } else {
             s->tlsext_session_ticket->length = 0;
             s->tlsext_session_ticket->data = NULL;

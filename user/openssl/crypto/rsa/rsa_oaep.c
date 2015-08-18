@@ -75,11 +75,11 @@ int RSA_padding_add_PKCS1_OAEP_mgf1(unsigned char *to, int tlen,
         return 0;
     sgx_memset(db + mdlen, 0, emlen - flen - 2 * mdlen - 1);
     db[emlen - flen - mdlen - 1] = 0x01;
-    memcpy(db + emlen - flen - mdlen, from, (unsigned int)flen);
+    sgx_memcpy(db + emlen - flen - mdlen, from, (unsigned int)flen);
     if (RAND_bytes(seed, mdlen) <= 0)
         return 0;
 # ifdef PKCS_TESTVECT
-    memcpy(seed,
+    sgx_memcpy(seed,
            "\xaa\xfd\x12\xf6\x59\xca\xe6\x34\x89\xb4\x79\xe5\x07\x6d\xde\xc2\xf0\x6c\xb5\x8f",
            20);
 # endif
@@ -166,7 +166,7 @@ int RSA_padding_check_PKCS1_OAEP_mgf1(unsigned char *to, int tlen,
      * TODO(emilia): Consider porting BN_bn2bin_padded from BoringSSL.
      */
     sgx_memset(em, 0, num);
-    memcpy(em + num - flen, from, flen);
+    sgx_memcpy(em + num - flen, from, flen);
 
     /*
      * The first byte must be zero, however we must not leak if this is
@@ -223,7 +223,7 @@ int RSA_padding_check_PKCS1_OAEP_mgf1(unsigned char *to, int tlen,
         RSAerr(RSA_F_RSA_PADDING_CHECK_PKCS1_OAEP_MGF1, RSA_R_DATA_TOO_LARGE);
         mlen = -1;
     } else {
-        memcpy(to, db + msg_index, mlen);
+        sgx_memcpy(to, db + msg_index, mlen);
         goto cleanup;
     }
 
@@ -272,7 +272,7 @@ int PKCS1_MGF1(unsigned char *mask, long len,
         } else {
             if (!EVP_DigestFinal_ex(&c, md, NULL))
                 goto err;
-            memcpy(mask + outlen, md, len - outlen);
+            sgx_memcpy(mask + outlen, md, len - outlen);
             outlen = len;
         }
     }

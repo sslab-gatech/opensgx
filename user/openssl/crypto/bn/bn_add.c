@@ -228,7 +228,7 @@ int BN_usub(BIGNUM *r, const BIGNUM *a, const BIGNUM *b)
         }
     }
 #if 0
-    memcpy(rp, ap, sizeof(*rp) * (max - i));
+    sgx_memcpy(rp, ap, sizeof(*rp) * (max - i));
 #else
     if (rp != ap) {
         for (;;) {

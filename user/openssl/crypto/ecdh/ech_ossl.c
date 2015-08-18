@@ -203,7 +203,7 @@ static int ecdh_compute_key(void *out, size_t outlen, const EC_POINT *pub_key,
         /* no KDF, just copy as much as we can */
         if (outlen > buflen)
             outlen = buflen;
-        memcpy(out, buf, outlen);
+        sgx_memcpy(out, buf, outlen);
         ret = outlen;
     }
 

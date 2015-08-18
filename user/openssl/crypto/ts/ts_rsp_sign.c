@@ -356,7 +356,7 @@ int TS_RESP_CTX_set_status_info(TS_RESP_CTX *ctx,
         goto err;
     if (text) {
         if (!(utf8_text = ASN1_UTF8STRING_new())
-            || !ASN1_STRING_set(utf8_text, text, strlen(text)))
+            || !ASN1_STRING_set(utf8_text, text, sgx_strlen(text)))
             goto err;
         if (!si->text && !(si->text = sk_ASN1_UTF8STRING_new_null()))
             goto err;
@@ -978,7 +978,7 @@ static ASN1_GENERALIZEDTIME
          * We cannot use the snprintf return value, because it might have
          * been truncated.
          */
-        p += strlen(p);
+        p += sgx_strlen(p);
 
         /*
          * To make things a bit harder, X.690 | ISO/IEC 8825-1 provides the

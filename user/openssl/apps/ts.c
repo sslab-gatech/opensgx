@@ -170,93 +170,93 @@ int MAIN(int argc, char **argv)
         goto cleanup;
 
     for (argc--, argv++; argc > 0; argc--, argv++) {
-        if (strcmp(*argv, "-config") == 0) {
+        if (sgx_strcmp(*argv, "-config") == 0) {
             if (argc-- < 1)
                 goto usage;
             configfile = *++argv;
-        } else if (strcmp(*argv, "-section") == 0) {
+        } else if (sgx_strcmp(*argv, "-section") == 0) {
             if (argc-- < 1)
                 goto usage;
             section = *++argv;
-        } else if (strcmp(*argv, "-query") == 0) {
+        } else if (sgx_strcmp(*argv, "-query") == 0) {
             if (mode != CMD_NONE)
                 goto usage;
             mode = CMD_QUERY;
-        } else if (strcmp(*argv, "-data") == 0) {
+        } else if (sgx_strcmp(*argv, "-data") == 0) {
             if (argc-- < 1)
                 goto usage;
             data = *++argv;
-        } else if (strcmp(*argv, "-digest") == 0) {
+        } else if (sgx_strcmp(*argv, "-digest") == 0) {
             if (argc-- < 1)
                 goto usage;
             digest = *++argv;
-        } else if (strcmp(*argv, "-rand") == 0) {
+        } else if (sgx_strcmp(*argv, "-rand") == 0) {
             if (argc-- < 1)
                 goto usage;
             rnd = *++argv;
-        } else if (strcmp(*argv, "-policy") == 0) {
+        } else if (sgx_strcmp(*argv, "-policy") == 0) {
             if (argc-- < 1)
                 goto usage;
             policy = *++argv;
-        } else if (strcmp(*argv, "-no_nonce") == 0) {
+        } else if (sgx_strcmp(*argv, "-no_nonce") == 0) {
             no_nonce = 1;
-        } else if (strcmp(*argv, "-cert") == 0) {
+        } else if (sgx_strcmp(*argv, "-cert") == 0) {
             cert = 1;
-        } else if (strcmp(*argv, "-in") == 0) {
+        } else if (sgx_strcmp(*argv, "-in") == 0) {
             if (argc-- < 1)
                 goto usage;
             in = *++argv;
-        } else if (strcmp(*argv, "-token_in") == 0) {
+        } else if (sgx_strcmp(*argv, "-token_in") == 0) {
             token_in = 1;
-        } else if (strcmp(*argv, "-out") == 0) {
+        } else if (sgx_strcmp(*argv, "-out") == 0) {
             if (argc-- < 1)
                 goto usage;
             out = *++argv;
-        } else if (strcmp(*argv, "-token_out") == 0) {
+        } else if (sgx_strcmp(*argv, "-token_out") == 0) {
             token_out = 1;
-        } else if (strcmp(*argv, "-text") == 0) {
+        } else if (sgx_strcmp(*argv, "-text") == 0) {
             text = 1;
-        } else if (strcmp(*argv, "-reply") == 0) {
+        } else if (sgx_strcmp(*argv, "-reply") == 0) {
             if (mode != CMD_NONE)
                 goto usage;
             mode = CMD_REPLY;
-        } else if (strcmp(*argv, "-queryfile") == 0) {
+        } else if (sgx_strcmp(*argv, "-queryfile") == 0) {
             if (argc-- < 1)
                 goto usage;
             queryfile = *++argv;
-        } else if (strcmp(*argv, "-passin") == 0) {
+        } else if (sgx_strcmp(*argv, "-passin") == 0) {
             if (argc-- < 1)
                 goto usage;
             passin = *++argv;
-        } else if (strcmp(*argv, "-inkey") == 0) {
+        } else if (sgx_strcmp(*argv, "-inkey") == 0) {
             if (argc-- < 1)
                 goto usage;
             inkey = *++argv;
-        } else if (strcmp(*argv, "-signer") == 0) {
+        } else if (sgx_strcmp(*argv, "-signer") == 0) {
             if (argc-- < 1)
                 goto usage;
             signer = *++argv;
-        } else if (strcmp(*argv, "-chain") == 0) {
+        } else if (sgx_strcmp(*argv, "-chain") == 0) {
             if (argc-- < 1)
                 goto usage;
             chain = *++argv;
-        } else if (strcmp(*argv, "-verify") == 0) {
+        } else if (sgx_strcmp(*argv, "-verify") == 0) {
             if (mode != CMD_NONE)
                 goto usage;
             mode = CMD_VERIFY;
-        } else if (strcmp(*argv, "-CApath") == 0) {
+        } else if (sgx_strcmp(*argv, "-CApath") == 0) {
             if (argc-- < 1)
                 goto usage;
             ca_path = *++argv;
-        } else if (strcmp(*argv, "-CAfile") == 0) {
+        } else if (sgx_strcmp(*argv, "-CAfile") == 0) {
             if (argc-- < 1)
                 goto usage;
             ca_file = *++argv;
-        } else if (strcmp(*argv, "-untrusted") == 0) {
+        } else if (sgx_strcmp(*argv, "-untrusted") == 0) {
             if (argc-- < 1)
                 goto usage;
             untrusted = *++argv;
-        } else if (strcmp(*argv, "-engine") == 0) {
+        } else if (sgx_strcmp(*argv, "-engine") == 0) {
             if (argc-- < 1)
                 goto usage;
             engine = *++argv;

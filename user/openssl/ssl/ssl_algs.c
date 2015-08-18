@@ -60,14 +60,15 @@
 #include <openssl/objects.h>
 #include <openssl/lhash.h>
 #include "ssl_locl.h"
+#include "../crypto/sgx.h"
 
 int SSL_library_init(void)
 {
-
 #ifndef OPENSSL_NO_DES
     EVP_add_cipher(EVP_des_cbc());
     EVP_add_cipher(EVP_des_ede3_cbc());
 #endif
+
 #ifndef OPENSSL_NO_IDEA
     EVP_add_cipher(EVP_idea_cbc());
 #endif

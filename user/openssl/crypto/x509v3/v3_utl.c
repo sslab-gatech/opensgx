@@ -242,14 +242,14 @@ int X509V3_get_value_bool(CONF_VALUE *value, int *asn1_bool)
     char *btmp;
     if (!(btmp = value->value))
         goto err;
-    if (!strcmp(btmp, "TRUE") || !strcmp(btmp, "true")
-        || !strcmp(btmp, "Y") || !strcmp(btmp, "y")
-        || !strcmp(btmp, "YES") || !strcmp(btmp, "yes")) {
+    if (!sgx_strcmp(btmp, "TRUE") || !sgx_strcmp(btmp, "true")
+        || !sgx_strcmp(btmp, "Y") || !sgx_strcmp(btmp, "y")
+        || !sgx_strcmp(btmp, "YES") || !sgx_strcmp(btmp, "yes")) {
         *asn1_bool = 0xff;
         return 1;
-    } else if (!strcmp(btmp, "FALSE") || !strcmp(btmp, "false")
-               || !strcmp(btmp, "N") || !strcmp(btmp, "n")
-               || !strcmp(btmp, "NO") || !strcmp(btmp, "no")) {
+    } else if (!sgx_strcmp(btmp, "FALSE") || !sgx_strcmp(btmp, "false")
+               || !sgx_strcmp(btmp, "N") || !sgx_strcmp(btmp, "n")
+               || !sgx_strcmp(btmp, "NO") || !sgx_strcmp(btmp, "no")) {
         *asn1_bool = 0;
         return 1;
     }
@@ -380,12 +380,12 @@ static char *strip_spaces(char *name)
     char *p, *q;
     /* Skip over leading spaces */
     p = name;
-    while (*p && isspace((unsigned char)*p))
+    while (*p && sgx_isspace((unsigned char)*p))
         p++;
     if (!*p)
         return NULL;
-    q = p + strlen(p) - 1;
-    while ((q != p) && isspace((unsigned char)*q))
+    q = p + sgx_strlen(p) - 1;
+    while ((q != p) && sgx_isspace((unsigned char)*q))
         q--;
     if (p != q)
         q[1] = 0;
@@ -458,10 +458,10 @@ unsigned char *string_to_hex(const char *str, long *len)
             OPENSSL_free(hexbuf);
             return NULL;
         }
-        if (isupper(ch))
-            ch = tolower(ch);
-        if (isupper(cl))
-            cl = tolower(cl);
+        if (sgx_isupper(ch))
+            ch = sgx_tolower(ch);
+        if (sgx_isupper(cl))
+            cl = sgx_tolower(cl);
 
         if ((ch >= '0') && (ch <= '9'))
             ch -= '0';
@@ -506,8 +506,8 @@ int name_cmp(const char *name, const char *cmp)
 {
     int len, ret;
     char c;
-    len = strlen(cmp);
-    if ((ret = strncmp(name, cmp, len)))
+    len = sgx_strlen(cmp);
+    if ((ret = sgx_strncmp(name, cmp, len)))
         return ret;
     c = name[len];
     if (!c || (c == '.'))
@@ -517,7 +517,7 @@ int name_cmp(const char *name, const char *cmp)
 
 static int sk_strcmp(const char *const *a, const char *const *b)
 {
-    return strcmp(*a, *b);
+    return sgx_strcmp(*a, *b);
 }
 
 STACK_OF(OPENSSL_STRING) *X509_get1_email(X509 *x)
@@ -695,7 +695,7 @@ static int equal_nocase(const unsigned char *pattern, size_t pattern_len,
     return 1;
 }
 
-/* Compare using memcmp. */
+/* Compare using sgx_memcmp. */
 static int equal_case(const unsigned char *pattern, size_t pattern_len,
                       const unsigned char *subject, size_t subject_len,
                       unsigned int flags)
@@ -703,7 +703,7 @@ static int equal_case(const unsigned char *pattern, size_t pattern_len,
     skip_prefix(&pattern, &pattern_len, subject, subject_len, flags);
     if (pattern_len != subject_len)
         return 0;
-    return !memcmp(pattern, subject, pattern_len);
+    return !sgx_memcmp(pattern, subject, pattern_len);
 }
 
 /*
@@ -771,7 +771,7 @@ static int wildcard_match(const unsigned char *prefix, size_t prefix_len,
     }
     /* IDNA labels cannot match partial wildcards */
     if (!allow_idna &&
-        subject_len >= 4 && strncasecmp((char *)subject, "xn--", 4) == 0)
+        subject_len >= 4 && sgx_strncasecmp((char *)subject, "xn--", 4) == 0)
         return 0;
     /* The wildcard may match a literal '*' */
     if (wildcard_end == wildcard_start + 1 && *wildcard_start == '*')
@@ -830,7 +830,7 @@ static const unsigned char *valid_star(const unsigned char *p, size_t len,
                    || ('A' <= p[i] && p[i] <= 'Z')
                    || ('0' <= p[i] && p[i] <= '9')) {
             if ((state & LABEL_START) != 0
-                && len - i >= 4 && strncasecmp((char *)&p[i], "xn--", 4) == 0)
+                && len - i >= 4 && sgx_strncasecmp((char *)&p[i], "xn--", 4) == 0)
                 state |= LABEL_IDNA;
             state &= ~(LABEL_HYPHEN | LABEL_START);
         } else if (p[i] == '.') {
@@ -895,7 +895,7 @@ static int do_check_string(ASN1_STRING *a, int cmp_type, equal_fn equal,
             return 0;
         if (cmp_type == V_ASN1_IA5STRING)
             rv = equal(a->data, a->length, (unsigned char *)b, blen, flags);
-        else if (a->length == (int)blen && !memcmp(a->data, b, blen))
+        else if (a->length == (int)blen && !sgx_memcmp(a->data, b, blen))
             rv = 1;
         if (rv > 0 && peername)
             *peername = BUF_strndup((char *)a->data, a->length);
@@ -948,7 +948,7 @@ static int do_x509_check(X509 *x, const char *chk, size_t chklen,
     }
 
     if (chklen == 0)
-        chklen = strlen(chk);
+        chklen = sgx_strlen(chk);
 
     gens = X509_get_ext_d2i(x, NID_subject_alt_name, NULL, NULL);
     if (gens) {
@@ -1004,7 +1004,7 @@ int X509_check_host(X509 *x, const char *chk, size_t chklen,
      * NUL in string length).
      */
     if (chklen == 0)
-        chklen = strlen(chk);
+        chklen = sgx_strlen(chk);
     else if (memchr(chk, '\0', chklen > 1 ? chklen - 1 : chklen))
         return -2;
     if (chklen > 1 && chk[chklen - 1] == '\0')
@@ -1023,7 +1023,7 @@ int X509_check_email(X509 *x, const char *chk, size_t chklen,
      * NUL in string length).
      */
     if (chklen == 0)
-        chklen = strlen((char *)chk);
+        chklen = sgx_strlen((char *)chk);
     else if (memchr(chk, '\0', chklen > 1 ? chklen - 1 : chklen))
         return -2;
     if (chklen > 1 && chk[chklen - 1] == '\0')
@@ -1086,7 +1086,7 @@ ASN1_OCTET_STRING *a2i_IPADDRESS_NC(const char *ipasc)
     unsigned char ipout[32];
     char *iptmp = NULL, *p;
     int iplen1, iplen2;
-    p = strchr(ipasc, '/');
+    p = sgx_strchr(ipasc, '/');
     if (!p)
         return NULL;
     iptmp = BUF_strdup(ipasc);
@@ -1128,7 +1128,7 @@ int a2i_ipadd(unsigned char *ipout, const char *ipasc)
 {
     /* If string contains a ':' assume IPv6 */
 
-    if (strchr(ipasc, ':')) {
+    if (sgx_strchr(ipasc, ':')) {
         if (!ipv6_from_asc(ipout, ipasc))
             return 0;
         return 16;
@@ -1215,16 +1215,16 @@ static int ipv6_from_asc(unsigned char *v6, const char *in)
 
     if (v6stat.zero_pos >= 0) {
         /* Copy initial part */
-        memcpy(v6, v6stat.tmp, v6stat.zero_pos);
+        sgx_memcpy(v6, v6stat.tmp, v6stat.zero_pos);
         /* Zero middle */
         sgx_memset(v6 + v6stat.zero_pos, 0, 16 - v6stat.total);
         /* Copy final part */
         if (v6stat.total != v6stat.zero_pos)
-            memcpy(v6 + v6stat.zero_pos + 16 - v6stat.total,
+            sgx_memcpy(v6 + v6stat.zero_pos + 16 - v6stat.total,
                    v6stat.tmp + v6stat.zero_pos,
                    v6stat.total - v6stat.zero_pos);
     } else
-        memcpy(v6, v6stat.tmp, 16);
+        sgx_memcpy(v6, v6stat.tmp, 16);
 
     return 1;
 }

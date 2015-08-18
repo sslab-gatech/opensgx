@@ -2250,7 +2250,7 @@ int ec_GFp_nistp256_precompute_mult(EC_GROUP *group, BN_CTX *ctx)
      * if the generator is the standard one, use built-in precomputation
      */
     if (0 == EC_POINT_cmp(group, generator, group->generator, ctx)) {
-        memcpy(pre->g_pre_comp, gmul, sizeof(pre->g_pre_comp));
+        sgx_memcpy(pre->g_pre_comp, gmul, sizeof(pre->g_pre_comp));
         ret = 1;
         goto err;
     }

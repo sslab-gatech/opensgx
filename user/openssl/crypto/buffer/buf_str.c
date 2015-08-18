@@ -60,8 +60,6 @@
 #include "cryptlib.h"
 #include <openssl/buffer.h>
 
-#include "../sgx.h"
-
 size_t BUF_strnlen(const char *str, size_t maxlen)
 {
     const char *p;
@@ -75,7 +73,7 @@ char *BUF_strdup(const char *str)
 {
     if (str == NULL)
         return (NULL);
-    return BUF_strndup(str, strlen(str));
+    return BUF_strndup(str, sgx_strlen(str));
 }
 
 char *BUF_strndup(const char *str, size_t siz)

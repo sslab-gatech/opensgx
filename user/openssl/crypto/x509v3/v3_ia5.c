@@ -88,7 +88,7 @@ static char *i2s_ASN1_IA5STRING(X509V3_EXT_METHOD *method,
         X509V3err(X509V3_F_I2S_ASN1_IA5STRING, ERR_R_MALLOC_FAILURE);
         return NULL;
     }
-    memcpy(tmp, ia5->data, ia5->length);
+    sgx_memcpy(tmp, ia5->data, ia5->length);
     tmp[ia5->length] = 0;
     return tmp;
 }
@@ -105,7 +105,7 @@ static ASN1_IA5STRING *s2i_ASN1_IA5STRING(X509V3_EXT_METHOD *method,
     if (!(ia5 = M_ASN1_IA5STRING_new()))
         goto err;
     if (!ASN1_STRING_set((ASN1_STRING *)ia5, (unsigned char *)str,
-                         strlen(str))) {
+                         sgx_strlen(str))) {
         M_ASN1_IA5STRING_free(ia5);
         goto err;
     }

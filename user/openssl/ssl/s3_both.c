@@ -171,7 +171,7 @@ int ssl3_send_finished(SSL *s, int a, int b, const char *sender, int slen)
         if (i == 0)
             return 0;
         s->s3->tmp.finish_md_len = i;
-        memcpy(p, s->s3->tmp.finish_md, i);
+        sgx_memcpy(p, s->s3->tmp.finish_md, i);
         l = i;
 
         /*
@@ -179,11 +179,11 @@ int ssl3_send_finished(SSL *s, int a, int b, const char *sender, int slen)
          */
         if (s->type == SSL_ST_CONNECT) {
             OPENSSL_assert(i <= EVP_MAX_MD_SIZE);
-            memcpy(s->s3->previous_client_finished, s->s3->tmp.finish_md, i);
+            sgx_memcpy(s->s3->previous_client_finished, s->s3->tmp.finish_md, i);
             s->s3->previous_client_finished_len = i;
         } else {
             OPENSSL_assert(i <= EVP_MAX_MD_SIZE);
-            memcpy(s->s3->previous_server_finished, s->s3->tmp.finish_md, i);
+            sgx_memcpy(s->s3->previous_server_finished, s->s3->tmp.finish_md, i);
             s->s3->previous_server_finished_len = i;
         }
 
@@ -279,11 +279,11 @@ int ssl3_get_finished(SSL *s, int a, int b)
      */
     if (s->type == SSL_ST_ACCEPT) {
         OPENSSL_assert(i <= EVP_MAX_MD_SIZE);
-        memcpy(s->s3->previous_client_finished, s->s3->tmp.peer_finish_md, i);
+        sgx_memcpy(s->s3->previous_client_finished, s->s3->tmp.peer_finish_md, i);
         s->s3->previous_client_finished_len = i;
     } else {
         OPENSSL_assert(i <= EVP_MAX_MD_SIZE);
-        memcpy(s->s3->previous_server_finished, s->s3->tmp.peer_finish_md, i);
+        sgx_memcpy(s->s3->previous_server_finished, s->s3->tmp.peer_finish_md, i);
         s->s3->previous_server_finished_len = i;
     }
 
@@ -481,7 +481,9 @@ int ssl_cert_type(X509 *x, EVP_PKEY *pkey)
     if (pk == NULL)
         goto err;
 
+    pk->type = 6;
     i = pk->type;
+    sgx_printf("%d\n", i);
     if (i == EVP_PKEY_RSA) {
         ret = SSL_PKEY_RSA_ENC;
     } else if (i == EVP_PKEY_DSA) {

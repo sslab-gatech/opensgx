@@ -320,10 +320,10 @@ int RSA_memory_lock(RSA *r)
     for (i = 0; i < 6; i++) {
         b = *(t[i]);
         *(t[i]) = &(bn[i]);
-        memcpy((char *)&(bn[i]), (char *)b, sizeof(BIGNUM));
+        sgx_memcpy((char *)&(bn[i]), (char *)b, sizeof(BIGNUM));
         bn[i].flags = BN_FLG_STATIC_DATA;
         bn[i].d = ul;
-        memcpy((char *)ul, b->d, sizeof(BN_ULONG) * b->top);
+        sgx_memcpy((char *)ul, b->d, sizeof(BN_ULONG) * b->top);
         ul += b->top;
         BN_clear_free(b);
     }

@@ -20,20 +20,13 @@
 #include <sgx-lib.h>
 #include <stdarg.h>
 
-unsigned long cur_heap_ptr = 0x0;
-
-unsigned long heap_end = 0x0;
-
 // one 4k page : enclave page & offset
 
-void sgx_print_hex(unsigned long addr) {
-
-    sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
-
-    stub->fcode = PRINT_HEX;
-    stub->addr = addr;
-    sgx_exit(stub->trampoline);
-}
+static unsigned long cur_heap_ptr = 0x0;
+static unsigned long heap_end = 0x0;
+static int has_initialized = 0;
+static void *managed_memory_start = 0;
+static int g_total_chunk = 0;
 
 void _enclu(enclu_cmd_t leaf, uint64_t rbx, uint64_t rcx, uint64_t rdx,
            out_regs_t *out_regs)
@@ -66,66 +59,103 @@ void _enclu(enclu_cmd_t leaf, uint64_t rbx, uint64_t rcx, uint64_t rdx,
     }
 }
 
-void *sgx_malloc(int size) {
+void sgx_malloc_init() {
+     sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
+     stub->fcode = FUNC_MALLOC;
+     stub->mcode = MALLOC_INIT;
+     // Enclave exit & jump into user-space trampoline
+     sgx_exit(stub->trampoline);
 
-//    sgx_puts("heap_ptr address");
-//    sgx_print_hex((unsigned long)cur_heap_ptr);
-    sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
+     cur_heap_ptr = (unsigned long)stub->heap_beg;
+     heap_end = (unsigned long)stub->heap_end;
 
-    if (cur_heap_ptr == 0) {
-        stub->fcode = FUNC_MALLOC;
-        stub->mcode = MALLOC_INIT;
-        // Enclave exit & jump into user-space trampoline
-        sgx_exit(stub->trampoline);
+     ////
+     managed_memory_start = (unsigned long)stub->heap_beg;
+     has_initialized = 1;
+     g_total_chunk = 0;
+}
 
-        cur_heap_ptr = (unsigned long)stub->heap_beg;
-        heap_end = (unsigned long)stub->heap_end;
-    }
+void sgx_free(void *ptr) {
+     struct mem_control_block *mcb;
+     mcb = ptr - sizeof(struct mem_control_block);
+     mcb->is_available = 1;
+     unsigned int chunk_size = mcb->size - sizeof(struct mem_control_block);
+     sgx_memset(ptr,0,chunk_size); 
+     return;
+}
 
-    void *last_heap_ptr = (void *)cur_heap_ptr;
-    unsigned long extra_secinfo_size = sizeof(secinfo_t) + (SECINFO_ALIGN_SIZE - 1);
+void *sgx_malloc(size_t numbytes) {
+     //the below mechanism is largely from "Inside memory management from IBM"
+     void *current_location;
+     struct mem_control_block *current_location_mcb;
+     void *memory_location;
+     sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
 
-    // Check whether the malloc request overfills EPC heap area
-    if ((cur_heap_ptr + extra_secinfo_size + ((size + 1) / 8) * 8) > heap_end) {
-        //XXX: calling sgx_puts in here makes prob.
-        //sgx_puts("DEBUG pending page");
+     if (!has_initialized) {
+          sgx_malloc_init();
+     }
+     numbytes = numbytes + sizeof(struct mem_control_block);
+     memory_location = 0;
 
-        secinfo_t *secinfo = sgx_memalign(SECINFO_ALIGN_SIZE, sizeof(secinfo_t));
+     current_location = managed_memory_start;
 
-        secinfo->flags.r = 1;
-        secinfo->flags.w = 1;
-        secinfo->flags.x = 0;
-        secinfo->flags.pending = 1;
-        secinfo->flags.modified = 0;
-        secinfo->flags.reserved1 = 0;
-        secinfo->flags.page_type = PT_REG;
-        int i = 0;
-        for(i = 0 ; i< 6; i++){
-            secinfo->flags.reserved2[i] = 0;
-        }
+     int total_chunk = g_total_chunk;
+     while (total_chunk) {
+          current_location_mcb = (struct mem_control_block *)current_location;
+          if (current_location_mcb->is_available) {
+               if (current_location_mcb->size >= numbytes) {
+                    current_location_mcb->is_available = 0;
+                    memory_location = current_location;
+                    break;
+               }
+          }
+          current_location = current_location + current_location_mcb->size;
+          total_chunk--;
+     }
+     if (!memory_location) {
+          void *last_heap_ptr = (void *)cur_heap_ptr;
+          unsigned long extra_secinfo_size = sizeof(secinfo_t) + (SECINFO_ALIGN_SIZE - 1);
 
-        stub->fcode = FUNC_MALLOC;
-        stub->mcode = REQUEST_EAUG;
-        // Enclave exit & jump into user-space trampoline
-        sgx_exit(stub->trampoline);
-        unsigned long pending_page = stub->pending_page;
-//        sgx_print_hex(pending_page);
+          if ((cur_heap_ptr + extra_secinfo_size + numbytes ) > heap_end) {
+             secinfo_t *secinfo = sgx_memalign(SECINFO_ALIGN_SIZE, sizeof(secinfo_t));
 
-        // EACCEPT should be called with [RBX:the address of secinfo, RCX:the adress of pending page]
-        out_regs_t out;
-        _enclu(ENCLU_EACCEPT, (uint64_t)secinfo, (uint64_t)pending_page, 0, &out);  // Check whether OS-provided pending page is legitimate for EPC heap area
-        if (out.oeax == 0) {   // No error occurred in EACCEPT
-            heap_end += PAGE_SIZE;
-        } else {
-            return NULL;
-        }
+             secinfo->flags.r = 1;
+             secinfo->flags.w = 1;
+             secinfo->flags.x = 0;
+             secinfo->flags.pending = 1;
+             secinfo->flags.modified = 0;
+             secinfo->flags.reserved1 = 0;
+             secinfo->flags.page_type = PT_REG;
+             int i = 0;
+             for (i = 0 ; i< 6; i++) {
+                 secinfo->flags.reserved2[i] = 0;
+             }
 
-    }
-    cur_heap_ptr = (unsigned long)last_heap_ptr + ((size+1)/8)*8;
+             stub->fcode = FUNC_MALLOC;
+             stub->mcode = REQUEST_EAUG;
+             // Enclave exit & jump into user-space trampoline
+             sgx_exit(stub->trampoline);
+             unsigned long pending_page = stub->pending_page;
 
-    //sgx_print_hex(heap_end);
-    //sgx_print_hex((unsigned long)last_heap_ptr);
-    return last_heap_ptr;
+             // EACCEPT should be called with [RBX:the address of secinfo, RCX:the adress of pending page]
+             out_regs_t out;
+             _enclu(ENCLU_EACCEPT, (uint64_t)secinfo, (uint64_t)pending_page, 0, &out);  // Check whether OS-provided pending page is legitimate for EPC heap area
+             if (out.oeax == 0) {   // No error occurred in EACCEPT
+                 heap_end += PAGE_SIZE;
+             } else {
+                 return NULL;
+             }
+          }
+          cur_heap_ptr = (unsigned long)last_heap_ptr + numbytes;
+          memory_location = last_heap_ptr;
+
+          current_location_mcb = memory_location;
+          current_location_mcb->is_available = 0;
+          current_location_mcb->size = numbytes;
+          g_total_chunk++; //g_total_chunk is added only when a new chunk is allocted (excluding the case of a using previously used chunk)
+     }
+     memory_location = memory_location + sizeof(struct mem_control_block);
+     return memory_location;
 }
 
 void *sgx_realloc(void *ptr, size_t size){
@@ -158,10 +188,6 @@ void *sgx_memalign(size_t align, size_t size) {
     return ptr;
 }
 
-void sgx_free(void *ptr) {
-
-}
-
 void sgx_puts(char buf[]) {
 
     size_t size = sgx_strlen(buf);
@@ -173,126 +199,6 @@ void sgx_puts(char buf[]) {
 
     // Enclave exit & jump into user-space trampoline
     sgx_exit(stub->trampoline);
-}
-
-size_t sgx_strlen(const char *string) {
-    size_t len = 0;
-    asm volatile("" ::: "memory");
-    asm volatile("push  %%rdi\n\t"
-                 "xor   %%rcx, %%rcx\n\t"
-                 "movq  %1, %%rdi\n\t"
-                 "not   %%ecx\n\t"
-                 "xor   %%eax, %%eax\n\t"
-                 "xor   %%al, %%al\n\t"
-                 "cld\n\t"
-                 "repne scasb\n\t"
-                 "not   %%ecx\n\t"
-                 "pop   %%rdi\n\t"
-                 "lea   -0x1(%%ecx), %%eax\n\t"
-                 :"=a"(len)
-                 :"r"((uint64_t) string)
-                 :"%rdi");
-    return len;
-}
-
-int sgx_strcmp (const char *str1, const char *str2)
-{
-    int result = 0;
-    asm volatile("" ::: "memory");
-    asm volatile("push %%rsi\n\t"
-                 "push %%rdi\n\t"
-                 "movq %1, %%rsi\n\t"
-                 "movq %2, %%rdi\n\t"
-
-                 "REPEAT :\n\t"
-                 "movzbl (%%rsi), %%eax\n\t"
-                 "movzbl (%%rdi), %%ebx\n\t"
-                 "sub %%bl, %%al\n\t"
-
-                 "ja END\n\t"
-                 "jb BELOW\n\t"
-                 "je EQUAL\n\t"
-
-                 "EQUAL :\n\t"
-                 "inc %%rsi\n\t"
-                 "inc %%rdi\n\t"
-                 "test %%bl, %%bl\n\t"
-                 "jnz REPEAT\n\t"
-
-                 "BELOW :\n\t"
-                 "neg %%rax\n\t"
-                 "neg %%al\n\t"
-
-                 "END :\n\t"
-                 "pop %%rdi\n\t"
-                 "pop %%rsi\n\t"
-                 :"=a"(result)
-                 :"r"((uint64_t)str1),
-                  "r"((uint64_t)str2)
-                 :"%rsi", "%rdi");
-
-
-    return result;
-}
-
-int sgx_memcmp (const void *ptr1, const void *ptr2, size_t num)
-{
-    int result = 0;
-    asm volatile("" ::: "memory");
-    asm volatile("push %%rsi\n\t"
-                 "push %%rdi\n\t"
-                 "movq %1, %%rsi\n\t"
-                 "movq %2, %%rdi\n\t"
-                 "movq %3, %%rcx\n\t"
-                 "xor %%rax,%%rax\n\t"
-                 "cld\n\t"
-                 "cmp %%rcx, %%rcx\n\t"
-                 "repe cmpsb\n\t"
-
-                 "jb CMP_BELOW\n\t"
-                 "ja CMP_ABOVE\n\t"
-                 "je CMP_END\n\t"
-
-                 "CMP_ABOVE :\n\t"
-                 "seta %%al\n\t"
-                 "jmp END\n\t"
-
-                 "CMP_BELOW :\n\t"
-                 "setb %%al\n\t"
-                 "neg %%rax\n\t"
-                 "jmp END\n\t"
-
-                 "CMP_END :\n\t"
-                 "pop %%rdi\n\t"
-                 "pop %%rsi\n\t"
-                 :"=a"(result)
-                 :"r"((uint64_t)ptr1),
-                  "r"((uint64_t)ptr2),
-                  "c"(num)
-                 :"%rsi", "%rdi");
-
-
-    return result;
-}
-
-void *sgx_memset (void *ptr, int value, size_t num)
-{
-    asm volatile("" ::: "memory");
-    asm volatile("xor %%rax, %%rax\n\t"
-                 "movq %0, %%rdi\n\t"
-                 "movb %1, %%al\n\t"
-                 "movq %2, %%rcx\n\t"
-                 "body:"
-                 "mov %%al, 0x0(%%rdi)\n\t"
-                 "lea 0x1(%%rdi), %%rdi\n\t"
-                 "loop body\n\t"
-                 :
-                 :"r"((uint64_t) ptr),
-                  "r"((uint8_t) value),
-                  "r"((uint64_t) num)
-                 :"%rdi", "%al", "%rcx");
-
-    return ptr;
 }
 
 void *sgx_memcpy (void *dest, const void *src, size_t size)
@@ -310,92 +216,76 @@ void *sgx_memcpy (void *dest, const void *src, size_t size)
     return dest;
 }
 
-int sgx_send(const char *ip, const char *port, const void *msg, size_t length)
+void *sgx_memmove(void *dest, const void *src, size_t size)
 {
-    sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
+    asm volatile("" ::: "memory");
+    asm volatile("movq %0, %%rdi\n\t"
+                 "movq %1, %%rsi\n\t"
+                 "movl %2, %%ecx\n\t"
+                 "rep movsb \n\t"
+                 :
+                 :"a"((uint64_t)dest),
+                  "b"((uint64_t)src),
+                  "c"((uint32_t)size));
 
-    stub->fcode = FUNC_SEND;
-    sgx_memcpy(stub->out_data1, ip, sgx_strlen(ip));
-    sgx_memcpy(stub->out_data2, port, sgx_strlen(port));
-    sgx_memcpy(stub->out_data3, msg, length);
-    stub->out_arg1 = length;
-
-    // Enclave exit & jump into user-space trampoline
-    sgx_exit(stub->trampoline);
-
-    // return #of bytes sent.
-    return stub->in_arg1;
+    return dest;
 }
 
-int sgx_recv(const char *port, const char *buf)
+time_t sgx_time(time_t *t)
 {
-
     sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
 
-    //recv
-    stub->fcode = FUNC_RECV;
-    sgx_memcpy(stub->out_data1, port, sizeof(port));
-    stub->out_arg1 = SGXLIB_MAX_ARG;
+    stub->fcode = FUNC_TIME;
 
-    // Enclave exit & jump into user-space trampoline
     sgx_exit(stub->trampoline);
 
-    // recv failure check
-    if (stub->in_arg1 < 0 ) {
-        return;
+    if (t != NULL)
+        sgx_memcpy(t, stub->out_data1, sizeof(time_t));
+
+    return stub->in_arg3;
+}
+
+
+ssize_t sgx_write(int fd, const void *buf, size_t count)
+{
+    sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
+    int tmp_len;
+
+    for(int i=0;i<count/SGXLIB_MAX_ARG+1;i++) {
+        stub->fcode = FUNC_WRITE;
+        stub->out_arg1 = fd;
+
+        if(i == count/SGXLIB_MAX_ARG)
+            tmp_len = (int)count % SGXLIB_MAX_ARG;
+        else
+            tmp_len = SGXLIB_MAX_ARG;
+
+        stub->out_arg2 = tmp_len;
+        sgx_memcpy(stub->out_data1, buf+i*SGXLIB_MAX_ARG, tmp_len);
+        sgx_exit(stub->trampoline);
     }
-    else {
-        sgx_memcpy(buf, stub->in_data1, stub->in_arg1);
+
+    return stub->in_arg1;
+}
+
+ssize_t sgx_read(int fd, void *buf, size_t count)
+{
+    sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
+    int tmp_len;
+
+    for(int i=0;i<count/SGXLIB_MAX_ARG+1;i++) {
+        stub->fcode = FUNC_READ;
+        stub->out_arg1 = fd;
+
+        if(i == count/SGXLIB_MAX_ARG)
+            tmp_len = (int)count % SGXLIB_MAX_ARG;
+        else
+            tmp_len = SGXLIB_MAX_ARG;
+
+        stub->out_arg2 = tmp_len;
+        sgx_exit(stub->trampoline);
+        sgx_memcpy(buf+i*SGXLIB_MAX_ARG, stub->in_data1, tmp_len);
     }
-
-    // return #of bytes recv
-    return stub->in_arg1;
-}
-
-int sgx_socket()
-{
-    sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
-
-    stub->fcode = FUNC_SOCKET;
-
-    sgx_exit(stub->trampoline);
-
-    return stub->in_arg1;
-}
-
-int sgx_bind(int sockfd, int port)
-{
-    sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
-
-    stub->fcode = FUNC_BIND;
-    stub->out_arg1 = sockfd;
-    stub->out_arg2 = port;
-
-    sgx_exit(stub->trampoline);
-
-    return stub->in_arg1;
-}
-
-int sgx_listen(int sockfd)
-{
-    sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
-
-    stub->fcode = FUNC_LISTEN;
-    stub->out_arg1 = sockfd;
-
-    sgx_exit(stub->trampoline);
-
-    return stub->in_arg1;
-}
-
-int sgx_accept(int sockfd)
-{
-    sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
-
-    stub->fcode = FUNC_ACCEPT;
-    stub->out_arg1 = sockfd;
-
-    sgx_exit(stub->trampoline);
 
     return stub->in_arg1;
 }
@@ -412,11 +302,132 @@ int sgx_close(int fd)
     return stub->in_arg1;
 }
 
-void sgx_close_sock(void) {
+int sgx_socket(int domain, int type, int protocol)
+{
     sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
-    stub->fcode = FUNC_CLOSE_SOCK;
+
+    stub->fcode = FUNC_SOCKET;
+    stub->out_arg1 = domain;
+    stub->out_arg2 = type;
+    stub->out_arg3 = protocol;
 
     sgx_exit(stub->trampoline);
+
+    return stub->in_arg1;
+}
+
+int sgx_bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
+{
+    sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
+
+    stub->fcode = FUNC_BIND;
+    stub->out_arg1 = sockfd;
+    sgx_memcpy(stub->out_data1, addr, addrlen);
+    stub->out_arg2 = addrlen;
+
+    sgx_exit(stub->trampoline);
+
+    return stub->in_arg1;
+}
+
+int sgx_listen(int sockfd, int backlog)
+{
+    sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
+
+    stub->fcode = FUNC_LISTEN;
+    stub->out_arg1 = sockfd;
+    stub->out_arg2 = backlog;
+
+    sgx_exit(stub->trampoline);
+
+    return stub->in_arg1;
+}
+
+int sgx_accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen)
+{
+    sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
+
+    stub->fcode = FUNC_ACCEPT;
+    stub->out_arg1 = sockfd;
+
+    sgx_exit(stub->trampoline);
+
+    sgx_memcpy(addr, stub->out_data1, sizeof(struct sockaddr));
+    sgx_memcpy(addrlen, stub->out_data2, sizeof(socklen_t));
+    return stub->in_arg1;
+}
+
+int sgx_connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
+{
+    sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
+
+    stub->fcode = FUNC_CONNECT;
+    stub->out_arg1 = sockfd;
+    sgx_memcpy(stub->out_data1, addr, addrlen);
+    stub->out_arg2 = addrlen;
+
+    sgx_exit(stub->trampoline);
+
+    return stub->in_arg1;
+}
+
+ssize_t sgx_send(int fd, const void *buf, size_t len, int flags)
+{
+    sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
+
+    stub->fcode = FUNC_SEND;
+    sgx_memcpy(stub->out_data1, buf, len);
+    stub->out_arg1 = fd;
+    stub->out_arg2 = (int)len;
+    stub->out_arg3 = flags;
+
+    // Enclave exit & jump into user-space trampoline
+    sgx_exit(stub->trampoline);
+
+    return stub->in_arg1;
+}
+
+ssize_t sgx_recv(int fd, void *buf, size_t len, int flags)
+{
+    sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
+
+    stub->fcode = FUNC_RECV;
+    stub->out_arg1 = fd;
+    stub->out_arg2 = (int)len;
+    stub->out_arg3 = flags;
+
+    // Enclave exit & jump into user-space trampoline
+    sgx_exit(stub->trampoline);
+
+    sgx_memcpy(buf, stub->in_data1, len);
+
+    return stub->in_arg1;
+}
+
+int sgx_enclave_read(void *buf, int len)
+{
+    sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
+
+    if (len <= 0) {
+        return -1;
+    }
+    sgx_memcpy(buf, stub->in_data1, len);
+    sgx_memset(stub->in_data1, 0, SGXLIB_MAX_ARG);
+
+    return len;
+}
+
+int sgx_enclave_write(void *buf, int len)
+{
+    sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
+
+    if (len <= 0) {
+        return -1;
+    }
+    sgx_memset(stub->out_data1, 0, SGXLIB_MAX_ARG);
+    sgx_memcpy(stub->out_data1, buf, len);
+
+    return len;
 }
 
 void sgx_putchar(char c) {
@@ -581,4 +592,64 @@ int sgx_printf(const char *format, ...) {
     va_start(args, format);
 
     return sgx_print(0, format, args);
+}
+
+
+void sgx_print_hex(unsigned long addr) {
+    sgx_printf("%x\n", (unsigned long)addr);
+}
+
+int sgx_tolower(int c)
+{
+  return c >= 'A' && c <= 'Z' ? c + 32 : c;
+}
+
+int sgx_toupper(int c)
+{
+  return c >= 'a' && c <= 'z' ? c - 32 : c;
+}
+
+int sgx_islower(int c)
+{
+  return c >= 'a' && c <= 'z' ?  1 : 0;
+}
+
+int sgx_isupper(int c)
+{
+  return c >= 'A' && c <= 'Z' ? 1 : 0;
+}
+
+
+int sgx_isdigit(int c)
+{
+    return c >= '0' && c <= '9' ? 1 : 0; 
+}
+
+int sgx_isspace(int c)
+{
+    if (c == ' '  || c == '\t' || c == '\n' ||
+        c == '\v' || c == '\f' || c == '\r')
+        return 1;
+
+    return 0;
+}
+
+int sgx_isalnum(int c)
+{
+    if ((c >= 'a' && c <= 'z') ||
+        (c >= 'A' && c <= 'Z') ||
+        (c >= '0' && c <= '9'))
+        return 1;
+
+    return 0;
+}
+
+int sgx_isxdigit(int c)
+{
+    if ((c >= '0' && c <= '9') ||
+        (c >= 'a' && c <= 'f') ||
+        (c >= 'A' && c <= 'F'))
+        return 1;
+
+    return 0;
 }

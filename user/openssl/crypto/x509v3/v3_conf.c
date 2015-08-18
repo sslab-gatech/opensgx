@@ -229,10 +229,10 @@ X509_EXTENSION *X509V3_EXT_i2d(int ext_nid, int crit, void *ext_struc)
 static int v3_check_critical(char **value)
 {
     char *p = *value;
-    if ((strlen(p) < 9) || strncmp(p, "critical,", 9))
+    if ((strlen(p) < 9) || sgx_strncmp(p, "critical,", 9))
         return 0;
     p += 9;
-    while (isspace((unsigned char)*p))
+    while (sgx_isspace((unsigned char)*p))
         p++;
     *value = p;
     return 1;
@@ -243,16 +243,16 @@ static int v3_check_generic(char **value)
 {
     int gen_type = 0;
     char *p = *value;
-    if ((strlen(p) >= 4) && !strncmp(p, "DER:", 4)) {
+    if ((strlen(p) >= 4) && !sgx_strncmp(p, "DER:", 4)) {
         p += 4;
         gen_type = 1;
-    } else if ((strlen(p) >= 5) && !strncmp(p, "ASN1:", 5)) {
+    } else if ((strlen(p) >= 5) && !sgx_strncmp(p, "ASN1:", 5)) {
         p += 5;
         gen_type = 2;
     } else
         return 0;
 
-    while (isspace((unsigned char)*p))
+    while (sgx_isspace((unsigned char)*p))
         p++;
     *value = p;
     return gen_type;

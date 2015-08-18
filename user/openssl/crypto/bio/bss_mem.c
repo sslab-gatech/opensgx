@@ -61,8 +61,6 @@
 #include "cryptlib.h"
 #include <openssl/bio.h>
 
-#include "../sgx.h"
-
 static int mem_write(BIO *h, const char *buf, int num);
 static int mem_read(BIO *h, char *buf, int size);
 static int mem_puts(BIO *h, const char *str);
@@ -103,7 +101,7 @@ BIO *BIO_new_mem_buf(void *buf, int len)
         BIOerr(BIO_F_BIO_NEW_MEM_BUF, BIO_R_NULL_PARAMETER);
         return NULL;
     }
-    sz = (len < 0) ? strlen(buf) : (size_t)len;
+    sz = (len < 0) ? sgx_strlen(buf) : (size_t)len;
     if (!(ret = BIO_new(BIO_s_mem())))
         return NULL;
     b = (BUF_MEM *)ret->ptr;
@@ -155,12 +153,12 @@ static int mem_read(BIO *b, char *out, int outl)
     BIO_clear_retry_flags(b);
     ret = (outl >= 0 && (size_t)outl > bm->length) ? (int)bm->length : outl;
     if ((out != NULL) && (ret > 0)) {
-        memcpy(out, bm->data, ret);
+        sgx_memcpy(out, bm->data, ret);
         bm->length -= ret;
         if (b->flags & BIO_FLAGS_MEM_RDONLY)
             bm->data += ret;
         else {
-            memmove(&(bm->data[0]), &(bm->data[ret]), bm->length);
+            sgx_memmove(&(bm->data[0]), &(bm->data[ret]), bm->length);
         }
     } else if (bm->length == 0) {
         ret = b->num;
@@ -191,7 +189,7 @@ static int mem_write(BIO *b, const char *in, int inl)
     blen = bm->length;
     if (BUF_MEM_grow_clean(bm, blen + inl) != (blen + inl))
         goto end;
-    memcpy(&(bm->data[blen]), in, inl);
+    sgx_memcpy(&(bm->data[blen]), in, inl);
     ret = inl;
  end:
     return (ret);
@@ -306,7 +304,7 @@ static int mem_puts(BIO *bp, const char *str)
 {
     int n, ret;
 
-    n = strlen(str);
+    n = sgx_strlen(str);
     ret = mem_write(bp, str, n);
     /* memory semantics is that it will always work */
     return (ret);

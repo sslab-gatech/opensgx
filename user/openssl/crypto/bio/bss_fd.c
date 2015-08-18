@@ -242,7 +242,7 @@ static int fd_puts(BIO *bp, const char *str)
 {
     int n, ret;
 
-    n = strlen(str);
+    n = sgx_strlen(str);
     ret = fd_write(bp, str, n);
     return (ret);
 }
@@ -259,7 +259,7 @@ static int fd_gets(BIO *bp, char *buf, int size)
     ptr[0] = '\0';
 
     if (buf[0] != '\0')
-        ret = strlen(buf);
+        ret = sgx_strlen(buf);
     return (ret);
 }
 

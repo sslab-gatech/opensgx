@@ -316,11 +316,11 @@ static CONF_MODULE *module_find(char *name)
     if (p)
         nchar = p - name;
     else
-        nchar = strlen(name);
+        nchar = sgx_strlen(name);
 
     for (i = 0; i < sk_CONF_MODULE_num(supported_modules); i++) {
         tmod = sk_CONF_MODULE_value(supported_modules, i);
-        if (!strncmp(tmod->name, name, nchar))
+        if (!sgx_strncmp(tmod->name, name, nchar))
             return tmod;
     }
 
@@ -530,11 +530,11 @@ char *CONF_get1_default_config_file(void)
     if (file)
         return BUF_strdup(file);
 
-    len = strlen(X509_get_default_cert_area());
+    len = sgx_strlen(X509_get_default_cert_area());
 #ifndef OPENSSL_SYS_VMS
     len++;
 #endif
-    len += strlen(OPENSSL_CONF);
+    len += sgx_strlen(OPENSSL_CONF);
 
     file = OPENSSL_malloc(len + 1);
 
@@ -571,11 +571,11 @@ int CONF_parse_list(const char *list_, int sep, int nospc,
     lstart = list_;
     for (;;) {
         if (nospc) {
-            while (*lstart && isspace((unsigned char)*lstart))
+            while (*lstart && sgx_isspace((unsigned char)*lstart))
                 lstart++;
         }
 
-        p = strchr(lstart, sep);
+        p = sgx_strchr(lstart, sep);
         if (p == lstart || !*lstart)
             ret = list_cb(NULL, 0, arg);
         else {
@@ -584,7 +584,7 @@ int CONF_parse_list(const char *list_, int sep, int nospc,
             else
                 tmpend = lstart + sgx_strlen(lstart) - 1;
             if (nospc) {
-                while (isspace((unsigned char)*tmpend))
+                while (sgx_isspace((unsigned char)*tmpend))
                     tmpend--;
             }
             ret = list_cb(lstart, tmpend - lstart + 1, arg);

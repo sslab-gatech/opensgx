@@ -198,7 +198,7 @@ static int rtcp_read(BIO *b, char *out, int outl)
         length = ctx->filled - ctx->pos;
         if (length > outl)
             length = outl;
-        memmove(out, &ctx->msg.data[ctx->pos], length);
+        sgx_memmove(out, &ctx->msg.data[ctx->pos], length);
         ctx->pos += length;
         return length;
     }
@@ -228,7 +228,7 @@ static int rtcp_read(BIO *b, char *out, int outl)
         length = ctx->filled - ctx->pos;
         if (length > outl)
             length = outl;
-        memmove(out, ctx->msg.data, length);
+        sgx_memmove(out, ctx->msg.data, length);
         ctx->pos += length;
         return length;
     }
@@ -251,7 +251,7 @@ static int rtcp_write(BIO *b, const char *in, int inl)
         ctx->msg.channel = 'R';
         ctx->msg.function = 'P';
         ctx->msg.length = segment;
-        memmove(ctx->msg.data, &in[i], segment);
+        sgx_memmove(ctx->msg.data, &in[i], segment);
         status = put(b->num, (char *)&ctx->msg, segment + RPC_HDR_SIZE);
         if ((status & 1) == 0) {
             i = -1;
@@ -312,7 +312,7 @@ static int rtcp_puts(BIO *bp, const char *str)
     int length;
     if (str == NULL)
         return (0);
-    length = strlen(str);
+    length = sgx_strlen(str);
     if (length == 0)
         return (0);
     return rtcp_write(bp, str, length);

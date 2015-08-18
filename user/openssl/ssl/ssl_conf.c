@@ -134,10 +134,10 @@ static int ssl_match_option(SSL_CONF_CTX *cctx, const ssl_flag_tbl *tbl,
     if (!(cctx->flags & tbl->name_flags & SSL_TFLAG_BOTH))
         return 0;
     if (namelen == -1) {
-        if (strcmp(tbl->name, name))
+        if (sgx_strcmp(tbl->name, name))
             return 0;
     } else if (tbl->namelen != namelen
-               || strncasecmp(tbl->name, name, namelen))
+               || sgx_strncasecmp(tbl->name, name, namelen))
         return 0;
     if (cctx->poptions) {
         if (tbl->name_flags & SSL_TFLAG_INV)
@@ -272,13 +272,13 @@ static int cmd_ECDHParameters(SSL_CONF_CTX *cctx, const char *value)
             onoff = 0;
             value++;
         }
-        if (!strcasecmp(value, "automatic")) {
+        if (!sgx_strcasecmp(value, "automatic")) {
             if (onoff == -1)
                 onoff = 1;
         } else if (onoff != -1)
             return 0;
     } else if (cctx->flags & SSL_CONF_FLAG_CMDLINE) {
-        if (!strcmp(value, "auto"))
+        if (!sgx_strcmp(value, "auto"))
             onoff = 1;
     }
 
@@ -453,13 +453,13 @@ static int ssl_conf_cmd_skip_prefix(SSL_CONF_CTX *cctx, const char **pcmd)
         return 0;
     /* If a prefix is set, check and skip */
     if (cctx->prefix) {
-        if (strlen(*pcmd) <= cctx->prefixlen)
+        if (sgx_strlen(*pcmd) <= cctx->prefixlen)
             return 0;
         if (cctx->flags & SSL_CONF_FLAG_CMDLINE &&
-            strncmp(*pcmd, cctx->prefix, cctx->prefixlen))
+            sgx_strncmp(*pcmd, cctx->prefix, cctx->prefixlen))
             return 0;
         if (cctx->flags & SSL_CONF_FLAG_FILE &&
-            strncasecmp(*pcmd, cctx->prefix, cctx->prefixlen))
+            sgx_strncasecmp(*pcmd, cctx->prefix, cctx->prefixlen))
             return 0;
         *pcmd += cctx->prefixlen;
     } else if (cctx->flags & SSL_CONF_FLAG_CMDLINE) {
@@ -482,11 +482,11 @@ static const ssl_conf_cmd_tbl *ssl_conf_cmd_lookup(SSL_CONF_CTX *cctx,
     for (i = 0, t = ssl_conf_cmds;
          i < sizeof(ssl_conf_cmds) / sizeof(ssl_conf_cmd_tbl); i++, t++) {
         if (cctx->flags & SSL_CONF_FLAG_CMDLINE) {
-            if (t->str_cmdline && !strcmp(t->str_cmdline, cmd))
+            if (t->str_cmdline && !sgx_strcmp(t->str_cmdline, cmd))
                 return t;
         }
         if (cctx->flags & SSL_CONF_FLAG_FILE) {
-            if (t->str_file && !strcasecmp(t->str_file, cmd))
+            if (t->str_file && !sgx_strcasecmp(t->str_file, cmd))
                 return t;
         }
     }
@@ -635,7 +635,7 @@ int SSL_CONF_CTX_set1_prefix(SSL_CONF_CTX *cctx, const char *pre)
         OPENSSL_free(cctx->prefix);
     cctx->prefix = tmp;
     if (tmp)
-        cctx->prefixlen = strlen(tmp);
+        cctx->prefixlen = sgx_strlen(tmp);
     else
         cctx->prefixlen = 0;
     return 1;

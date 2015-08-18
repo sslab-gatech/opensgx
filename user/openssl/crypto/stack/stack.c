@@ -203,8 +203,8 @@ int sk_insert(_STACK *st, void *data, int loc)
         for (i = st->num; i >= loc; i--)
             t[i] = f[i];
 
-#ifdef undef                    /* no memmove on sunos :-( */
-        memmove(&(st->data[loc + 1]),
+#ifdef undef                    /* no sgx_memmove on sunos :-( */
+        sgx_memmove(&(st->data[loc + 1]),
                 &(st->data[loc]), sizeof(char *) * (st->num - loc));
 #endif
         st->data[loc] = data;
@@ -238,7 +238,7 @@ void *sk_delete(_STACK *st, int loc)
         for (i = loc; i < j; i++)
             st->data[i] = st->data[i + 1];
         /*
-         * In theory memcpy is not safe for this memcpy( &(st->data[loc]),
+         * In theory sgx_memcpy is not safe for this sgx_memcpy( &(st->data[loc]),
          * &(st->data[loc+1]), sizeof(char *)*(st->num-loc-1));
          */
     }
@@ -373,7 +373,7 @@ void sk_sort(_STACK *st)
          * "now").
          */
         comp_func = (int (*)(const void *, const void *))(st->comp);
-        qsort(st->data, st->num, sizeof(char *), comp_func);
+        sgx_qsort(st->data, st->num, sizeof(char *), comp_func);
         st->sorted = 1;
     }
 }

@@ -442,7 +442,7 @@ ASN1_VALUE *SMIME_read_ASN1(BIO *bio, BIO **bcont, const ASN1_ITEM *it)
 
     /* Handle multipart/signed */
 
-    if (!strcmp(hdr->value, "multipart/signed")) {
+    if (!sgx_strcmp(hdr->value, "multipart/signed")) {
         /* Split into two parts */
         prm = mime_param_find(hdr, "boundary");
         if (!prm || !prm->param_value) {
@@ -475,8 +475,8 @@ ASN1_VALUE *SMIME_read_ASN1(BIO *bio, BIO **bcont, const ASN1_ITEM *it)
             return NULL;
         }
 
-        if (strcmp(hdr->value, "application/x-pkcs7-signature") &&
-            strcmp(hdr->value, "application/pkcs7-signature")) {
+        if (sgx_strcmp(hdr->value, "application/x-pkcs7-signature") &&
+            sgx_strcmp(hdr->value, "application/pkcs7-signature")) {
             ASN1err(ASN1_F_SMIME_READ_ASN1, ASN1_R_SIG_INVALID_MIME_TYPE);
             ERR_add_error_data(2, "type: ", hdr->value);
             sk_MIME_HEADER_pop_free(headers, mime_hdr_free);
@@ -502,8 +502,8 @@ ASN1_VALUE *SMIME_read_ASN1(BIO *bio, BIO **bcont, const ASN1_ITEM *it)
 
     /* OK, if not multipart/signed try opaque signature */
 
-    if (strcmp(hdr->value, "application/x-pkcs7-mime") &&
-        strcmp(hdr->value, "application/pkcs7-mime")) {
+    if (sgx_strcmp(hdr->value, "application/x-pkcs7-mime") &&
+        sgx_strcmp(hdr->value, "application/pkcs7-mime")) {
         ASN1err(ASN1_F_SMIME_READ_ASN1, ASN1_R_INVALID_MIME_TYPE);
         ERR_add_error_data(2, "type: ", hdr->value);
         sk_MIME_HEADER_pop_free(headers, mime_hdr_free);
@@ -572,7 +572,7 @@ int SMIME_text(BIO *in, BIO *out)
         sk_MIME_HEADER_pop_free(headers, mime_hdr_free);
         return 0;
     }
-    if (strcmp(hdr->value, "text/plain")) {
+    if (sgx_strcmp(hdr->value, "text/plain")) {
         ASN1err(ASN1_F_SMIME_TEXT, ASN1_R_INVALID_MIME_TYPE);
         ERR_add_error_data(2, "type: ", hdr->value);
         sk_MIME_HEADER_pop_free(headers, mime_hdr_free);
@@ -600,7 +600,7 @@ static int multi_split(BIO *bio, char *bound, STACK_OF(BIO) **ret)
     STACK_OF(BIO) *parts;
     char state, part, first;
 
-    blen = strlen(bound);
+    blen = sgx_strlen(bound);
     part = 0;
     state = 0;
     first = 1;
@@ -657,7 +657,7 @@ static STACK_OF(MIME_HEADER) *mime_parse_hdr(BIO *bio)
         return NULL;
     while ((len = BIO_gets(bio, linebuf, MAX_SMLEN)) > 0) {
         /* If whitespace at line start then continuation line */
-        if (mhdr && isspace((unsigned char)linebuf[0]))
+        if (mhdr && sgx_isspace((unsigned char)linebuf[0]))
             state = MIME_NAME;
         else
             state = MIME_START;
@@ -767,7 +767,7 @@ static char *strip_start(char *name)
             /* Else null string */
             return NULL;
         }
-        if (!isspace((unsigned char)c))
+        if (!sgx_isspace((unsigned char)c))
             return p;
     }
     return NULL;
@@ -780,7 +780,7 @@ static char *strip_end(char *name)
     if (!name)
         return NULL;
     /* Look for first non white space or quote */
-    for (p = name + strlen(name) - 1; p >= name; p--) {
+    for (p = name + sgx_strlen(name) - 1; p >= name; p--) {
         c = *p;
         if (c == '"') {
             if (p - 1 == name)
@@ -788,7 +788,7 @@ static char *strip_end(char *name)
             *p = 0;
             return name;
         }
-        if (isspace((unsigned char)c))
+        if (sgx_isspace((unsigned char)c))
             *p = 0;
         else
             return name;
@@ -806,8 +806,8 @@ static MIME_HEADER *mime_hdr_new(char *name, char *value)
             return NULL;
         for (p = tmpname; *p; p++) {
             c = (unsigned char)*p;
-            if (isupper(c)) {
-                c = tolower(c);
+            if (sgx_isupper(c)) {
+                c = sgx_tolower(c);
                 *p = c;
             }
         }
@@ -818,8 +818,8 @@ static MIME_HEADER *mime_hdr_new(char *name, char *value)
             return NULL;
         for (p = tmpval; *p; p++) {
             c = (unsigned char)*p;
-            if (isupper(c)) {
-                c = tolower(c);
+            if (sgx_isupper(c)) {
+                c = sgx_tolower(c);
                 *p = c;
             }
         }
@@ -846,8 +846,8 @@ static int mime_hdr_addparam(MIME_HEADER *mhdr, char *name, char *value)
             return 0;
         for (p = tmpname; *p; p++) {
             c = (unsigned char)*p;
-            if (isupper(c)) {
-                c = tolower(c);
+            if (sgx_isupper(c)) {
+                c = sgx_tolower(c);
                 *p = c;
             }
         }
@@ -875,7 +875,7 @@ static int mime_hdr_cmp(const MIME_HEADER *const *a,
     if (!(*a)->name || !(*b)->name)
         return ! !(*a)->name - ! !(*b)->name;
 
-    return (strcmp((*a)->name, (*b)->name));
+    return (sgx_strcmp((*a)->name, (*b)->name));
 }
 
 static int mime_param_cmp(const MIME_PARAM *const *a,
@@ -883,7 +883,7 @@ static int mime_param_cmp(const MIME_PARAM *const *a,
 {
     if (!(*a)->param_name || !(*b)->param_name)
         return ! !(*a)->param_name - ! !(*b)->param_name;
-    return (strcmp((*a)->param_name, (*b)->param_name));
+    return (sgx_strcmp((*a)->param_name, (*b)->param_name));
 }
 
 /* Find a header with a given name (if possible) */
@@ -939,15 +939,15 @@ static void mime_param_free(MIME_PARAM *param)
 static int mime_bound_check(char *line, int linelen, char *bound, int blen)
 {
     if (linelen == -1)
-        linelen = strlen(line);
+        linelen = sgx_strlen(line);
     if (blen == -1)
-        blen = strlen(bound);
+        blen = sgx_strlen(bound);
     /* Quickly eliminate if line length too short */
     if (blen + 2 > linelen)
         return 0;
     /* Check for part boundary */
-    if (!strncmp(line, "--", 2) && !strncmp(line + 2, bound, blen)) {
-        if (!strncmp(line + blen + 2, "--", 2))
+    if (!sgx_strncmp(line, "--", 2) && !sgx_strncmp(line + 2, bound, blen)) {
+        if (!sgx_strncmp(line + blen + 2, "--", 2))
             return 2;
         else
             return 1;

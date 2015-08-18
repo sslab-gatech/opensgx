@@ -104,23 +104,23 @@ char **argv;
     argc--;
     argv++;
     while (argc >= 1) {
-        if (strcmp(*argv, "-e") == 0)
+        if (sgx_strcmp(*argv, "-e") == 0)
             enc = 1;
-        if (strcmp(*argv, "-in") == 0) {
+        if (sgx_strcmp(*argv, "-in") == 0) {
             if (--argc < 1)
                 goto bad;
             inf = *(++argv);
-        } else if (strcmp(*argv, "-out") == 0) {
+        } else if (sgx_strcmp(*argv, "-out") == 0) {
             if (--argc < 1)
                 goto bad;
             outf = *(++argv);
-        } else if (strcmp(*argv, "-d") == 0)
+        } else if (sgx_strcmp(*argv, "-d") == 0)
             enc = 0;
-        else if (strcmp(*argv, "-v") == 0)
+        else if (sgx_strcmp(*argv, "-v") == 0)
             verbose = 1;
-        else if (strcmp(*argv, "-debug") == 0)
+        else if (sgx_strcmp(*argv, "-debug") == 0)
             debug = 1;
-        else if (strcmp(*argv, "-bufsize") == 0) {
+        else if (sgx_strcmp(*argv, "-bufsize") == 0) {
             if (--argc < 1)
                 goto bad;
             bufsize = (unsigned char *)*(++argv);

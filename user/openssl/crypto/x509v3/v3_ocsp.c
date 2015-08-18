@@ -224,7 +224,7 @@ static int i2d_ocsp_nonce(void *a, unsigned char **pp)
 {
     ASN1_OCTET_STRING *os = a;
     if (pp) {
-        memcpy(*pp, os->data, os->length);
+        sgx_memcpy(*pp, os->data, os->length);
         *pp += os->length;
     }
     return os->length;

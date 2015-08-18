@@ -159,7 +159,7 @@ int custom_ext_add(SSL *s, int server,
         s2n(meth->ext_type, ret);
         s2n(outlen, ret);
         if (outlen) {
-            memcpy(ret, out, outlen);
+            sgx_memcpy(ret, out, outlen);
             ret += outlen;
         }
         /*
@@ -233,7 +233,7 @@ static int custom_ext_meth_add(custom_ext_methods *exts,
     }
 
     meth = exts->meths + exts->meths_count;
-    memset(meth, 0, sizeof(custom_ext_method));
+    sgx_memset(meth, 0, sizeof(custom_ext_method));
     meth->parse_cb = parse_cb;
     meth->add_cb = add_cb;
     meth->free_cb = free_cb;

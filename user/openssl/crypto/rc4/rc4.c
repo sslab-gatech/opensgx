@@ -84,15 +84,15 @@ int main(int argc, char *argv[])
     argc--;
     argv++;
     while (argc >= 1) {
-        if (strcmp(*argv, "-in") == 0) {
+        if (sgx_strcmp(*argv, "-in") == 0) {
             if (--argc < 1)
                 goto bad;
             infile = *(++argv);
-        } else if (strcmp(*argv, "-out") == 0) {
+        } else if (sgx_strcmp(*argv, "-out") == 0) {
             if (--argc < 1)
                 goto bad;
             outfile = *(++argv);
-        } else if (strcmp(*argv, "-key") == 0) {
+        } else if (sgx_strcmp(*argv, "-key") == 0) {
             if (--argc < 1)
                 goto bad;
             keystr = *(++argv);
@@ -151,9 +151,9 @@ int main(int argc, char *argv[])
         keystr = buf;
     }
 
-    EVP_Digest((unsigned char *)keystr, strlen(keystr), md, NULL, EVP_md5(),
+    EVP_Digest((unsigned char *)keystr, sgx_strlen(keystr), md, NULL, EVP_md5(),
                NULL);
-    OPENSSL_cleanse(keystr, strlen(keystr));
+    OPENSSL_cleanse(keystr, sgx_strlen(keystr));
     RC4_set_key(&key, MD5_DIGEST_LENGTH, md);
 
     for (;;) {

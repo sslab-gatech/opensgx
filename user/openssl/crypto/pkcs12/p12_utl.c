@@ -69,7 +69,7 @@ unsigned char *OPENSSL_asc2uni(const char *asc, int asclen,
     int ulen, i;
     unsigned char *unitmp;
     if (asclen == -1)
-        asclen = strlen(asc);
+        asclen = sgx_strlen(asc);
     ulen = asclen * 2 + 2;
     if (!(unitmp = OPENSSL_malloc(ulen)))
         return NULL;

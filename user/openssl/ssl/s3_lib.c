@@ -2966,9 +2966,9 @@ int ssl3_new(SSL *s)
 
     if ((s3 = OPENSSL_malloc(sizeof *s3)) == NULL)
         goto err;
-    memset(s3, 0, sizeof *s3);
-    memset(s3->rrec.seq_num, 0, sizeof(s3->rrec.seq_num));
-    memset(s3->wrec.seq_num, 0, sizeof(s3->wrec.seq_num));
+    sgx_memset(s3, 0, sizeof *s3);
+    sgx_memset(s3->rrec.seq_num, 0, sizeof(s3->rrec.seq_num));
+    sgx_memset(s3->wrec.seq_num, 0, sizeof(s3->wrec.seq_num));
 
     s->s3 = s3;
 
@@ -3088,7 +3088,7 @@ void ssl3_clear(SSL *s)
         s->s3->alpn_selected = NULL;
     }
 #endif
-    memset(s->s3, 0, sizeof *s->s3);
+    sgx_memset(s->s3, 0, sizeof *s->s3);
     s->s3->rbuf.buf = rp;
     s->s3->wbuf.buf = wp;
     s->s3->rbuf.len = rlen;
@@ -3270,7 +3270,7 @@ long ssl3_ctrl(SSL *s, int cmd, long larg, void *parg)
             ret = 1;
             if (parg == NULL)
                 break;
-            if (strlen((char *)parg) > TLSEXT_MAXLEN_host_name) {
+            if (sgx_strlen((char *)parg) > TLSEXT_MAXLEN_host_name) {
                 SSLerr(SSL_F_SSL3_CTRL, SSL_R_SSL3_EXT_INVALID_SERVERNAME);
                 return 0;
             }
@@ -3783,13 +3783,13 @@ long ssl3_ctx_ctrl(SSL_CTX *ctx, int cmd, long larg, void *parg)
                 return 0;
             }
             if (cmd == SSL_CTRL_SET_TLSEXT_TICKET_KEYS) {
-                memcpy(ctx->tlsext_tick_key_name, keys, 16);
-                memcpy(ctx->tlsext_tick_hmac_key, keys + 16, 16);
-                memcpy(ctx->tlsext_tick_aes_key, keys + 32, 16);
+                sgx_memcpy(ctx->tlsext_tick_key_name, keys, 16);
+                sgx_memcpy(ctx->tlsext_tick_hmac_key, keys + 16, 16);
+                sgx_memcpy(ctx->tlsext_tick_aes_key, keys + 32, 16);
             } else {
-                memcpy(keys, ctx->tlsext_tick_key_name, 16);
-                memcpy(keys + 16, ctx->tlsext_tick_hmac_key, 16);
-                memcpy(keys + 32, ctx->tlsext_tick_aes_key, 16);
+                sgx_memcpy(keys, ctx->tlsext_tick_key_name, 16);
+                sgx_memcpy(keys + 16, ctx->tlsext_tick_hmac_key, 16);
+                sgx_memcpy(keys + 32, ctx->tlsext_tick_aes_key, 16);
             }
             return 1;
         }
@@ -3813,8 +3813,8 @@ long ssl3_ctx_ctrl(SSL_CTX *ctx, int cmd, long larg, void *parg)
         ctx->srp_ctx.login = NULL;
         if (parg == NULL)
             break;
-        if (strlen((const char *)parg) > 255
-            || strlen((const char *)parg) < 1) {
+        if (sgx_strlen((const char *)parg) > 255
+            || sgx_strlen((const char *)parg) < 1) {
             SSLerr(SSL_F_SSL3_CTX_CTRL, SSL_R_INVALID_SRP_USERNAME);
             return 0;
         }
@@ -4190,7 +4190,7 @@ int ssl3_get_req_cert_type(SSL *s, unsigned char *p)
 
     /* If we have custom certificate types set, use them */
     if (s->cert->ctypes) {
-        memcpy(p, s->cert->ctypes, s->cert->ctype_num);
+        sgx_memcpy(p, s->cert->ctypes, s->cert->ctype_num);
         return (int)s->cert->ctype_num;
     }
     /* get configured sigalgs */
@@ -4294,7 +4294,7 @@ static int ssl3_set_req_cert_type(CERT *c, const unsigned char *p, size_t len)
     c->ctypes = OPENSSL_malloc(len);
     if (!c->ctypes)
         return 0;
-    memcpy(c->ctypes, p, len);
+    sgx_memcpy(c->ctypes, p, len);
     c->ctype_num = len;
     return 1;
 }

@@ -172,14 +172,14 @@ static int added_obj_cmp(const ADDED_OBJ *ca, const ADDED_OBJ *cb)
         else if (b->sn == NULL)
             return (1);
         else
-            return (strcmp(a->sn, b->sn));
+            return (sgx_strcmp(a->sn, b->sn));
     case ADDED_LNAME:
         if (a->ln == NULL)
             return (-1);
         else if (b->ln == NULL)
             return (1);
         else
-            return (strcmp(a->ln, b->ln));
+            return (sgx_strcmp(a->ln, b->ln));
     case ADDED_NID:
         return (a->nid - b->nid);
     default:
@@ -502,7 +502,7 @@ int OBJ_obj2txt(char *buf, int buf_len, const ASN1_OBJECT *a, int no_name)
         if (s) {
             if (buf)
                 BUF_strlcpy(buf, s, buf_len);
-            n = strlen(s);
+            n = sgx_strlen(s);
             return n;
         }
     }
@@ -568,7 +568,7 @@ int OBJ_obj2txt(char *buf, int buf_len, const ASN1_OBJECT *a, int no_name)
             bndec = BN_bn2dec(bl);
             if (!bndec)
                 goto err;
-            i = strlen(bndec);
+            i = sgx_strlen(bndec);
             if (buf) {
                 if (buf_len > 1) {
                     *buf++ = '.';
@@ -589,7 +589,7 @@ int OBJ_obj2txt(char *buf, int buf_len, const ASN1_OBJECT *a, int no_name)
             OPENSSL_free(bndec);
         } else {
             BIO_snprintf(tbuf, sizeof tbuf, ".%lu", l);
-            i = strlen(tbuf);
+            i = sgx_strlen(tbuf);
             if (buf && (buf_len > 0)) {
                 BUF_strlcpy(buf, tbuf, buf_len);
                 if (i > buf_len) {
@@ -734,24 +734,24 @@ int OBJ_create_objects(BIO *in)
         if (i <= 0)
             return (num);
         buf[i - 1] = '\0';
-        if (!isalnum((unsigned char)buf[0]))
+        if (!sgx_isalnum((unsigned char)buf[0]))
             return (num);
         o = s = buf;
-        while (isdigit((unsigned char)*s) || (*s == '.'))
+        while (sgx_isdigit((unsigned char)*s) || (*s == '.'))
             s++;
         if (*s != '\0') {
             *(s++) = '\0';
-            while (isspace((unsigned char)*s))
+            while (sgx_isspace((unsigned char)*s))
                 s++;
             if (*s == '\0')
                 s = NULL;
             else {
                 l = s;
-                while ((*l != '\0') && !isspace((unsigned char)*l))
+                while ((*l != '\0') && !sgx_isspace((unsigned char)*l))
                     l++;
                 if (*l != '\0') {
                     *(l++) = '\0';
-                    while (isspace((unsigned char)*l))
+                    while (sgx_isspace((unsigned char)*l))
                         l++;
                     if (*l == '\0')
                         l = NULL;

@@ -67,7 +67,7 @@
 static char *skip_dot(char *name)
 {
     char *p;
-    p = strchr(name, '.');
+    p = sgx_strchr(name, '.');
     if (p)
         return p + 1;
     return name;
@@ -124,12 +124,12 @@ static int int_engine_configure(char *name, char *value, const CONF *cnf)
         /* First handle some special pseudo ctrls */
 
         /* Override engine name to use */
-        if (!strcmp(ctrlname, "engine_id"))
+        if (!sgx_strcmp(ctrlname, "engine_id"))
             name = ctrlvalue;
-        else if (!strcmp(ctrlname, "soft_load"))
+        else if (!sgx_strcmp(ctrlname, "soft_load"))
             soft = 1;
         /* Load a dynamic ENGINE */
-        else if (!strcmp(ctrlname, "dynamic_path")) {
+        else if (!sgx_strcmp(ctrlname, "dynamic_path")) {
             e = ENGINE_by_id("dynamic");
             if (!e)
                 goto err;
@@ -159,9 +159,9 @@ static int int_engine_configure(char *name, char *value, const CONF *cnf)
              * Allow "EMPTY" to mean no value: this allows a valid "value" to
              * be passed to ctrls of type NO_INPUT
              */
-            if (!strcmp(ctrlvalue, "EMPTY"))
+            if (!sgx_strcmp(ctrlvalue, "EMPTY"))
                 ctrlvalue = NULL;
-            if (!strcmp(ctrlname, "init")) {
+            if (!sgx_strcmp(ctrlname, "init")) {
                 if (!NCONF_get_number_e(cnf, value, "init", &do_init))
                     goto err;
                 if (do_init == 1) {
@@ -172,7 +172,7 @@ static int int_engine_configure(char *name, char *value, const CONF *cnf)
                               ENGINE_R_INVALID_INIT_VALUE);
                     goto err;
                 }
-            } else if (!strcmp(ctrlname, "default_algorithms")) {
+            } else if (!sgx_strcmp(ctrlname, "default_algorithms")) {
                 if (!ENGINE_set_default_string(e, ctrlvalue))
                     goto err;
             } else if (!ENGINE_ctrl_cmd_string(e, ctrlname, ctrlvalue, 0))

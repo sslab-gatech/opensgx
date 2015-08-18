@@ -1761,13 +1761,13 @@ int X509_cmp_time(const ASN1_TIME *ctm, time_t *cmp_time)
     if (ctm->type == V_ASN1_UTCTIME) {
         if ((i < 11) || (i > 17))
             return 0;
-        memcpy(p, str, 10);
+        sgx_memcpy(p, str, 10);
         p += 10;
         str += 10;
     } else {
         if (i < 13)
             return 0;
-        memcpy(p, str, 12);
+        sgx_memcpy(p, str, 12);
         p += 12;
         str += 12;
     }
@@ -1820,7 +1820,7 @@ int X509_cmp_time(const ASN1_TIME *ctm, time_t *cmp_time)
         if (i > j)
             return 1;
     }
-    i = strcmp(buff1, buff2);
+    i = sgx_strcmp(buff1, buff2);
     if (i == 0)                 /* wait a second then return younger :-) */
         return -1;
     else
@@ -1845,7 +1845,7 @@ ASN1_TIME *X509_time_adj_ex(ASN1_TIME *s,
     if (in_tm)
         t = *in_tm;
     else
-        time(&t);
+        sgx_time(&t);
 
     if (s && !(s->flags & ASN1_STRING_FLAG_MSTRING)) {
         if (s->type == V_ASN1_UTCTIME)
@@ -2283,11 +2283,11 @@ int X509_STORE_CTX_init(X509_STORE_CTX *ctx, X509_STORE *store, X509 *x509,
     ctx->check_policy = check_policy;
 
     /*
-     * This memset() can't make any sense anyway, so it's removed. As
+     * This sgx_memset() can't make any sense anyway, so it's removed. As
      * X509_STORE_CTX_cleanup does a proper "free" on the ex_data, we put a
      * corresponding "new" here and remove this bogus initialisation.
      */
-    /* memset(&(ctx->ex_data),0,sizeof(CRYPTO_EX_DATA)); */
+    /* sgx_memset(&(ctx->ex_data),0,sizeof(CRYPTO_EX_DATA)); */
     if (!CRYPTO_new_ex_data(CRYPTO_EX_INDEX_X509_STORE_CTX, ctx,
                             &(ctx->ex_data))) {
         OPENSSL_free(ctx);

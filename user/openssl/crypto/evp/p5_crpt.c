@@ -110,7 +110,7 @@ int PKCS5_PBE_keyivgen(EVP_CIPHER_CTX *cctx, const char *pass, int passlen,
     if (!pass)
         passlen = 0;
     else if (passlen == -1)
-        passlen = strlen(pass);
+        passlen = sgx_strlen(pass);
 
     if (!EVP_DigestInit_ex(&ctx, md, NULL))
         goto err;
@@ -133,9 +133,9 @@ int PKCS5_PBE_keyivgen(EVP_CIPHER_CTX *cctx, const char *pass, int passlen,
             goto err;
     }
     OPENSSL_assert(EVP_CIPHER_key_length(cipher) <= (int)sizeof(md_tmp));
-    memcpy(key, md_tmp, EVP_CIPHER_key_length(cipher));
+    sgx_memcpy(key, md_tmp, EVP_CIPHER_key_length(cipher));
     OPENSSL_assert(EVP_CIPHER_iv_length(cipher) <= 16);
-    memcpy(iv, md_tmp + (16 - EVP_CIPHER_iv_length(cipher)),
+    sgx_memcpy(iv, md_tmp + (16 - EVP_CIPHER_iv_length(cipher)),
            EVP_CIPHER_iv_length(cipher));
     if (!EVP_CipherInit_ex(cctx, cipher, NULL, key, iv, en_de))
         goto err;

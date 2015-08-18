@@ -77,7 +77,7 @@ static int get_random_bytes(unsigned char *buf, int num)
         if ((rnd = OPENSSL_ia32_rdrand()) == 0)
             return 0;
 
-        memcpy(buf, &rnd, num);
+        sgx_memcpy(buf, &rnd, num);
     }
 
     return 1;

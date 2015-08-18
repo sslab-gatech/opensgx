@@ -83,7 +83,7 @@ static int rsa_cb(int operation, ASN1_VALUE **pval, const ASN1_ITEM *it,
     return 1;
 }
 
-ASN1_SEQUENCE_cb(RSAPrivateKey, rsa_cb + ENCLAVE_OFFSET) = {
+ASN1_SEQUENCE_cb(RSAPrivateKey, rsa_cb) = {
         ASN1_SIMPLE(RSA, version, LONG),
         ASN1_SIMPLE(RSA, n, BIGNUM),
         ASN1_SIMPLE(RSA, e, BIGNUM),
@@ -96,7 +96,7 @@ ASN1_SEQUENCE_cb(RSAPrivateKey, rsa_cb + ENCLAVE_OFFSET) = {
 } ASN1_SEQUENCE_END_cb(RSA, RSAPrivateKey)
 
 
-ASN1_SEQUENCE_cb(RSAPublicKey, rsa_cb + ENCLAVE_OFFSET) = {
+ASN1_SEQUENCE_cb(RSAPublicKey, rsa_cb) = {
         ASN1_SIMPLE(RSA, n, BIGNUM),
         ASN1_SIMPLE(RSA, e, BIGNUM),
 } ASN1_SEQUENCE_END_cb(RSA, RSAPublicKey)

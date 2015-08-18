@@ -55,7 +55,7 @@ static int is_exception(const char *msg)
 {
     const char *const *p;
     for (p = exceptions; *p; ++p)
-        if (strcmp(msg, *p) == 0)
+        if (sgx_strcmp(msg, *p) == 0)
             return 1;
     return 0;
 }
@@ -262,8 +262,8 @@ static void run_cert(X509 *crt, const char *nameincert,
 {
     const char *const *pname = names;
     while (*pname) {
-        int samename = strcasecmp(nameincert, *pname) == 0;
-        size_t namelen = strlen(*pname);
+        int samename = sgx_strcasecmp(nameincert, *pname) == 0;
+        size_t namelen = sgx_strlen(*pname);
         char *name = sgx_malloc(namelen);
         int match, ret;
         sgx_memcpy(name, *pname, namelen);
@@ -302,7 +302,7 @@ static void run_cert(X509 *crt, const char *nameincert,
         if (fn->email) {
             if (ret && !samename)
                 match = 1;
-            if (!ret && samename && strchr(nameincert, '@') != NULL)
+            if (!ret && samename && sgx_strchr(nameincert, '@') != NULL)
                 match = 0;
         } else if (ret)
             match = 1;

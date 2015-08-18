@@ -173,7 +173,7 @@ int PKCS12_key_gen_uni(unsigned char *pass, int passlen, unsigned char *salt,
                 || !EVP_DigestFinal_ex(&ctx, Ai, NULL))
                 goto err;
         }
-        memcpy(out, Ai, min(n, u));
+        sgx_memcpy(out, Ai, min(n, u));
         if (u >= n) {
 #ifdef DEBUG_KEYGEN
             fprintf(stderr, "Output KEY (length %d)\n", tmpn);
@@ -203,7 +203,7 @@ int PKCS12_key_gen_uni(unsigned char *pass, int passlen, unsigned char *salt,
             if (Ijlen > v) {
                 if (!BN_bn2bin(Ij, B))
                     goto err;
-                memcpy(I + j, B + 1, v);
+                sgx_memcpy(I + j, B + 1, v);
 #ifndef PKCS12_BROKEN_KEYGEN
                 /* If less than v bytes pad with zeroes */
             } else if (Ijlen < v) {

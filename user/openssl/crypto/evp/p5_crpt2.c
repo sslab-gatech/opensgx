@@ -98,7 +98,7 @@ int PKCS5_PBKDF2_HMAC(const char *pass, int passlen,
     if (!pass)
         passlen = 0;
     else if (passlen == -1)
-        passlen = strlen(pass);
+        passlen = sgx_strlen(pass);
     if (!HMAC_Init_ex(&hctx_tpl, pass, passlen, digest, NULL)) {
         HMAC_CTX_cleanup(&hctx_tpl);
         return 0;
@@ -128,7 +128,7 @@ int PKCS5_PBKDF2_HMAC(const char *pass, int passlen,
             return 0;
         }
         HMAC_CTX_cleanup(&hctx);
-        memcpy(p, digtmp, cplen);
+        sgx_memcpy(p, digtmp, cplen);
         for (j = 1; j < iter; j++) {
             if (!HMAC_CTX_copy(&hctx, &hctx_tpl)) {
                 HMAC_CTX_cleanup(&hctx_tpl);

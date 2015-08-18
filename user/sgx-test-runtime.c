@@ -21,9 +21,8 @@
 #include <sgx-kern.h>
 #include <sgx-user.h>
 #include <sgx-utils.h>
-#include <sgx-signature.h>
+#include <sgx-crypto.h>
 #include <sys/types.h>
-#include <sys/socket.h>
 #include <netdb.h>
 #include <unistd.h>
 #include <sgx-malloc.h>
@@ -33,46 +32,55 @@
 #define is_aligned(addr, bytes) \
      ((((uintptr_t)(const void *)(addr)) & (bytes - 1)) == 0)
 
-extern void ENCT_START;
-extern void ENCT_END;
-extern void ENCD_START;
-extern void ENCD_END;
-
-void enclave_start() \
-    __attribute__((section(".enc_text")));
-void enclave_start()
-{
-    enclave_main();
-    sgx_exit(NULL);
-}
-
 int main(int argc, char **argv)
 {
+    char *binary;
+    char *size;
+    char *offset;
+    char *code_start;
+    char *code_end;
+    char *data_start;
+    char *data_end;
+    char *entry;
+    char *base_addr;
+
+    binary     = argv[1];
+    size       = argv[2];
+    offset     = argv[3];
+    code_start = argv[4];
+    code_end   = argv[5];
+    data_start = argv[6];
+    data_end   = argv[7];
+    entry      = argv[8];
+
+    long ecode_size = strtol(code_end, NULL, 16) - strtol(code_start, NULL, 16);
+    long edata_size = strtol(data_end, NULL, 16) - strtol(data_start, NULL, 16);
+    int ecode_page_n = ((ecode_size - 1) / PAGE_SIZE) + 1;
+    int edata_page_n = ((edata_size - 1) / PAGE_SIZE) + 1;
+    int n_of_pages = ecode_page_n + edata_page_n;
+    long entry_offset = strtol(entry, NULL, 16) - strtol(code_start, NULL, 16);
+
+    printf("ecode_size: %ld edata_size: %ld entry_offset: %lx\n", ecode_size,
+                                                                  edata_size, entry_offset);
+
+    long code_offset = strtol(offset, NULL, 16);
+    int binary_size = atoi(size);
+
     if(!sgx_init())
         err(1, "failed to init sgx");
+    base_addr = OpenSGX_loader(binary, binary_size, code_offset, n_of_pages);
 
-    //XXX n_of_pages should be set properly
-    //n_of_pages = n_of_enc_code + n_of_enc_data
-    //improper setting of n_of_pages could contaminate other EPC area
-    //e.g. if n_of_pages mistakenly doesn't consider enc_data section,
-    //memory write access to enc_data section could make write access on other EPC page.
-    void *entry = (void *)(uintptr_t)enclave_start;
-    void *codes = (void *)(uintptr_t)&ENCT_START;
-    unsigned int ecode_size = (unsigned int)&ENCT_END - (unsigned int)&ENCT_START;
-    unsigned int edata_size = (unsigned int)&ENCD_END - (unsigned int)&ENCD_START;
-    unsigned int ecode_page_n = ((ecode_size - 1) / PAGE_SIZE) + 1;
-    printf("DEBUG n_of_code_pages: %d\n", ecode_page_n);
-    unsigned int edata_page_n = ((edata_size - 1) / PAGE_SIZE) + 1;
-    unsigned int n_of_pages = ecode_page_n + edata_page_n;
-    printf("n_of_pages: %d\n", n_of_pages);
-
-    assert(is_aligned((uintptr_t)codes, PAGE_SIZE));
-
-    tcs_t *tcs = test_run_enclave(entry, codes, n_of_pages);
+    tcs_t *tcs = test_init_enclave(base_addr, entry_offset, n_of_pages);
     if (!tcs)
         err(1, "failed to run enclave");
+
+    void (*aep)() = exception_handler;
+    sgx_enter(tcs, aep);
+
+    char *buf = malloc(11);
+    sgx_host_read(buf, 11);
+    printf("%s", buf);
 
 //    free(tcs);
     return 0;
 }
-

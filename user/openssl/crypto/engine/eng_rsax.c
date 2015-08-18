@@ -292,7 +292,7 @@ static E_RSAX_MOD_CTX *e_rsax_get_ctx(RSA *rsa, int idx, BIGNUM *m)
     if (BN_num_bits(m) == 512) {
         UINT64 _m[8];
         bn_extract_to_array_512(m, 8, _m);
-        memset(&hptr[idx].ctx.b512, 0, sizeof(struct mod_ctx_512));
+        sgx_memset(&hptr[idx].ctx.b512, 0, sizeof(struct mod_ctx_512));
         mod_exp_pre_compute_data_512(_m, &hptr[idx].ctx.b512);
     }
 
@@ -358,7 +358,7 @@ static int bn_extract_to_array_512(const BIGNUM *b, unsigned int n,
     int i;
     UINT64 tmp;
     unsigned char bn_buff[64];
-    memset(bn_buff, 0, 64);
+    sgx_memset(bn_buff, 0, 64);
     if (BN_num_bytes(b) > 64) {
         printf("Can't support this byte size\n");
         return 0;
@@ -408,7 +408,7 @@ static int mod_exp_pre_compute_data_512(UINT64 *m, struct mod_ctx_512 *data)
     /* Init _m with m */
     BN_init(&_m);
     interleaved_array_to_bn_512(&_m, m);
-    memset(_t, 0, 64);
+    sgx_memset(_t, 0, 64);
 
     /* Inits */
     BN_init(&two_768);

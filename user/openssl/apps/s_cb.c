@@ -1138,7 +1138,7 @@ int MS_CALLBACK verify_cookie_callback(SSL *ssl, unsigned char *cookie,
     OPENSSL_free(buffer);
 
     if (cookie_len == resultlength
-        && memcmp(result, cookie, resultlength) == 0)
+        && sgx_memcmp(result, cookie, resultlength) == 0)
         return 1;
 
     return 0;
@@ -1363,7 +1363,7 @@ int args_excert(char ***pargs, int *pargc,
             goto err;
         }
     }
-    if (strcmp(arg, "-xcert") == 0) {
+    if (sgx_strcmp(arg, "-xcert") == 0) {
         if (!argn) {
             *badarg = 1;
             return 1;
@@ -1374,7 +1374,7 @@ int args_excert(char ***pargs, int *pargc,
             goto err;
         }
         exc->certfile = argn;
-    } else if (strcmp(arg, "-xkey") == 0) {
+    } else if (sgx_strcmp(arg, "-xkey") == 0) {
         if (!argn) {
             *badarg = 1;
             return 1;
@@ -1385,7 +1385,7 @@ int args_excert(char ***pargs, int *pargc,
             return 1;
         }
         exc->keyfile = argn;
-    } else if (strcmp(arg, "-xchain") == 0) {
+    } else if (sgx_strcmp(arg, "-xchain") == 0) {
         if (!argn) {
             *badarg = 1;
             return 1;
@@ -1396,16 +1396,16 @@ int args_excert(char ***pargs, int *pargc,
             return 1;
         }
         exc->chainfile = argn;
-    } else if (strcmp(arg, "-xchain_build") == 0) {
+    } else if (sgx_strcmp(arg, "-xchain_build") == 0) {
         narg = 1;
         exc->build_chain = 1;
-    } else if (strcmp(arg, "-xcertform") == 0) {
+    } else if (sgx_strcmp(arg, "-xcertform") == 0) {
         if (!argn) {
             *badarg = 1;
             goto err;
         }
         exc->certform = str2fmt(argn);
-    } else if (strcmp(arg, "-xkeyform") == 0) {
+    } else if (sgx_strcmp(arg, "-xkeyform") == 0) {
         if (!argn) {
             *badarg = 1;
             goto err;
@@ -1446,7 +1446,7 @@ static void print_raw_cipherlist(BIO *bio, SSL *s)
             BIO_puts(bio, ":");
         if (c)
             BIO_puts(bio, SSL_CIPHER_get_name(c));
-        else if (!memcmp(rlist, scsv_id - num + 3, num))
+        else if (!sgx_memcmp(rlist, scsv_id - num + 3, num))
             BIO_puts(bio, "SCSV");
         else {
             size_t j;
@@ -1549,10 +1549,10 @@ int args_ssl_call(SSL_CTX *ctx, BIO *err, SSL_CONF_CTX *cctx,
         /*
          * If no_ecdhe or named curve already specified don't need a default.
          */
-        if (!no_ecdhe && !strcmp(param, "-named_curve"))
+        if (!no_ecdhe && !sgx_strcmp(param, "-named_curve"))
             no_ecdhe = 1;
 #ifndef OPENSSL_NO_JPAKE
-        if (!no_jpake && !strcmp(param, "-cipher")) {
+        if (!no_jpake && !sgx_strcmp(param, "-cipher")) {
             BIO_puts(err, "JPAKE sets cipher to PSK\n");
             return 0;
         }

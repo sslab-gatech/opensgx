@@ -63,6 +63,8 @@
 
 #include "../e_os.h"
 
+#include "../sgx.h"
+
 #ifdef OPENSSL_NO_CAST
 int main(int argc, char *argv[])
 {
@@ -153,7 +155,7 @@ int main(int argc, char *argv[])
         CAST_set_key(&key, k_len[z], k);
 
         CAST_ecb_encrypt(in, out, &key, CAST_ENCRYPT);
-        if (memcmp(out, &(c[z][0]), 8) != 0) {
+        if (sgx_memcmp(out, &(c[z][0]), 8) != 0) {
             printf("ecb cast error encrypting for keysize %d\n",
                    k_len[z] * 8);
             printf("got     :");
@@ -168,7 +170,7 @@ int main(int argc, char *argv[])
         }
 
         CAST_ecb_encrypt(out, out, &key, CAST_DECRYPT);
-        if (memcmp(out, in, 8) != 0) {
+        if (sgx_memcmp(out, in, 8) != 0) {
             printf("ecb cast error decrypting for keysize %d\n",
                    k_len[z] * 8);
             printf("got     :");
@@ -192,8 +194,8 @@ int main(int argc, char *argv[])
 
         printf("This test will take some time....");
         fflush(stdout);
-        memcpy(out_a, in_a, sizeof(in_a));
-        memcpy(out_b, in_b, sizeof(in_b));
+        sgx_memcpy(out_a, in_a, sizeof(in_a));
+        sgx_memcpy(out_b, in_b, sizeof(in_b));
         i = 1;
 
         for (l = 0; l < 1000000L; l++) {
@@ -210,8 +212,8 @@ int main(int argc, char *argv[])
             }
         }
 
-        if ((memcmp(out_a, c_a, sizeof(c_a)) != 0) ||
-            (memcmp(out_b, c_b, sizeof(c_b)) != 0)) {
+        if ((sgx_memcmp(out_a, c_a, sizeof(c_a)) != 0) ||
+            (sgx_memcmp(out_b, c_b, sizeof(c_b)) != 0)) {
             printf("\n");
             printf("Error\n");
 

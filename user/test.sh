@@ -19,17 +19,23 @@ EOF
 }
 
 run_test() {
+  FILE=$1
+  if [ ! -f $FILE ]; 
+  then
+    echo -n "Binary $FILE missing. (Build and retry) "
+  fi
+
   mkdir -p log
-  BASE=log/$(basename $1)
+  BASE=log/$(basename $FILE)
   $SGX $1 >$BASE.stdout 2>$BASE.stderr
   EXIT=$?
   EXPECT=0
 
-  if [[ $1 =~ fault.* ]]; then
+  if [[ $FILE =~ fault.* ]]; then
     EXPECT=139
   fi
 
-  if [[ $1 =~ exception-div-zero.* ]]; then
+  if [[ $FILE =~ exception-div-zero.* ]]; then
     EXPECT=136
   fi
 
@@ -92,6 +98,18 @@ case "$1" in
       fi 
       if [[ "$OUT" == "test/simple-quote" ]]; then
       printf "%-30s: please test it with simple_send together\n" "$OUT" 
+      continue  
+      fi 
+      if [[ "$OUT" == "test/simple-server" ]]; then
+      printf "%-30s: please test it with simple_client together\n" "$OUT" 
+      continue  
+      fi 
+      if [[ "$OUT" == "test/simple-openssl" ]]; then
+      printf "%-30s: temporarily blocked\n" "$OUT" 
+      continue  
+      fi 
+      if [[ "$OUT" == "test/simple-aes" ]]; then
+      printf "%-30s: temporarily blocked\n" "$OUT" 
       continue  
       fi 
       printf "%-30s: %s\n" "$OUT" "$(run_test $OUT)"

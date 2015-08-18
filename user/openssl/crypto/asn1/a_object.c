@@ -78,7 +78,7 @@ int i2d_ASN1_OBJECT(ASN1_OBJECT *a, unsigned char **pp)
 
     p = *pp;
     ASN1_put_object(&p, 0, a->length, V_ASN1_OBJECT, V_ASN1_UNIVERSAL);
-    memcpy(p, a->data, a->length);
+    sgx_memcpy(p, a->data, a->length);
     p += a->length;
 
     *pp = p;
@@ -97,7 +97,7 @@ int a2d_ASN1_OBJECT(unsigned char *out, int olen, const char *buf, int num)
     if (num == 0)
         return (0);
     else if (num == -1)
-        num = strlen(buf);
+        num = sgx_strlen(buf);
 
     p = buf;
     c = *(p++);
@@ -319,7 +319,7 @@ ASN1_OBJECT *c2i_ASN1_OBJECT(ASN1_OBJECT **a, const unsigned char **pp,
         }
         ret->flags |= ASN1_OBJECT_FLAG_DYNAMIC_DATA;
     }
-    memcpy(data, p, length);
+    sgx_memcpy(data, p, length);
     /* reattach data to object, after which it remains const */
     ret->data = data;
     ret->length = length;

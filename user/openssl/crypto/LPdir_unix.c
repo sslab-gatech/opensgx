@@ -102,7 +102,7 @@ const char *LP_find_file(LP_DIR_CTX **ctx, const char *directory)
         return 0;
     }
 
-    strncpy((*ctx)->entry_name, direntry->d_name,
+    sgx_strncpy((*ctx)->entry_name, direntry->d_name,
             sizeof((*ctx)->entry_name) - 1);
     (*ctx)->entry_name[sizeof((*ctx)->entry_name) - 1] = '\0';
     return (*ctx)->entry_name;

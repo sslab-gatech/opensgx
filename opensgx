@@ -3,7 +3,7 @@ ROOT=$(dirname "$0")
 SGXTOOL=$ROOT/user/sgx-tool
 SGX=$ROOT/sgx
 DEVICEKEY=$ROOT/user/conf/device.key
-
+SGXRUNTIME=$ROOT/user/sgx-test-runtime
 
 key_gen() {
   FILENAME=sign.key
@@ -21,12 +21,11 @@ compile_code() {
 }
 
 run_enclave() {
-  BASEDIR=$(dirname $1)
-  BASENAME=$(basename $1)
-  NAME="${BASENAME%.*}"
-  EXE=$BASEDIR/$NAME.sgx
+  $SGX $1 $2
+}
 
-  $SGX $EXE $1
+run_enclave_with_icount() {
+  $SGX -i $1 $2
 }
 
 measure() {
@@ -87,6 +86,36 @@ sign() {
   rm $MEASURE $SIG $TOKEN
 }
 
+loading() {
+  size=$(stat -c%s $1)
+
+  offset=$(readelf -S $1 | grep .enc_text)
+  array=($offset)
+  offset=${array[4]}
+
+  code_start=$(nm $1 | grep ENCT_START)
+  array=($code_start)
+  code_start=${array[0]}
+
+  code_end=$(nm $1 | grep ENCT_END)
+  array=($code_end)
+  code_end=${array[0]}
+
+  data_start=$(nm $1 | grep ENCD_START)
+  array=($data_start)
+  data_start=${array[0]}
+
+  data_end=$(nm $1 | grep ENCD_END)
+  array=($data_end)
+  data_end=${array[0]}
+
+  entry=$(nm $1 | grep enclave_start)
+  array=($entry)
+  entry=${array[0]}
+
+  $SGX $SGXRUNTIME $1 $size $offset $code_start $code_end $data_start $data_end $entry
+}
+
 case "$1" in
   -k|--key)
   key_gen
@@ -104,7 +133,13 @@ case "$1" in
     ;;
   esac
   ;;
+  -i|--icount)
+  run_enclave_with_icount $2 $3
+  ;;
+  -t|--test)
+  loading $2
+  ;;
   *)
-  run_enclave $1
+  run_enclave $1 $2
   ;;
 esac

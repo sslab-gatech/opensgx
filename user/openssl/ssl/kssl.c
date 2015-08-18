@@ -750,7 +750,7 @@ static void *kssl_calloc(size_t nmemb, size_t size)
 
     p = OPENSSL_malloc(nmemb * size);
     if (p) {
-        memset(p, 0, nmemb * size);
+        sgx_memset(p, 0, nmemb * size);
     }
     return p;
 }
@@ -1058,7 +1058,7 @@ krb5_error_code kssl_cget_tkt( /* UPDATE */ KSSL_CTX *kssl_ctx,
     krb5_data krb5_app_req;
 
     kssl_err_set(kssl_err, 0, "");
-    memset((char *)&krb5creds, 0, sizeof(krb5creds));
+    sgx_memset((char *)&krb5creds, 0, sizeof(krb5creds));
 
     if (!kssl_ctx) {
         kssl_err_set(kssl_err, SSL_R_KRB5_S_INIT, "No kssl_ctx defined.\n");
@@ -1266,7 +1266,7 @@ static krb5_error_code kssl_TKT2tkt( /* IN */ krb5_context krb5context,
         kssl_err->reason = SSL_R_KRB5_S_RD_REQ;
         return KRB5KRB_ERR_GENERIC;
     } else {
-        memcpy(new5ticket->enc_part.ciphertext.data,
+        sgx_memcpy(new5ticket->enc_part.ciphertext.data,
                asn1ticket->encdata->cipher->data,
                asn1ticket->encdata->cipher->length);
     }
@@ -1603,14 +1603,14 @@ kssl_ctx_setprinc(KSSL_CTX *kssl_ctx, int which,
         return KSSL_CTX_ERR;
     else {
         for (i = 0; i < nentities; i++) {
-            strncat(*princ, entity[i].data, entity[i].length);
+            sgx_strncat(*princ, entity[i].data, entity[i].length);
             if (i < nentities - 1) {
-                strcat(*princ, "/");
+                sgx_strcat(*princ, "/");
             }
         }
         if (realm) {
-            strcat(*princ, "@");
-            (void)strncat(*princ, realm->data, realm->length);
+            sgx_strcat(*princ, "@");
+            (void)sgx_strncat(*princ, realm->data, realm->length);
         }
     }
 
@@ -1654,10 +1654,10 @@ krb5_error_code kssl_ctx_setstring(KSSL_CTX *kssl_ctx, int which, char *text)
         return KSSL_CTX_OK;
     }
 
-    if ((*string = kssl_calloc(1, strlen(text) + 1)) == NULL)
+    if ((*string = kssl_calloc(1, sgx_strlen(text) + 1)) == NULL)
         return KSSL_CTX_ERR;
     else
-        strcpy(*string, text);
+        sgx_strcpy(*string, text);
 
     return KSSL_CTX_OK;
 }
@@ -1704,7 +1704,7 @@ krb5_error_code kssl_ctx_setkey(KSSL_CTX *kssl_ctx, krb5_keyblock *session)
         kssl_ctx->length = 0;
         return KSSL_CTX_ERR;
     } else
-        memcpy(kssl_ctx->key, contents, length);
+        sgx_memcpy(kssl_ctx->key, contents, length);
 
     return KSSL_CTX_OK;
 }
@@ -1807,7 +1807,7 @@ int kssl_tgt_is_available(KSSL_CTX *kssl_ctx)
     krb5_creds krb5creds, *krb5credsp = NULL;
     int rc = 0;
 
-    memset((char *)&krb5creds, 0, sizeof(krb5creds));
+    sgx_memset((char *)&krb5creds, 0, sizeof(krb5creds));
 
     if (!kssl_ctx)
         return (0);
@@ -2082,7 +2082,7 @@ krb5_error_code kssl_check_authent(
     }
 # endif
     enc = kssl_map_enc(enctype);
-    memset(iv, 0, sizeof iv);   /* per RFC 1510 */
+    sgx_memset(iv, 0, sizeof iv);   /* per RFC 1510 */
 
     if (enc == NULL) {
         /*
@@ -2136,7 +2136,7 @@ krb5_error_code kssl_check_authent(
         goto err;
     }
 
-    memset(&tm_time, 0, sizeof(struct tm));
+    sgx_memset(&tm_time, 0, sizeof(struct tm));
     if (k_gmtime(auth->ctime, &tm_time) &&
         ((tr = mktime(&tm_time)) != (time_t)(-1))) {
         now = time(&now);
@@ -2204,18 +2204,18 @@ krb5_error_code kssl_build_principal_2(
 
     if ((new_r = calloc(1, rlen + 1)) == NULL)
         goto err;
-    memcpy(new_r, realm, rlen);
+    sgx_memcpy(new_r, realm, rlen);
     krb5_princ_set_realm_length(context, new_p, rlen);
     krb5_princ_set_realm_data(context, new_p, new_r);
 
     if ((new_p->data[0].data = calloc(1, slen + 1)) == NULL)
         goto err;
-    memcpy(new_p->data[0].data, svc, slen);
+    sgx_memcpy(new_p->data[0].data, svc, slen);
     new_p->data[0].length = slen;
 
     if ((new_p->data[1].data = calloc(1, hlen + 1)) == NULL)
         goto err;
-    memcpy(new_p->data[1].data, host, hlen);
+    sgx_memcpy(new_p->data[1].data, host, hlen);
     new_p->data[1].length = hlen;
 
     krb5_princ_type(context, new_p) = KRB5_NT_UNKNOWN;

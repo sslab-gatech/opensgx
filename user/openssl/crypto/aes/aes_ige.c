@@ -70,8 +70,8 @@ typedef struct {
 # define load_block(d, s)        (d) = *(const aes_block_t *)(s)
 # define store_block(d, s)       *(aes_block_t *)(d) = (s)
 #else
-# define load_block(d, s)        memcpy((d).data, (s), AES_BLOCK_SIZE)
-# define store_block(d, s)       memcpy((d), (s).data, AES_BLOCK_SIZE)
+# define load_block(d, s)        sgx_memcpy((d).data, (s), AES_BLOCK_SIZE)
+# define store_block(d, s)       sgx_memcpy((d), (s).data, AES_BLOCK_SIZE)
 #endif
 
 /* N.B. The IV for this mode is _twice_ the block size */
@@ -113,8 +113,8 @@ void AES_ige_encrypt(const unsigned char *in, unsigned char *out,
                 in += AES_BLOCK_SIZE;
                 out += AES_BLOCK_SIZE;
             }
-            memcpy(ivec, ivp->data, AES_BLOCK_SIZE);
-            memcpy(ivec + AES_BLOCK_SIZE, iv2p->data, AES_BLOCK_SIZE);
+            sgx_memcpy(ivec, ivp->data, AES_BLOCK_SIZE);
+            sgx_memcpy(ivec + AES_BLOCK_SIZE, iv2p->data, AES_BLOCK_SIZE);
         } else {
             aes_block_t tmp, tmp2;
             aes_block_t iv;
@@ -138,8 +138,8 @@ void AES_ige_encrypt(const unsigned char *in, unsigned char *out,
                 in += AES_BLOCK_SIZE;
                 out += AES_BLOCK_SIZE;
             }
-            memcpy(ivec, iv.data, AES_BLOCK_SIZE);
-            memcpy(ivec + AES_BLOCK_SIZE, iv2.data, AES_BLOCK_SIZE);
+            sgx_memcpy(ivec, iv.data, AES_BLOCK_SIZE);
+            sgx_memcpy(ivec + AES_BLOCK_SIZE, iv2.data, AES_BLOCK_SIZE);
         }
     } else {
         if (in != out &&
@@ -166,8 +166,8 @@ void AES_ige_encrypt(const unsigned char *in, unsigned char *out,
                 in += AES_BLOCK_SIZE;
                 out += AES_BLOCK_SIZE;
             }
-            memcpy(ivec, ivp->data, AES_BLOCK_SIZE);
-            memcpy(ivec + AES_BLOCK_SIZE, iv2p->data, AES_BLOCK_SIZE);
+            sgx_memcpy(ivec, ivp->data, AES_BLOCK_SIZE);
+            sgx_memcpy(ivec + AES_BLOCK_SIZE, iv2p->data, AES_BLOCK_SIZE);
         } else {
             aes_block_t tmp, tmp2;
             aes_block_t iv;
@@ -192,8 +192,8 @@ void AES_ige_encrypt(const unsigned char *in, unsigned char *out,
                 in += AES_BLOCK_SIZE;
                 out += AES_BLOCK_SIZE;
             }
-            memcpy(ivec, iv.data, AES_BLOCK_SIZE);
-            memcpy(ivec + AES_BLOCK_SIZE, iv2.data, AES_BLOCK_SIZE);
+            sgx_memcpy(ivec, iv.data, AES_BLOCK_SIZE);
+            sgx_memcpy(ivec + AES_BLOCK_SIZE, iv2.data, AES_BLOCK_SIZE);
         }
     }
 }
@@ -239,7 +239,7 @@ void AES_bi_ige_encrypt(const unsigned char *in, unsigned char *out,
             for (n = 0; n < AES_BLOCK_SIZE; ++n)
                 out[n] ^= iv2[n];
             iv = out;
-            memcpy(prev, in, AES_BLOCK_SIZE);
+            sgx_memcpy(prev, in, AES_BLOCK_SIZE);
             iv2 = prev;
             len -= AES_BLOCK_SIZE;
             in += AES_BLOCK_SIZE;
@@ -255,7 +255,7 @@ void AES_bi_ige_encrypt(const unsigned char *in, unsigned char *out,
             /*
              * XXX: reduce copies by alternating between buffers
              */
-            memcpy(tmp, out, AES_BLOCK_SIZE);
+            sgx_memcpy(tmp, out, AES_BLOCK_SIZE);
             for (n = 0; n < AES_BLOCK_SIZE; ++n)
                 out[n] ^= iv[n];
             /*
@@ -274,7 +274,7 @@ void AES_bi_ige_encrypt(const unsigned char *in, unsigned char *out,
              * hexdump(stdout,"out", out, AES_BLOCK_SIZE);
              */
             iv = out;
-            memcpy(prev, tmp, AES_BLOCK_SIZE);
+            sgx_memcpy(prev, tmp, AES_BLOCK_SIZE);
             iv2 = prev;
             len -= AES_BLOCK_SIZE;
         }
@@ -287,14 +287,14 @@ void AES_bi_ige_encrypt(const unsigned char *in, unsigned char *out,
         while (len >= AES_BLOCK_SIZE) {
             in -= AES_BLOCK_SIZE;
             out -= AES_BLOCK_SIZE;
-            memcpy(tmp, in, AES_BLOCK_SIZE);
-            memcpy(tmp2, in, AES_BLOCK_SIZE);
+            sgx_memcpy(tmp, in, AES_BLOCK_SIZE);
+            sgx_memcpy(tmp2, in, AES_BLOCK_SIZE);
             for (n = 0; n < AES_BLOCK_SIZE; ++n)
                 tmp[n] ^= iv2[n];
             AES_decrypt(tmp, out, key);
             for (n = 0; n < AES_BLOCK_SIZE; ++n)
                 out[n] ^= iv[n];
-            memcpy(tmp3, tmp2, AES_BLOCK_SIZE);
+            sgx_memcpy(tmp3, tmp2, AES_BLOCK_SIZE);
             iv = tmp3;
             iv2 = out;
             len -= AES_BLOCK_SIZE;
@@ -305,14 +305,14 @@ void AES_bi_ige_encrypt(const unsigned char *in, unsigned char *out,
         iv2 = ivec + AES_BLOCK_SIZE;
         len = length;
         while (len >= AES_BLOCK_SIZE) {
-            memcpy(tmp, out, AES_BLOCK_SIZE);
-            memcpy(tmp2, out, AES_BLOCK_SIZE);
+            sgx_memcpy(tmp, out, AES_BLOCK_SIZE);
+            sgx_memcpy(tmp2, out, AES_BLOCK_SIZE);
             for (n = 0; n < AES_BLOCK_SIZE; ++n)
                 tmp[n] ^= iv2[n];
             AES_decrypt(tmp, out, key);
             for (n = 0; n < AES_BLOCK_SIZE; ++n)
                 out[n] ^= iv[n];
-            memcpy(tmp3, tmp2, AES_BLOCK_SIZE);
+            sgx_memcpy(tmp3, tmp2, AES_BLOCK_SIZE);
             iv = tmp3;
             iv2 = out;
             len -= AES_BLOCK_SIZE;

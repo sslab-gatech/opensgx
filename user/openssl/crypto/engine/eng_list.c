@@ -110,7 +110,7 @@ static int engine_list_add(ENGINE *e)
     }
     iterator = engine_list_head;
     while (iterator && !conflict) {
-        conflict = (strcmp(iterator->id, e->id) == 0);
+        conflict = (sgx_strcmp(iterator->id, e->id) == 0);
         iterator = iterator->next;
     }
     if (conflict) {
@@ -331,7 +331,7 @@ ENGINE *ENGINE_by_id(const char *id)
     }
     CRYPTO_w_lock(CRYPTO_LOCK_ENGINE);
     iterator = engine_list_head;
-    while (iterator && (strcmp(id, iterator->id) != 0))
+    while (iterator && (sgx_strcmp(id, iterator->id) != 0))
         iterator = iterator->next;
     if (iterator) {
         /*
@@ -366,7 +366,7 @@ ENGINE *ENGINE_by_id(const char *id)
     /*
      * Prevent infinite recusrion if we're looking for the dynamic engine.
      */
-    if (strcmp(id, "dynamic")) {
+    if (sgx_strcmp(id, "dynamic")) {
 # ifdef OPENSSL_SYS_VMS
         if ((load_dir = getenv("OPENSSL_ENGINES")) == 0)
             load_dir = "SSLROOT:[ENGINES]";

@@ -160,7 +160,7 @@ IMPLEMENT_dtls1_meth_func(DTLS1_VERSION,
 int dtls1_accept(SSL *s)
 {
     BUF_MEM *buf;
-    unsigned long Time = (unsigned long)time(NULL);
+    unsigned long Time = (unsigned long)sgx_time(NULL);
     void (*cb) (const SSL *ssl, int type, int val) = NULL;
     unsigned long alg_k;
     int ret = -1;
@@ -332,7 +332,7 @@ int dtls1_accept(SSL *s)
              * listening
              */
             if (listen) {
-                memcpy(s->s3->write_sequence, s->s3->read_sequence,
+                sgx_memcpy(s->s3->write_sequence, s->s3->read_sequence,
                        sizeof(s->s3->write_sequence));
             }
 
@@ -937,7 +937,7 @@ int dtls1_send_hello_verify_request(SSL *s)
         }
 
         *(p++) = (unsigned char)s->d1->cookie_len;
-        memcpy(p, s->d1->cookie, s->d1->cookie_len);
+        sgx_memcpy(p, s->d1->cookie, s->d1->cookie_len);
         p += s->d1->cookie_len;
         msg_len = p - msg;
 

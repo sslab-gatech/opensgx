@@ -131,7 +131,7 @@ int DES_enc_write(int fd, const void *_buf, int len,
     /* pad short strings */
     if (len < 8) {
         cp = shortbuf;
-        memcpy(shortbuf, buf, len);
+        sgx_memcpy(shortbuf, buf, len);
         RAND_pseudo_bytes(shortbuf + len, 8 - len);
         rnum = 8;
     } else {

@@ -179,11 +179,11 @@ int ssl3_read_n(SSL *s, int n, int max, int extend)
                 /*
                  * Note that even if packet is corrupted and its length field
                  * is insane, we can only be led to wrong decision about
-                 * whether memmove will occur or not. Header values has no
-                 * effect on memmove arguments and therefore no buffer
+                 * whether sgx_memmove will occur or not. Header values has no
+                 * effect on sgx_memmove arguments and therefore no buffer
                  * overrun can be triggered.
                  */
-                memmove(rb->buf + align, pkt, left);
+                sgx_memmove(rb->buf + align, pkt, left);
                 rb->offset = align;
             }
         }
@@ -221,7 +221,7 @@ int ssl3_read_n(SSL *s, int n, int max, int extend)
      * pointed to by 'packet', 'left' extra ones at the end
      */
     if (s->packet != pkt) {     /* len > 0 */
-        memmove(pkt, s->packet, len + left);
+        sgx_memmove(pkt, s->packet, len + left);
         s->packet = pkt;
         rb->offset = len + align;
     }
@@ -735,7 +735,7 @@ int ssl3_write_bytes(SSL *s, int type, const void *buf_, int len)
             else
                 nw = max_send_fragment * (mb_param.interleave = 4);
 
-            memcpy(aad, s->s3->write_sequence, 8);
+            sgx_memcpy(aad, s->s3->write_sequence, 8);
             aad[8] = type;
             aad[9] = (unsigned char)(s->version >> 8);
             aad[10] = (unsigned char)(s->version);
@@ -997,7 +997,7 @@ static int do_ssl3_write(SSL *s, int type, const unsigned char *buf,
             goto err;
         }
     } else {
-        memcpy(wr->data, wr->input, wr->length);
+        sgx_memcpy(wr->data, wr->input, wr->length);
         wr->input = wr->data;
     }
 
@@ -1254,7 +1254,7 @@ int ssl3_read_bytes(SSL *s, int type, unsigned char *buf, int len, int peek)
         else
             n = (unsigned int)len;
 
-        memcpy(buf, &(rr->data[rr->off]), n);
+        sgx_memcpy(buf, &(rr->data[rr->off]), n);
         if (!peek) {
             rr->length -= n;
             rr->off += n;

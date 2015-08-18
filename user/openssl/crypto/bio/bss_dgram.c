@@ -62,8 +62,6 @@
 #define USE_SOCKETS
 #include "cryptlib.h"
 
-#include "../sgx.h"
-
 #include <openssl/bio.h>
 #ifndef OPENSSL_NO_DGRAM
 
@@ -304,7 +302,7 @@ static void dgram_adjust_rcv_timeout(BIO *b)
         get_current_time(&timenow);
 
         /* Calculate time left until timer expires */
-        memcpy(&timeleft, &(data->next_timeout), sizeof(struct timeval));
+        sgx_memcpy(&timeleft, &(data->next_timeout), sizeof(struct timeval));
         timeleft.tv_sec -= timenow.tv_sec;
         timeleft.tv_usec -= timenow.tv_usec;
         if (timeleft.tv_usec < 0) {
@@ -566,15 +564,15 @@ static long dgram_ctrl(BIO *b, int cmd, long num, void *ptr)
 # endif
             switch (to->sa_family) {
             case AF_INET:
-                memcpy(&data->peer, to, sizeof(data->peer.sa_in));
+                sgx_memcpy(&data->peer, to, sizeof(data->peer.sa_in));
                 break;
 # if OPENSSL_USE_IPV6
             case AF_INET6:
-                memcpy(&data->peer, to, sizeof(data->peer.sa_in6));
+                sgx_memcpy(&data->peer, to, sizeof(data->peer.sa_in6));
                 break;
 # endif
             default:
-                memcpy(&data->peer, to, sizeof(data->peer.sa));
+                sgx_memcpy(&data->peer, to, sizeof(data->peer.sa));
                 break;
             }
 # if 0
@@ -697,15 +695,15 @@ static long dgram_ctrl(BIO *b, int cmd, long num, void *ptr)
             data->connected = 1;
             switch (to->sa_family) {
             case AF_INET:
-                memcpy(&data->peer, to, sizeof(data->peer.sa_in));
+                sgx_memcpy(&data->peer, to, sizeof(data->peer.sa_in));
                 break;
 # if OPENSSL_USE_IPV6
             case AF_INET6:
-                memcpy(&data->peer, to, sizeof(data->peer.sa_in6));
+                sgx_memcpy(&data->peer, to, sizeof(data->peer.sa_in6));
                 break;
 # endif
             default:
-                memcpy(&data->peer, to, sizeof(data->peer.sa));
+                sgx_memcpy(&data->peer, to, sizeof(data->peer.sa));
                 break;
             }
         } else {
@@ -729,26 +727,26 @@ static long dgram_ctrl(BIO *b, int cmd, long num, void *ptr)
         }
         if (num == 0 || num > ret)
             num = ret;
-        memcpy(ptr, &data->peer, (ret = num));
+        sgx_memcpy(ptr, &data->peer, (ret = num));
         break;
     case BIO_CTRL_DGRAM_SET_PEER:
         to = (struct sockaddr *)ptr;
         switch (to->sa_family) {
         case AF_INET:
-            memcpy(&data->peer, to, sizeof(data->peer.sa_in));
+            sgx_memcpy(&data->peer, to, sizeof(data->peer.sa_in));
             break;
 # if OPENSSL_USE_IPV6
         case AF_INET6:
-            memcpy(&data->peer, to, sizeof(data->peer.sa_in6));
+            sgx_memcpy(&data->peer, to, sizeof(data->peer.sa_in6));
             break;
 # endif
         default:
-            memcpy(&data->peer, to, sizeof(data->peer.sa));
+            sgx_memcpy(&data->peer, to, sizeof(data->peer.sa));
             break;
         }
         break;
     case BIO_CTRL_DGRAM_SET_NEXT_TIMEOUT:
-        memcpy(&(data->next_timeout), ptr, sizeof(struct timeval));
+        sgx_memcpy(&(data->next_timeout), ptr, sizeof(struct timeval));
         break;
 # if defined(SO_RCVTIMEO)
     case BIO_CTRL_DGRAM_SET_RECV_TIMEOUT:
@@ -956,7 +954,7 @@ static int dgram_puts(BIO *bp, const char *str)
 {
     int n, ret;
 
-    n = strlen(str);
+    n = sgx_strlen(str);
     ret = dgram_write(bp, str, n);
     return (ret);
 }
@@ -1419,7 +1417,7 @@ static int dgram_sctp_write(BIO *b, const char *in, int inl)
         if (data->saved_message.data)
             OPENSSL_free(data->saved_message.data);
         data->saved_message.data = OPENSSL_malloc(inl);
-        memcpy(data->saved_message.data, in, inl);
+        sgx_memcpy(data->saved_message.data, in, inl);
         data->saved_message.length = inl;
         return inl;
     }
@@ -1568,7 +1566,7 @@ static long dgram_sctp_ctrl(BIO *b, int cmd, long num, void *ptr)
          */
         authkey->sca_keylength = 64;
 #  endif
-        memcpy(&authkey->sca_key[0], ptr, 64 * sizeof(uint8_t));
+        sgx_memcpy(&authkey->sca_key[0], ptr, 64 * sizeof(uint8_t));
 
         ret =
             setsockopt(b->num, IPPROTO_SCTP, SCTP_AUTH_KEY, authkey,
@@ -1662,7 +1660,7 @@ static long dgram_sctp_ctrl(BIO *b, int cmd, long num, void *ptr)
         if (num > (long)sizeof(struct bio_dgram_sctp_sndinfo))
             num = sizeof(struct bio_dgram_sctp_sndinfo);
 
-        memcpy(ptr, &(data->sndinfo), num);
+        sgx_memcpy(ptr, &(data->sndinfo), num);
         ret = num;
         break;
     case BIO_CTRL_DGRAM_SCTP_SET_SNDINFO:
@@ -1670,14 +1668,14 @@ static long dgram_sctp_ctrl(BIO *b, int cmd, long num, void *ptr)
         if (num > (long)sizeof(struct bio_dgram_sctp_sndinfo))
             num = sizeof(struct bio_dgram_sctp_sndinfo);
 
-        memcpy(&(data->sndinfo), ptr, num);
+        sgx_memcpy(&(data->sndinfo), ptr, num);
         break;
     case BIO_CTRL_DGRAM_SCTP_GET_RCVINFO:
         /* Returns the size of the copied struct. */
         if (num > (long)sizeof(struct bio_dgram_sctp_rcvinfo))
             num = sizeof(struct bio_dgram_sctp_rcvinfo);
 
-        memcpy(ptr, &data->rcvinfo, num);
+        sgx_memcpy(ptr, &data->rcvinfo, num);
 
         ret = num;
         break;
@@ -1686,14 +1684,14 @@ static long dgram_sctp_ctrl(BIO *b, int cmd, long num, void *ptr)
         if (num > (long)sizeof(struct bio_dgram_sctp_rcvinfo))
             num = sizeof(struct bio_dgram_sctp_rcvinfo);
 
-        memcpy(&(data->rcvinfo), ptr, num);
+        sgx_memcpy(&(data->rcvinfo), ptr, num);
         break;
     case BIO_CTRL_DGRAM_SCTP_GET_PRINFO:
         /* Returns the size of the copied struct. */
         if (num > (long)sizeof(struct bio_dgram_sctp_prinfo))
             num = sizeof(struct bio_dgram_sctp_prinfo);
 
-        memcpy(ptr, &(data->prinfo), num);
+        sgx_memcpy(ptr, &(data->prinfo), num);
         ret = num;
         break;
     case BIO_CTRL_DGRAM_SCTP_SET_PRINFO:
@@ -1701,7 +1699,7 @@ static long dgram_sctp_ctrl(BIO *b, int cmd, long num, void *ptr)
         if (num > (long)sizeof(struct bio_dgram_sctp_prinfo))
             num = sizeof(struct bio_dgram_sctp_prinfo);
 
-        memcpy(&(data->prinfo), ptr, num);
+        sgx_memcpy(&(data->prinfo), ptr, num);
         break;
     case BIO_CTRL_DGRAM_SCTP_SAVE_SHUTDOWN:
         /* Returns always 1. */
@@ -1959,7 +1957,7 @@ static int dgram_sctp_puts(BIO *bp, const char *str)
 {
     int n, ret;
 
-    n = strlen(str);
+    n = sgx_strlen(str);
     ret = dgram_sctp_write(bp, str, n);
     return (ret);
 }

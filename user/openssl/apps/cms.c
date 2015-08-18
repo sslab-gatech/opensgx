@@ -170,149 +170,149 @@ int MAIN(int argc, char **argv)
         goto end;
 
     while (!badarg && *args && *args[0] == '-') {
-        if (!strcmp(*args, "-encrypt"))
+        if (!sgx_strcmp(*args, "-encrypt"))
             operation = SMIME_ENCRYPT;
-        else if (!strcmp(*args, "-decrypt"))
+        else if (!sgx_strcmp(*args, "-decrypt"))
             operation = SMIME_DECRYPT;
-        else if (!strcmp(*args, "-sign"))
+        else if (!sgx_strcmp(*args, "-sign"))
             operation = SMIME_SIGN;
-        else if (!strcmp(*args, "-sign_receipt"))
+        else if (!sgx_strcmp(*args, "-sign_receipt"))
             operation = SMIME_SIGN_RECEIPT;
-        else if (!strcmp(*args, "-resign"))
+        else if (!sgx_strcmp(*args, "-resign"))
             operation = SMIME_RESIGN;
-        else if (!strcmp(*args, "-verify"))
+        else if (!sgx_strcmp(*args, "-verify"))
             operation = SMIME_VERIFY;
-        else if (!strcmp(*args, "-verify_retcode"))
+        else if (!sgx_strcmp(*args, "-verify_retcode"))
             verify_retcode = 1;
-        else if (!strcmp(*args, "-verify_receipt")) {
+        else if (!sgx_strcmp(*args, "-verify_receipt")) {
             operation = SMIME_VERIFY_RECEIPT;
             if (!args[1])
                 goto argerr;
             args++;
             rctfile = *args;
-        } else if (!strcmp(*args, "-cmsout"))
+        } else if (!sgx_strcmp(*args, "-cmsout"))
             operation = SMIME_CMSOUT;
-        else if (!strcmp(*args, "-data_out"))
+        else if (!sgx_strcmp(*args, "-data_out"))
             operation = SMIME_DATAOUT;
-        else if (!strcmp(*args, "-data_create"))
+        else if (!sgx_strcmp(*args, "-data_create"))
             operation = SMIME_DATA_CREATE;
-        else if (!strcmp(*args, "-digest_verify"))
+        else if (!sgx_strcmp(*args, "-digest_verify"))
             operation = SMIME_DIGEST_VERIFY;
-        else if (!strcmp(*args, "-digest_create"))
+        else if (!sgx_strcmp(*args, "-digest_create"))
             operation = SMIME_DIGEST_CREATE;
-        else if (!strcmp(*args, "-compress"))
+        else if (!sgx_strcmp(*args, "-compress"))
             operation = SMIME_COMPRESS;
-        else if (!strcmp(*args, "-uncompress"))
+        else if (!sgx_strcmp(*args, "-uncompress"))
             operation = SMIME_UNCOMPRESS;
-        else if (!strcmp(*args, "-EncryptedData_decrypt"))
+        else if (!sgx_strcmp(*args, "-EncryptedData_decrypt"))
             operation = SMIME_ENCRYPTED_DECRYPT;
-        else if (!strcmp(*args, "-EncryptedData_encrypt"))
+        else if (!sgx_strcmp(*args, "-EncryptedData_encrypt"))
             operation = SMIME_ENCRYPTED_ENCRYPT;
 # ifndef OPENSSL_NO_DES
-        else if (!strcmp(*args, "-des3"))
+        else if (!sgx_strcmp(*args, "-des3"))
             cipher = EVP_des_ede3_cbc();
-        else if (!strcmp(*args, "-des"))
+        else if (!sgx_strcmp(*args, "-des"))
             cipher = EVP_des_cbc();
-        else if (!strcmp(*args, "-des3-wrap"))
+        else if (!sgx_strcmp(*args, "-des3-wrap"))
             wrap_cipher = EVP_des_ede3_wrap();
 # endif
 # ifndef OPENSSL_NO_SEED
-        else if (!strcmp(*args, "-seed"))
+        else if (!sgx_strcmp(*args, "-seed"))
             cipher = EVP_seed_cbc();
 # endif
 # ifndef OPENSSL_NO_RC2
-        else if (!strcmp(*args, "-rc2-40"))
+        else if (!sgx_strcmp(*args, "-rc2-40"))
             cipher = EVP_rc2_40_cbc();
-        else if (!strcmp(*args, "-rc2-128"))
+        else if (!sgx_strcmp(*args, "-rc2-128"))
             cipher = EVP_rc2_cbc();
-        else if (!strcmp(*args, "-rc2-64"))
+        else if (!sgx_strcmp(*args, "-rc2-64"))
             cipher = EVP_rc2_64_cbc();
 # endif
 # ifndef OPENSSL_NO_AES
-        else if (!strcmp(*args, "-aes128"))
+        else if (!sgx_strcmp(*args, "-aes128"))
             cipher = EVP_aes_128_cbc();
-        else if (!strcmp(*args, "-aes192"))
+        else if (!sgx_strcmp(*args, "-aes192"))
             cipher = EVP_aes_192_cbc();
-        else if (!strcmp(*args, "-aes256"))
+        else if (!sgx_strcmp(*args, "-aes256"))
             cipher = EVP_aes_256_cbc();
-        else if (!strcmp(*args, "-aes128-wrap"))
+        else if (!sgx_strcmp(*args, "-aes128-wrap"))
             wrap_cipher = EVP_aes_128_wrap();
-        else if (!strcmp(*args, "-aes192-wrap"))
+        else if (!sgx_strcmp(*args, "-aes192-wrap"))
             wrap_cipher = EVP_aes_192_wrap();
-        else if (!strcmp(*args, "-aes256-wrap"))
+        else if (!sgx_strcmp(*args, "-aes256-wrap"))
             wrap_cipher = EVP_aes_256_wrap();
 # endif
 # ifndef OPENSSL_NO_CAMELLIA
-        else if (!strcmp(*args, "-camellia128"))
+        else if (!sgx_strcmp(*args, "-camellia128"))
             cipher = EVP_camellia_128_cbc();
-        else if (!strcmp(*args, "-camellia192"))
+        else if (!sgx_strcmp(*args, "-camellia192"))
             cipher = EVP_camellia_192_cbc();
-        else if (!strcmp(*args, "-camellia256"))
+        else if (!sgx_strcmp(*args, "-camellia256"))
             cipher = EVP_camellia_256_cbc();
 # endif
-        else if (!strcmp(*args, "-debug_decrypt"))
+        else if (!sgx_strcmp(*args, "-debug_decrypt"))
             flags |= CMS_DEBUG_DECRYPT;
-        else if (!strcmp(*args, "-text"))
+        else if (!sgx_strcmp(*args, "-text"))
             flags |= CMS_TEXT;
-        else if (!strcmp(*args, "-nointern"))
+        else if (!sgx_strcmp(*args, "-nointern"))
             flags |= CMS_NOINTERN;
-        else if (!strcmp(*args, "-noverify")
-                 || !strcmp(*args, "-no_signer_cert_verify"))
+        else if (!sgx_strcmp(*args, "-noverify")
+                 || !sgx_strcmp(*args, "-no_signer_cert_verify"))
             flags |= CMS_NO_SIGNER_CERT_VERIFY;
-        else if (!strcmp(*args, "-nocerts"))
+        else if (!sgx_strcmp(*args, "-nocerts"))
             flags |= CMS_NOCERTS;
-        else if (!strcmp(*args, "-noattr"))
+        else if (!sgx_strcmp(*args, "-noattr"))
             flags |= CMS_NOATTR;
-        else if (!strcmp(*args, "-nodetach"))
+        else if (!sgx_strcmp(*args, "-nodetach"))
             flags &= ~CMS_DETACHED;
-        else if (!strcmp(*args, "-nosmimecap"))
+        else if (!sgx_strcmp(*args, "-nosmimecap"))
             flags |= CMS_NOSMIMECAP;
-        else if (!strcmp(*args, "-binary"))
+        else if (!sgx_strcmp(*args, "-binary"))
             flags |= CMS_BINARY;
-        else if (!strcmp(*args, "-keyid"))
+        else if (!sgx_strcmp(*args, "-keyid"))
             flags |= CMS_USE_KEYID;
-        else if (!strcmp(*args, "-nosigs"))
+        else if (!sgx_strcmp(*args, "-nosigs"))
             flags |= CMS_NOSIGS;
-        else if (!strcmp(*args, "-no_content_verify"))
+        else if (!sgx_strcmp(*args, "-no_content_verify"))
             flags |= CMS_NO_CONTENT_VERIFY;
-        else if (!strcmp(*args, "-no_attr_verify"))
+        else if (!sgx_strcmp(*args, "-no_attr_verify"))
             flags |= CMS_NO_ATTR_VERIFY;
-        else if (!strcmp(*args, "-stream"))
+        else if (!sgx_strcmp(*args, "-stream"))
             flags |= CMS_STREAM;
-        else if (!strcmp(*args, "-indef"))
+        else if (!sgx_strcmp(*args, "-indef"))
             flags |= CMS_STREAM;
-        else if (!strcmp(*args, "-noindef"))
+        else if (!sgx_strcmp(*args, "-noindef"))
             flags &= ~CMS_STREAM;
-        else if (!strcmp(*args, "-nooldmime"))
+        else if (!sgx_strcmp(*args, "-nooldmime"))
             flags |= CMS_NOOLDMIMETYPE;
-        else if (!strcmp(*args, "-crlfeol"))
+        else if (!sgx_strcmp(*args, "-crlfeol"))
             flags |= CMS_CRLFEOL;
-        else if (!strcmp(*args, "-noout"))
+        else if (!sgx_strcmp(*args, "-noout"))
             noout = 1;
-        else if (!strcmp(*args, "-receipt_request_print"))
+        else if (!sgx_strcmp(*args, "-receipt_request_print"))
             rr_print = 1;
-        else if (!strcmp(*args, "-receipt_request_all"))
+        else if (!sgx_strcmp(*args, "-receipt_request_all"))
             rr_allorfirst = 0;
-        else if (!strcmp(*args, "-receipt_request_first"))
+        else if (!sgx_strcmp(*args, "-receipt_request_first"))
             rr_allorfirst = 1;
-        else if (!strcmp(*args, "-receipt_request_from")) {
+        else if (!sgx_strcmp(*args, "-receipt_request_from")) {
             if (!args[1])
                 goto argerr;
             args++;
             if (!rr_from)
                 rr_from = sk_OPENSSL_STRING_new_null();
             sk_OPENSSL_STRING_push(rr_from, *args);
-        } else if (!strcmp(*args, "-receipt_request_to")) {
+        } else if (!sgx_strcmp(*args, "-receipt_request_to")) {
             if (!args[1])
                 goto argerr;
             args++;
             if (!rr_to)
                 rr_to = sk_OPENSSL_STRING_new_null();
             sk_OPENSSL_STRING_push(rr_to, *args);
-        } else if (!strcmp(*args, "-print")) {
+        } else if (!sgx_strcmp(*args, "-print")) {
             noout = 1;
             print = 1;
-        } else if (!strcmp(*args, "-secretkey")) {
+        } else if (!sgx_strcmp(*args, "-secretkey")) {
             long ltmp;
             if (!args[1])
                 goto argerr;
@@ -323,7 +323,7 @@ int MAIN(int argc, char **argv)
                 goto argerr;
             }
             secret_keylen = (size_t)ltmp;
-        } else if (!strcmp(*args, "-secretkeyid")) {
+        } else if (!sgx_strcmp(*args, "-secretkeyid")) {
             long ltmp;
             if (!args[1])
                 goto argerr;
@@ -334,12 +334,12 @@ int MAIN(int argc, char **argv)
                 goto argerr;
             }
             secret_keyidlen = (size_t)ltmp;
-        } else if (!strcmp(*args, "-pwri_password")) {
+        } else if (!sgx_strcmp(*args, "-pwri_password")) {
             if (!args[1])
                 goto argerr;
             args++;
             pwri_pass = (unsigned char *)*args;
-        } else if (!strcmp(*args, "-econtent_type")) {
+        } else if (!sgx_strcmp(*args, "-econtent_type")) {
             if (!args[1])
                 goto argerr;
             args++;
@@ -348,7 +348,7 @@ int MAIN(int argc, char **argv)
                 BIO_printf(bio_err, "Invalid OID %s\n", *args);
                 goto argerr;
             }
-        } else if (!strcmp(*args, "-rand")) {
+        } else if (!sgx_strcmp(*args, "-rand")) {
             if (!args[1])
                 goto argerr;
             args++;
@@ -356,29 +356,29 @@ int MAIN(int argc, char **argv)
             need_rand = 1;
         }
 # ifndef OPENSSL_NO_ENGINE
-        else if (!strcmp(*args, "-engine")) {
+        else if (!sgx_strcmp(*args, "-engine")) {
             if (!args[1])
                 goto argerr;
             engine = *++args;
         }
 # endif
-        else if (!strcmp(*args, "-passin")) {
+        else if (!sgx_strcmp(*args, "-passin")) {
             if (!args[1])
                 goto argerr;
             passargin = *++args;
-        } else if (!strcmp(*args, "-to")) {
+        } else if (!sgx_strcmp(*args, "-to")) {
             if (!args[1])
                 goto argerr;
             to = *++args;
-        } else if (!strcmp(*args, "-from")) {
+        } else if (!sgx_strcmp(*args, "-from")) {
             if (!args[1])
                 goto argerr;
             from = *++args;
-        } else if (!strcmp(*args, "-subject")) {
+        } else if (!sgx_strcmp(*args, "-subject")) {
             if (!args[1])
                 goto argerr;
             subject = *++args;
-        } else if (!strcmp(*args, "-signer")) {
+        } else if (!sgx_strcmp(*args, "-signer")) {
             if (!args[1])
                 goto argerr;
             /* If previous -signer argument add signer to list */
@@ -395,7 +395,7 @@ int MAIN(int argc, char **argv)
                 keyfile = NULL;
             }
             signerfile = *++args;
-        } else if (!strcmp(*args, "-recip")) {
+        } else if (!sgx_strcmp(*args, "-recip")) {
             if (!args[1])
                 goto argerr;
             if (operation == SMIME_ENCRYPT) {
@@ -409,11 +409,11 @@ int MAIN(int argc, char **argv)
                 cert = NULL;
             } else
                 recipfile = *++args;
-        } else if (!strcmp(*args, "-certsout")) {
+        } else if (!sgx_strcmp(*args, "-certsout")) {
             if (!args[1])
                 goto argerr;
             certsoutfile = *++args;
-        } else if (!strcmp(*args, "-md")) {
+        } else if (!sgx_strcmp(*args, "-md")) {
             if (!args[1])
                 goto argerr;
             sign_md = EVP_get_digestbyname(*++args);
@@ -421,7 +421,7 @@ int MAIN(int argc, char **argv)
                 BIO_printf(bio_err, "Unknown digest %s\n", *args);
                 goto argerr;
             }
-        } else if (!strcmp(*args, "-inkey")) {
+        } else if (!sgx_strcmp(*args, "-inkey")) {
             if (!args[1])
                 goto argerr;
             /* If previous -inkey arument add signer to list */
@@ -439,11 +439,11 @@ int MAIN(int argc, char **argv)
                 sk_OPENSSL_STRING_push(skkeys, keyfile);
             }
             keyfile = *++args;
-        } else if (!strcmp(*args, "-keyform")) {
+        } else if (!sgx_strcmp(*args, "-keyform")) {
             if (!args[1])
                 goto argerr;
             keyform = str2fmt(*++args);
-        } else if (!strcmp(*args, "-keyopt")) {
+        } else if (!sgx_strcmp(*args, "-keyopt")) {
             int keyidx = -1;
             if (!args[1])
                 goto argerr;
@@ -473,39 +473,39 @@ int MAIN(int argc, char **argv)
                 key_param = nparam;
             }
             sk_OPENSSL_STRING_push(key_param->param, *++args);
-        } else if (!strcmp(*args, "-rctform")) {
+        } else if (!sgx_strcmp(*args, "-rctform")) {
             if (!args[1])
                 goto argerr;
             rctformat = str2fmt(*++args);
-        } else if (!strcmp(*args, "-certfile")) {
+        } else if (!sgx_strcmp(*args, "-certfile")) {
             if (!args[1])
                 goto argerr;
             certfile = *++args;
-        } else if (!strcmp(*args, "-CAfile")) {
+        } else if (!sgx_strcmp(*args, "-CAfile")) {
             if (!args[1])
                 goto argerr;
             CAfile = *++args;
-        } else if (!strcmp(*args, "-CApath")) {
+        } else if (!sgx_strcmp(*args, "-CApath")) {
             if (!args[1])
                 goto argerr;
             CApath = *++args;
-        } else if (!strcmp(*args, "-in")) {
+        } else if (!sgx_strcmp(*args, "-in")) {
             if (!args[1])
                 goto argerr;
             infile = *++args;
-        } else if (!strcmp(*args, "-inform")) {
+        } else if (!sgx_strcmp(*args, "-inform")) {
             if (!args[1])
                 goto argerr;
             informat = str2fmt(*++args);
-        } else if (!strcmp(*args, "-outform")) {
+        } else if (!sgx_strcmp(*args, "-outform")) {
             if (!args[1])
                 goto argerr;
             outformat = str2fmt(*++args);
-        } else if (!strcmp(*args, "-out")) {
+        } else if (!sgx_strcmp(*args, "-out")) {
             if (!args[1])
                 goto argerr;
             outfile = *++args;
-        } else if (!strcmp(*args, "-content")) {
+        } else if (!sgx_strcmp(*args, "-content")) {
             if (!args[1])
                 goto argerr;
             contfile = *++args;

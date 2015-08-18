@@ -212,23 +212,23 @@ static int vms_load(DSO *dso)
     else
         sp1++;                  /* The byte after the found character */
     /* Now, let's see if there's a type, and save the position in sp2 */
-    sp2 = strchr(sp1, '.');
+    sp2 = sgx_strchr(sp1, '.');
     /*
      * If we found it, that's where we'll cut.  Otherwise, look for a version
      * number and save the position in sp2
      */
     if (sp2 == NULL)
-        sp2 = strchr(sp1, ';');
+        sp2 = sgx_strchr(sp1, ';');
     /*
      * If there was still nothing to find, set sp2 to point at the end of the
      * string
      */
     if (sp2 == NULL)
-        sp2 = sp1 + strlen(sp1);
+        sp2 = sp1 + sgx_strlen(sp1);
 
     /* Check that we won't get buffer overflows */
     if (sp2 - sp1 > FILENAME_MAX
-        || (sp1 - filename) + strlen(sp2) > FILENAME_MAX) {
+        || (sp1 - filename) + sgx_strlen(sp2) > FILENAME_MAX) {
         DSOerr(DSO_F_VMS_LOAD, DSO_R_FILENAME_TOO_BIG);
         goto err;
     }
@@ -239,18 +239,18 @@ static int vms_load(DSO *dso)
         goto err;
     }
 
-    strncpy(p->filename, sp1, sp2 - sp1);
+    sgx_strncpy(p->filename, sp1, sp2 - sp1);
     p->filename[sp2 - sp1] = '\0';
 
-    strncpy(p->imagename, filename, sp1 - filename);
+    sgx_strncpy(p->imagename, filename, sp1 - filename);
     p->imagename[sp1 - filename] = '\0';
-    strcat(p->imagename, sp2);
+    sgx_strcat(p->imagename, sp2);
 
-    p->filename_dsc.dsc$w_length = strlen(p->filename);
+    p->filename_dsc.dsc$w_length = sgx_strlen(p->filename);
     p->filename_dsc.dsc$b_dtype = DSC$K_DTYPE_T;
     p->filename_dsc.dsc$b_class = DSC$K_CLASS_S;
     p->filename_dsc.dsc$a_pointer = p->filename;
-    p->imagename_dsc.dsc$w_length = strlen(p->imagename);
+    p->imagename_dsc.dsc$w_length = sgx_strlen(p->imagename);
     p->imagename_dsc.dsc$b_dtype = DSC$K_DTYPE_T;
     p->imagename_dsc.dsc$b_class = DSC$K_CLASS_S;
     p->imagename_dsc.dsc$a_pointer = p->imagename;
@@ -353,10 +353,10 @@ void vms_bind_sym(DSO *dso, const char *symname, void **sym)
 # if __INITIAL_POINTER_SIZE == 64
     /* Copy the symbol name to storage with a 32-bit pointer. */
     symname_32p = symname_32;
-    strcpy(symname_32p, symname);
+    sgx_strcpy(symname_32p, symname);
 # endif                         /* __INITIAL_POINTER_SIZE == 64 [else] */
 
-    symname_dsc.dsc$w_length = strlen(SYMNAME);
+    symname_dsc.dsc$w_length = sgx_strlen(SYMNAME);
     symname_dsc.dsc$b_dtype = DSC$K_DTYPE_T;
     symname_dsc.dsc$b_class = DSC$K_CLASS_S;
     symname_dsc.dsc$a_pointer = SYMNAME;
@@ -457,15 +457,15 @@ static char *vms_merger(DSO *dso, const char *filespec1,
         filespec1 = "";
     if (!filespec2)
         filespec2 = "";
-    filespec1len = strlen(filespec1);
-    filespec2len = strlen(filespec2);
+    filespec1len = sgx_strlen(filespec1);
+    filespec2len = sgx_strlen(filespec2);
 
 # if __INITIAL_POINTER_SIZE == 64
     /* Copy the file names to storage with a 32-bit pointer. */
     filespec1_32p = filespec1_32;
     filespec2_32p = filespec2_32;
-    strcpy(filespec1_32p, filespec1);
-    strcpy(filespec2_32p, filespec2);
+    sgx_strcpy(filespec1_32p, filespec1);
+    sgx_strcpy(filespec2_32p, filespec2);
 # endif                         /* __INITIAL_POINTER_SIZE == 64 [else] */
 
     fab = cc$rms_fab;
@@ -514,7 +514,7 @@ static char *vms_merger(DSO *dso, const char *filespec1,
     merged = OPENSSL_malloc(nam.NAMX_ESL + 1);
     if (!merged)
         goto malloc_err;
-    strncpy(merged, nam.NAMX_ESA, nam.NAMX_ESL);
+    sgx_strncpy(merged, nam.NAMX_ESA, nam.NAMX_ESL);
     merged[nam.NAMX_ESL] = '\0';
     return (merged);
  malloc_err:
@@ -523,9 +523,9 @@ static char *vms_merger(DSO *dso, const char *filespec1,
 
 static char *vms_name_converter(DSO *dso, const char *filename)
 {
-    int len = strlen(filename);
+    int len = sgx_strlen(filename);
     char *not_translated = OPENSSL_malloc(len + 1);
-    strcpy(not_translated, filename);
+    sgx_strcpy(not_translated, filename);
     return (not_translated);
 }
 

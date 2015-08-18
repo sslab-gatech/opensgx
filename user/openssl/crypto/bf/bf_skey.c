@@ -63,6 +63,8 @@
 #include "bf_locl.h"
 #include "bf_pi.h"
 
+#include "../sgx.h"
+
 void BF_set_key(BF_KEY *key, int len, const unsigned char *data)
 #ifdef OPENSSL_FIPS
 {
@@ -77,7 +79,7 @@ void private_BF_set_key(BF_KEY *key, int len, const unsigned char *data)
     BF_LONG *p, ri, in[2];
     const unsigned char *d, *end;
 
-    memcpy(key, &bf_init, sizeof(BF_KEY));
+    sgx_memcpy(key, &bf_init, sizeof(BF_KEY));
     p = key->P;
 
     if (len > ((BF_ROUNDS + 2) * 4))

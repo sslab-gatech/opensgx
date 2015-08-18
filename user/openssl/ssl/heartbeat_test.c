@@ -74,7 +74,7 @@ static HEARTBEAT_TEST_FIXTURE set_up(const char *const test_case_name,
 {
     HEARTBEAT_TEST_FIXTURE fixture;
     int setup_ok = 1;
-    memset(&fixture, 0, sizeof(fixture));
+    sgx_memset(&fixture, 0, sizeof(fixture));
     fixture.test_case_name = test_case_name;
 
     fixture.ctx = SSL_CTX_new(meth);
@@ -112,7 +112,7 @@ static HEARTBEAT_TEST_FIXTURE set_up(const char *const test_case_name,
      * zeroed in opt mode and will cause spurious test failures that will
      * change with each execution.
      */
-    memset(fixture.s->s3->wbuf.buf, 0, fixture.s->s3->wbuf.len);
+    sgx_memset(fixture.s->s3->wbuf.buf, 0, fixture.s->s3->wbuf.len);
 
  fail:
     if (!setup_ok) {
@@ -203,7 +203,7 @@ static int execute_heartbeat(HEARTBEAT_TEST_FIXTURE fixture)
     int actual_payload_len;
 
     s->s3->rrec.data = payload;
-    s->s3->rrec.length = strlen((const char *)payload);
+    s->s3->rrec.length = sgx_strlen((const char *)payload);
     *payload++ = TLS1_HB_REQUEST;
     s2n(fixture.sent_payload_len, payload);
 
@@ -211,7 +211,7 @@ static int execute_heartbeat(HEARTBEAT_TEST_FIXTURE fixture)
      * Make a local copy of the request, since it gets overwritten at some
      * point
      */
-    memcpy((char *)sent_buf, (const char *)payload, sizeof(sent_buf));
+    sgx_memcpy((char *)sent_buf, (const char *)payload, sizeof(sent_buf));
 
     return_value = fixture.process_heartbeat(s);
 
@@ -234,13 +234,13 @@ static int execute_heartbeat(HEARTBEAT_TEST_FIXTURE fixture)
         printf("%s failed:\n  expected payload len: %d\n  received: %d\n",
                fixture.test_case_name, fixture.expected_payload_len,
                actual_payload_len);
-        print_payload("sent", sent_buf, strlen((const char *)sent_buf));
+        print_payload("sent", sent_buf, sgx_strlen((const char *)sent_buf));
         print_payload("received", p, actual_payload_len);
         result = 1;
     } else {
         char *actual_payload =
             BUF_strndup((const char *)p, actual_payload_len);
-        if (strcmp(actual_payload, fixture.expected_return_payload) != 0) {
+        if (sgx_strcmp(actual_payload, fixture.expected_return_payload) != 0) {
             printf
                 ("%s failed:\n  expected payload: \"%s\"\n  received: \"%s\"\n",
                  fixture.test_case_name, fixture.expected_return_payload,
@@ -259,7 +259,7 @@ static int execute_heartbeat(HEARTBEAT_TEST_FIXTURE fixture)
 static int honest_payload_size(unsigned char payload_buf[])
 {
     /* Omit three-byte pad at the beginning for type and payload length */
-    return strlen((const char *)&payload_buf[3]) - MIN_PADDING_SIZE;
+    return sgx_strlen((const char *)&payload_buf[3]) - MIN_PADDING_SIZE;
 }
 
 # define SETUP_HEARTBEAT_TEST_FIXTURE(type)\
@@ -295,7 +295,7 @@ static int test_dtls1_not_bleeding_empty_payload()
      * NUL at the end
      */
     unsigned char payload_buf[4 + MAX_PRINTABLE_CHARACTERS];
-    memset(payload_buf, ' ', MIN_PADDING_SIZE + 3);
+    sgx_memset(payload_buf, ' ', MIN_PADDING_SIZE + 3);
     payload_buf[MIN_PADDING_SIZE + 3] = '\0';
     payload_buf_len = honest_payload_size(payload_buf);
 
@@ -330,7 +330,7 @@ static int test_dtls1_heartbleed_empty_payload()
      * + minimum padding
      */
     unsigned char payload_buf[MAX_PRINTABLE_CHARACTERS + 4];
-    memset(payload_buf, ' ', MIN_PADDING_SIZE + 2);
+    sgx_memset(payload_buf, ' ', MIN_PADDING_SIZE + 2);
     payload_buf[MIN_PADDING_SIZE + 2] = '\0';
 
     fixture.payload = &payload_buf[0];
@@ -349,7 +349,7 @@ static int test_dtls1_heartbleed_excessive_plaintext_length()
      * heartbeat message length
      */
     unsigned char payload_buf[SSL3_RT_MAX_PLAIN_LENGTH + 2];
-    memset(payload_buf, ' ', sizeof(payload_buf));
+    sgx_memset(payload_buf, ' ', sizeof(payload_buf));
     payload_buf[sizeof(payload_buf) - 1] = '\0';
 
     fixture.payload = &payload_buf[0];
@@ -387,7 +387,7 @@ static int test_tls1_not_bleeding_empty_payload()
      * NUL at the end
      */
     unsigned char payload_buf[4 + MAX_PRINTABLE_CHARACTERS];
-    memset(payload_buf, ' ', MIN_PADDING_SIZE + 3);
+    sgx_memset(payload_buf, ' ', MIN_PADDING_SIZE + 3);
     payload_buf[MIN_PADDING_SIZE + 3] = '\0';
     payload_buf_len = honest_payload_size(payload_buf);
 
@@ -422,7 +422,7 @@ static int test_tls1_heartbleed_empty_payload()
      * + minimum padding
      */
     unsigned char payload_buf[MAX_PRINTABLE_CHARACTERS + 4];
-    memset(payload_buf, ' ', MIN_PADDING_SIZE + 2);
+    sgx_memset(payload_buf, ' ', MIN_PADDING_SIZE + 2);
     payload_buf[MIN_PADDING_SIZE + 2] = '\0';
 
     fixture.payload = &payload_buf[0];

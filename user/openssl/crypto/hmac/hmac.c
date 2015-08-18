@@ -120,7 +120,7 @@ int HMAC_Init_ex(HMAC_CTX *ctx, const void *key, int len,
                 goto err;
         } else {
             OPENSSL_assert(len >= 0 && len <= (int)sizeof(ctx->key));
-            memcpy(ctx->key, key, len);
+            sgx_memcpy(ctx->key, key, len);
             ctx->key_length = len;
         }
         if (ctx->key_length != HMAC_MAX_MD_CBLOCK)
@@ -203,7 +203,7 @@ int HMAC_CTX_copy(HMAC_CTX *dctx, HMAC_CTX *sctx)
         goto err;
     if (!EVP_MD_CTX_copy(&dctx->md_ctx, &sctx->md_ctx))
         goto err;
-    memcpy(dctx->key, sctx->key, HMAC_MAX_MD_CBLOCK);
+    sgx_memcpy(dctx->key, sctx->key, HMAC_MAX_MD_CBLOCK);
     dctx->key_length = sctx->key_length;
     dctx->md = sctx->md;
     return 1;

@@ -26,7 +26,6 @@ void main()
     char recvPort[] = "34444";
     char buf[512] = "";
     char msg[512] = "FROM NON_ENCLAVE: HELLO ENCLAVE";
-    int i = 0;
     int n_recv = 0, n_send;
 
     n_send = send_func(ip, sendPort, msg, strlen(msg));

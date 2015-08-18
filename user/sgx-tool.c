@@ -25,7 +25,7 @@
 
 #include <sgx.h>
 #include <sgx-user.h>
-#include <sgx-signature.h>
+#include <sgx-crypto.h>
 #include <sgx-utils.h>
 
 void cmd_genkey(char *bits)
@@ -84,18 +84,18 @@ void cmd_measure(char *binary, char *size, char *offset, char *code_start, char 
 {
     FILE *fp = NULL;
     unsigned char *buffer;
-    long nbits;
+    long nbytes;
     int n;
 
-    nbits = atoi(size) * 8;
-    buffer = malloc(nbits);
-    memset(buffer, 0, nbits);
+    nbytes = atoi(size);
+    buffer = malloc(nbytes);
+    memset(buffer, 0, nbytes);
 
     fp = fopen(binary, "rb");
     if (fp == NULL)
         return;
 
-    n = fread(buffer, nbits, 1, fp);
+    n = fread(buffer, nbytes, 1, fp);
     // XXX: fread will return 0 when MAX_BUFFER_SIZE > BINARY SIZE
 	if (n < 0)
         return;

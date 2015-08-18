@@ -146,50 +146,50 @@ int MAIN(int argc, char **argv)
     argc--;
     argv++;
     while (argc >= 1) {
-        if (strcmp(*argv, "-inform") == 0) {
+        if (sgx_strcmp(*argv, "-inform") == 0) {
             if (--argc < 1)
                 goto bad;
             informat = str2fmt(*(++argv));
-        } else if (strcmp(*argv, "-outform") == 0) {
+        } else if (sgx_strcmp(*argv, "-outform") == 0) {
             if (--argc < 1)
                 goto bad;
             outformat = str2fmt(*(++argv));
-        } else if (strcmp(*argv, "-in") == 0) {
+        } else if (sgx_strcmp(*argv, "-in") == 0) {
             if (--argc < 1)
                 goto bad;
             infile = *(++argv);
-        } else if (strcmp(*argv, "-out") == 0) {
+        } else if (sgx_strcmp(*argv, "-out") == 0) {
             if (--argc < 1)
                 goto bad;
             outfile = *(++argv);
         }
 # ifndef OPENSSL_NO_ENGINE
-        else if (strcmp(*argv, "-engine") == 0) {
+        else if (sgx_strcmp(*argv, "-engine") == 0) {
             if (--argc < 1)
                 goto bad;
             engine = *(++argv);
         }
 # endif
 # ifdef GENCB_TEST
-        else if (strcmp(*argv, "-timebomb") == 0) {
+        else if (sgx_strcmp(*argv, "-timebomb") == 0) {
             if (--argc < 1)
                 goto bad;
             timebomb = atoi(*(++argv));
         }
 # endif
-        else if (strcmp(*argv, "-text") == 0)
+        else if (sgx_strcmp(*argv, "-text") == 0)
             text = 1;
-        else if (strcmp(*argv, "-C") == 0)
+        else if (sgx_strcmp(*argv, "-C") == 0)
             C = 1;
-        else if (strcmp(*argv, "-genkey") == 0) {
+        else if (sgx_strcmp(*argv, "-genkey") == 0) {
             genkey = 1;
             need_rand = 1;
-        } else if (strcmp(*argv, "-rand") == 0) {
+        } else if (sgx_strcmp(*argv, "-rand") == 0) {
             if (--argc < 1)
                 goto bad;
             inrand = *(++argv);
             need_rand = 1;
-        } else if (strcmp(*argv, "-noout") == 0)
+        } else if (sgx_strcmp(*argv, "-noout") == 0)
             noout = 1;
         else if (sscanf(*argv, "%d", &num) == 1) {
             /* generate a key */

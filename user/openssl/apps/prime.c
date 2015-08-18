@@ -76,18 +76,18 @@ int MAIN(int argc, char **argv)
     --argc;
     ++argv;
     while (argc >= 1 && **argv == '-') {
-        if (!strcmp(*argv, "-hex"))
+        if (!sgx_strcmp(*argv, "-hex"))
             hex = 1;
-        else if (!strcmp(*argv, "-generate"))
+        else if (!sgx_strcmp(*argv, "-generate"))
             generate = 1;
-        else if (!strcmp(*argv, "-bits"))
+        else if (!sgx_strcmp(*argv, "-bits"))
             if (--argc < 1)
                 goto bad;
             else
                 bits = atoi(*++argv);
-        else if (!strcmp(*argv, "-safe"))
+        else if (!sgx_strcmp(*argv, "-safe"))
             safe = 1;
-        else if (!strcmp(*argv, "-checks"))
+        else if (!sgx_strcmp(*argv, "-checks"))
             if (--argc < 1)
                 goto bad;
             else

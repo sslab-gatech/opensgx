@@ -706,7 +706,7 @@ static EVP_PKEY *do_PVK_body(const unsigned char **in,
             return NULL;
         p += saltlen;
         /* Copy BLOBHEADER across, decrypt rest */
-        memcpy(enctmp, p, 8);
+        sgx_memcpy(enctmp, p, 8);
         p += 8;
         if (keylen < 8) {
             PEMerr(PEM_F_DO_PVK_BODY, PEM_R_PVK_TOO_SHORT);

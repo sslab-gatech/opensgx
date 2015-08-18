@@ -114,8 +114,8 @@ static int long_i2c(ASN1_VALUE **pval, unsigned char *cont, int *putype, const A
         /* this exists to bypass broken gcc optimization */
         char *cp = (char *)pval;
 
-        /* use memcpy, because we may not be long aligned */
-        memcpy(&ltmp, cp, sizeof(long));
+        /* use sgx_memcpy, because we may not be long aligned */
+        sgx_memcpy(&ltmp, cp, sizeof(long));
 
         if(ltmp == it->size) return -1;
         /* Convert the long to positive: we subtract one if negative so
@@ -172,7 +172,7 @@ static int long_c2i(ASN1_VALUE **pval, const unsigned char *cont, int len,
                 ASN1err(ASN1_F_LONG_C2I, ASN1_R_INTEGER_TOO_LARGE_FOR_LONG);
                 return 0;
         }
-        memcpy(cp, &ltmp, sizeof(long));
+        sgx_memcpy(cp, &ltmp, sizeof(long));
         return 1;
 }
 

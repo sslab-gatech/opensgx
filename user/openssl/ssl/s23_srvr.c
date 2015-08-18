@@ -148,7 +148,7 @@ IMPLEMENT_ssl23_meth_func(SSLv23_server_method,
 int ssl23_accept(SSL *s)
 {
     BUF_MEM *buf;
-    unsigned long Time = (unsigned long)time(NULL);
+    unsigned long Time = (unsigned long)sgx_time(NULL);
     void (*cb) (const SSL *ssl, int type, int val) = NULL;
     int ret = -1;
     int new_state, state;
@@ -271,7 +271,7 @@ int ssl23_get_client_hello(SSL *s)
 
         p = s->packet;
 
-        memcpy(buf, p, n);
+        sgx_memcpy(buf, p, n);
 
         if ((p[0] & 0x80) && (p[2] == SSL2_MT_CLIENT_HELLO)) {
             /*
@@ -387,13 +387,13 @@ int ssl23_get_client_hello(SSL *s)
                     type = 3;
                 }
             }
-        } else if ((strncmp("GET ", (char *)p, 4) == 0) ||
-                   (strncmp("POST ", (char *)p, 5) == 0) ||
-                   (strncmp("HEAD ", (char *)p, 5) == 0) ||
-                   (strncmp("PUT ", (char *)p, 4) == 0)) {
+        } else if ((sgx_strncmp("GET ", (char *)p, 4) == 0) ||
+                   (sgx_strncmp("POST ", (char *)p, 5) == 0) ||
+                   (sgx_strncmp("HEAD ", (char *)p, 5) == 0) ||
+                   (sgx_strncmp("PUT ", (char *)p, 4) == 0)) {
             SSLerr(SSL_F_SSL23_GET_CLIENT_HELLO, SSL_R_HTTP_REQUEST);
             goto err;
-        } else if (strncmp("CONNECT", (char *)p, 7) == 0) {
+        } else if (sgx_strncmp("CONNECT", (char *)p, 7) == 0) {
             SSLerr(SSL_F_SSL23_GET_CLIENT_HELLO, SSL_R_HTTPS_PROXY_REQUEST);
             goto err;
         }
@@ -497,8 +497,8 @@ int ssl23_get_client_hello(SSL *s)
         /* lets populate the random area */
         /* get the challenge_length */
         i = (cl > SSL3_RANDOM_SIZE) ? SSL3_RANDOM_SIZE : cl;
-        memset(d, 0, SSL3_RANDOM_SIZE);
-        memcpy(&(d[SSL3_RANDOM_SIZE - i]), &(p[csl + sil]), i);
+        sgx_memset(d, 0, SSL3_RANDOM_SIZE);
+        sgx_memcpy(&(d[SSL3_RANDOM_SIZE - i]), &(p[csl + sil]), i);
         d += SSL3_RANDOM_SIZE;
 
         /* no session-id reuse */
@@ -583,7 +583,7 @@ int ssl23_get_client_hello(SSL *s)
         s->rstate = SSL_ST_READ_HEADER;
         s->packet_length = n;
         s->packet = &(s->s2->rbuf[0]);
-        memcpy(s->packet, buf, n);
+        sgx_memcpy(s->packet, buf, n);
         s->s2->rbuf_left = n;
         s->s2->rbuf_offs = 0;
 
@@ -621,7 +621,7 @@ int ssl23_get_client_hello(SSL *s)
                     goto err;
 
             s->packet = &(s->s3->rbuf.buf[0]);
-            memcpy(s->packet, buf, n);
+            sgx_memcpy(s->packet, buf, n);
             s->s3->rbuf.left = n;
             s->s3->rbuf.offset = 0;
         } else {

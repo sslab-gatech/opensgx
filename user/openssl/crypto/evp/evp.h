@@ -254,8 +254,8 @@ typedef int evp_verify_method(int type, const unsigned char *m,
 #  endif
 
 #  ifndef OPENSSL_NO_RSA
-#   define EVP_PKEY_RSA_method     (evp_sign_method *)RSA_sign + ENCLAVE_OFFSET, \
-                                (evp_verify_method *)RSA_verify + ENCLAVE_OFFSET, \
+#   define EVP_PKEY_RSA_method     (evp_sign_method *)RSA_sign, \
+                                (evp_verify_method *)RSA_verify, \
                                 {EVP_PKEY_RSA,EVP_PKEY_RSA2,0,0}
 #   define EVP_PKEY_RSA_ASN1_OCTET_STRING_method \
                                 (evp_sign_method *)RSA_sign_ASN1_OCTET_STRING, \

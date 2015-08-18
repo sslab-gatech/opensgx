@@ -112,12 +112,12 @@ int main(int argc, char *argv[])
     i = 1;
     while (*P != NULL) {
 # ifdef CHARSET_EBCDIC
-        ebcdic2ascii((char *)*P, (char *)*P, strlen((char *)*P));
+        ebcdic2ascii((char *)*P, (char *)*P, sgx_strlen((char *)*P));
 # endif
-        EVP_Digest(&(P[0][0]), strlen((char *)*P), md, NULL, EVP_ripemd160(),
+        EVP_Digest(&(P[0][0]), sgx_strlen((char *)*P), md, NULL, EVP_ripemd160(),
                    NULL);
         p = pt(md);
-        if (strcmp(p, (char *)*R) != 0) {
+        if (sgx_strcmp(p, (char *)*R) != 0) {
             printf("error calculating RIPEMD160 on '%s'\n", *P);
             printf("got %s instead of %s\n", p, *R);
             err++;

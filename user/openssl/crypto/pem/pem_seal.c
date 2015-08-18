@@ -107,7 +107,7 @@ int PEM_SealInit(PEM_ENCODE_SEAL_CTX *ctx, EVP_CIPHER *type, EVP_MD *md_type,
         j = EVP_EncodeBlock((unsigned char *)s, ek[i],
                             RSA_size(pubk[i]->pkey.rsa));
         ekl[i] = j;
-        memcpy(ek[i], s, j + 1);
+        sgx_memcpy(ek[i], s, j + 1);
     }
 
     ret = npubk;

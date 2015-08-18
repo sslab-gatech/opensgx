@@ -931,27 +931,27 @@ const EVP_PKEY_ASN1_METHOD rsa_asn1_meths[] = {
      "RSA",
      "OpenSSL RSA method",
 
-     rsa_pub_decode + ENCLAVE_OFFSET,
-     rsa_pub_encode + ENCLAVE_OFFSET,
-     rsa_pub_cmp + ENCLAVE_OFFSET,
-     rsa_pub_print + ENCLAVE_OFFSET,
+     rsa_pub_decode,
+     rsa_pub_encode,
+     rsa_pub_cmp,
+     rsa_pub_print,
 
-     rsa_priv_decode + ENCLAVE_OFFSET,
-     rsa_priv_encode + ENCLAVE_OFFSET,
-     rsa_priv_print + ENCLAVE_OFFSET,
+     rsa_priv_decode,
+     rsa_priv_encode,
+     rsa_priv_print,
 
-     int_rsa_size + ENCLAVE_OFFSET,
-     rsa_bits + ENCLAVE_OFFSET,
+     int_rsa_size,
+     rsa_bits,
 
      0, 0, 0, 0, 0, 0,
 
-     rsa_sig_print + ENCLAVE_OFFSET,
-     int_rsa_free + ENCLAVE_OFFSET,
-     rsa_pkey_ctrl + ENCLAVE_OFFSET,
-     old_rsa_priv_decode + ENCLAVE_OFFSET,
-     old_rsa_priv_encode + ENCLAVE_OFFSET,
-     rsa_item_verify + ENCLAVE_OFFSET,
-     rsa_item_sign + ENCLAVE_OFFSET},
+     rsa_sig_print,
+     int_rsa_free,
+     rsa_pkey_ctrl,
+     old_rsa_priv_decode,
+     old_rsa_priv_encode,
+     rsa_item_verify,
+     rsa_item_sign},
 
     {
      EVP_PKEY_RSA2,

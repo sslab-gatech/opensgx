@@ -18,6 +18,7 @@
  */
 #include "config.h"
 #include "qemu-common.h"
+#include "tcg-plugin.h"
 #ifdef CONFIG_USER_ONLY
 #include <stdlib.h>
 #include <stdio.h>
@@ -1407,6 +1408,8 @@ void gdb_exit(CPUArchState *env, int code)
   GDBState *s;
   char buf[4];
 
+  if(guest_ins_count == 1) tcg_plugin_cpus_stopped();
+
   s = gdbserver_state;
   if (!s) {
       return;
@@ -1495,6 +1498,8 @@ void gdb_signalled(CPUArchState *env, int sig)
 {
     GDBState *s;
     char buf[4];
+
+    if(guest_ins_count == 1) tcg_plugin_cpus_stopped();
 
     s = gdbserver_state;
     if (gdbserver_fd < 0 || s->fd < 0) {

@@ -422,9 +422,9 @@ void CRYPTO_set_add_lock_callback(int (*func) (int *num, int mount, int type,
 }
 
 /*
- * the memset() here and in set_pointer() seem overkill, but for the sake of
+ * the sgx_memset() here and in set_pointer() seem overkill, but for the sake of
  * CRYPTO_THREADID_cmp() this avoids any platform silliness that might cause
- * two "equal" THREADID structs to not be memcmp()-identical.
+ * two "equal" THREADID structs to not be sgx_memcmp()-identical.
  */
 void CRYPTO_THREADID_set_numeric(CRYPTO_THREADID *id, unsigned long val)
 {
@@ -706,7 +706,7 @@ void OPENSSL_cpuid_setup(void)
             vec = OPENSSL_ia32_cpuid(OPENSSL_ia32cap_P);
 
         OPENSSL_ia32cap_P[2] = 0;
-        if ((env = strchr(env, ':'))) {
+        if ((env = sgx_strchr(env, ':'))) {
             unsigned int vecx;
             env++;
             off = (env[0] == '~') ? 1 : 0;
@@ -898,7 +898,7 @@ void OPENSSL_showfatal(const char *fmta, ...)
     else
         do {
             int keepgoing;
-            size_t len_0 = strlen(fmta) + 1, i;
+            size_t len_0 = sgx_strlen(fmta) + 1, i;
             WCHAR *fmtw;
 
             fmtw = (WCHAR *)alloca(len_0 * sizeof(WCHAR));

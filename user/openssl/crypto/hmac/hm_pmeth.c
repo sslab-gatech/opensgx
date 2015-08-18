@@ -210,11 +210,11 @@ static int pkey_hmac_ctrl_str(EVP_PKEY_CTX *ctx,
     if (!value) {
         return 0;
     }
-    if (!strcmp(type, "key")) {
+    if (!sgx_strcmp(type, "key")) {
         void *p = (void *)value;
         return pkey_hmac_ctrl(ctx, EVP_PKEY_CTRL_SET_MAC_KEY, -1, p);
     }
-    if (!strcmp(type, "hexkey")) {
+    if (!sgx_strcmp(type, "hexkey")) {
         unsigned char *key;
         int r;
         long keylen;

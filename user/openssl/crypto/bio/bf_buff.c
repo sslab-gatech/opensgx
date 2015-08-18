@@ -158,7 +158,7 @@ static int buffer_read(BIO *b, char *out, int outl)
     if (i != 0) {
         if (i > outl)
             i = outl;
-        memcpy(out, &(ctx->ibuf[ctx->ibuf_off]), i);
+        sgx_memcpy(out, &(ctx->ibuf[ctx->ibuf_off]), i);
         ctx->ibuf_off += i;
         ctx->ibuf_len -= i;
         num += i;
@@ -225,7 +225,7 @@ static int buffer_write(BIO *b, const char *in, int inl)
     i = ctx->obuf_size - (ctx->obuf_len + ctx->obuf_off);
     /* add to buffer and return */
     if (i >= inl) {
-        memcpy(&(ctx->obuf[ctx->obuf_off + ctx->obuf_len]), in, inl);
+        sgx_memcpy(&(ctx->obuf[ctx->obuf_off + ctx->obuf_len]), in, inl);
         ctx->obuf_len += inl;
         return (num + inl);
     }
@@ -233,7 +233,7 @@ static int buffer_write(BIO *b, const char *in, int inl)
     /* stuff already in buffer, so add to it first, then flush */
     if (ctx->obuf_len != 0) {
         if (i > 0) {            /* lets fill it up if we can */
-            memcpy(&(ctx->obuf[ctx->obuf_off + ctx->obuf_len]), in, i);
+            sgx_memcpy(&(ctx->obuf[ctx->obuf_off + ctx->obuf_len]), in, i);
             in += i;
             inl -= i;
             num += i;
@@ -345,7 +345,7 @@ static long buffer_ctrl(BIO *b, int cmd, long num, void *ptr)
         }
         ctx->ibuf_off = 0;
         ctx->ibuf_len = (int)num;
-        memcpy(ctx->ibuf, ptr, (int)num);
+        sgx_memcpy(ctx->ibuf, ptr, (int)num);
         ret = 1;
         break;
     case BIO_C_SET_BUFF_SIZE:
@@ -513,5 +513,5 @@ static int buffer_gets(BIO *b, char *buf, int size)
 
 static int buffer_puts(BIO *b, const char *str)
 {
-    return (buffer_write(b, str, strlen(str)));
+    return (buffer_write(b, str, sgx_strlen(str)));
 }

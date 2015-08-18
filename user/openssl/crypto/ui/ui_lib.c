@@ -200,7 +200,7 @@ static int general_allocate_boolean(UI *ui,
         UIerr(UI_F_GENERAL_ALLOCATE_BOOLEAN, ERR_R_PASSED_NULL_PARAMETER);
     } else {
         for (p = ok_chars; *p; p++) {
-            if (strchr(cancel_chars, *p)) {
+            if (sgx_strchr(cancel_chars, *p)) {
                 UIerr(UI_F_GENERAL_ALLOCATE_BOOLEAN,
                       UI_R_COMMON_OK_AND_CANCEL_CHARACTERS);
             }
@@ -409,9 +409,9 @@ char *UI_construct_prompt(UI *ui, const char *object_desc,
 
         if (object_desc == NULL)
             return NULL;
-        len = sizeof(prompt1) - 1 + strlen(object_desc);
+        len = sizeof(prompt1) - 1 + sgx_strlen(object_desc);
         if (object_name)
-            len += sizeof(prompt2) - 1 + strlen(object_name);
+            len += sizeof(prompt2) - 1 + sgx_strlen(object_name);
         len += sizeof(prompt3) - 1;
 
         prompt = (char *)OPENSSL_malloc(len + 1);
@@ -802,7 +802,7 @@ int UI_get_result_maxsize(UI_STRING *uis)
 
 int UI_set_result(UI *ui, UI_STRING *uis, const char *result)
 {
-    int l = strlen(result);
+    int l = sgx_strlen(result);
 
     ui->flags &= ~UI_FLAG_REDOABLE;
 
@@ -855,11 +855,11 @@ int UI_set_result(UI *ui, UI_STRING *uis, const char *result)
 
             uis->result_buf[0] = '\0';
             for (p = result; *p; p++) {
-                if (strchr(uis->_.boolean_data.ok_chars, *p)) {
+                if (sgx_strchr(uis->_.boolean_data.ok_chars, *p)) {
                     uis->result_buf[0] = uis->_.boolean_data.ok_chars[0];
                     break;
                 }
-                if (strchr(uis->_.boolean_data.cancel_chars, *p)) {
+                if (sgx_strchr(uis->_.boolean_data.cancel_chars, *p)) {
                     uis->result_buf[0] = uis->_.boolean_data.cancel_chars[0];
                     break;
                 }

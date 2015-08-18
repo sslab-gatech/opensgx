@@ -1,3 +1,4 @@
+REMOTE ATTESTATION ==================================================================
 Hey~ Mingwei :)
 use this test case for your remote attestation implementation..
 
@@ -12,3 +13,14 @@ recv and send back to back. Make sure that process has some waits before calling
 to make other process be ready to recv.
 check non_enclave/network_nonEnc & test/simple_network :)
 
+RDRAND==============================================================================
+Local hack for RDRAND COMPLETE
+Use rdrand test case in this dir...
+e.g.) ../qemu-x86-64 rdrand
+It will get the random values from the hardware based random number pool
+that is /dev/random ...
+
+!!!SO FREQUENTLY CALL RDRAND INSTRUCTION COULD EXHAUSE YOUR PC'S ENTROPY 
+!!!DO NOT CALL THAT INSTRUCTION CONTINUOSLY WITHOUT GENERATING ENTROPY...
+
+TODO: WILL FIX ABOVE PROBELM SOON BUT IT SEEMS WORK WELL NOW..

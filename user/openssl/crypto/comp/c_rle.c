@@ -4,6 +4,8 @@
 #include <openssl/objects.h>
 #include <openssl/comp.h>
 
+#include "../sgx.h"
+
 static int rle_compress_block(COMP_CTX *ctx, unsigned char *out,
                               unsigned int olen, unsigned char *in,
                               unsigned int ilen);
@@ -39,7 +41,7 @@ static int rle_compress_block(COMP_CTX *ctx, unsigned char *out,
     }
 
     *(out++) = 0;
-    memcpy(out, in, ilen);
+    sgx_memcpy(out, in, ilen);
     return (ilen + 1);
 }
 
@@ -56,7 +58,7 @@ static int rle_expand_block(COMP_CTX *ctx, unsigned char *out,
 
     i = *(in++);
     if (i == 0) {
-        memcpy(out, in, ilen - 1);
+        sgx_memcpy(out, in, ilen - 1);
     }
     return (ilen - 1);
 }

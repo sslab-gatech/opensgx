@@ -62,8 +62,6 @@
 #include "cryptlib.h"
 #include <openssl/bio.h>
 
-#include "../sgx.h"
-
 #ifndef OPENSSL_NO_SOCK
 
 # ifdef OPENSSL_SYS_WIN16
@@ -442,7 +440,7 @@ static int acpt_puts(BIO *bp, const char *str)
 {
     int n, ret;
 
-    n = strlen(str);
+    n = sgx_strlen(str);
     ret = acpt_write(bp, str, n);
     return (ret);
 }

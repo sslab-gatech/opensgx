@@ -167,12 +167,12 @@ static int ssleay_rand_pseudo_bytes(unsigned char *buf, int num);
 static int ssleay_rand_status(void);
 
 RAND_METHOD rand_ssleay_meth = {
-    ssleay_rand_seed + ENCLAVE_OFFSET,
-    ssleay_rand_nopseudo_bytes + ENCLAVE_OFFSET,
-    ssleay_rand_cleanup + ENCLAVE_OFFSET,
-    ssleay_rand_add + ENCLAVE_OFFSET,
-    ssleay_rand_pseudo_bytes + ENCLAVE_OFFSET,
-    ssleay_rand_status + ENCLAVE_OFFSET
+    ssleay_rand_seed,
+    ssleay_rand_nopseudo_bytes,
+    ssleay_rand_cleanup,
+    ssleay_rand_add,
+    ssleay_rand_pseudo_bytes,
+    ssleay_rand_status
 };
 
 RAND_METHOD *RAND_SSLeay(void)
@@ -322,9 +322,8 @@ static void ssleay_rand_add(const void *buf, int num, double add)
         md[k] ^= local_md[k];
     }
 
-//TODO : accessing entropy causes problem.. why?
-//    if (entropy < ENTROPY_NEEDED) // stop counting when we have enough
-//        entropy += add;
+    if (entropy < ENTROPY_NEEDED) // stop counting when we have enough
+        entropy += add;
 
     if (!do_not_lock)
         CRYPTO_w_unlock(CRYPTO_LOCK_RAND);
@@ -339,8 +338,6 @@ static void ssleay_rand_seed(const void *buf, int num)
     ssleay_rand_add(buf, num, (double)num);
 }
 
-//TODO: Temporarily disable getpid()
-#define GETPID_IS_MEANINGLESS
 int ssleay_rand_bytes(unsigned char *buf, int num, int pseudo, int lock)
 {
     static volatile int stirred_pool = 0;
@@ -351,7 +348,10 @@ int ssleay_rand_bytes(unsigned char *buf, int num, int pseudo, int lock)
     unsigned char local_md[MD_DIGEST_LENGTH];
     EVP_MD_CTX m;
 #ifndef GETPID_IS_MEANINGLESS
-    pid_t curr_pid = getpid();
+//XXX change getpid as sgx_time
+//    pid_t curr_pid = getpid();
+    pid_t curr_pid;
+    sgx_time((time_t *)&curr_pid);
 #endif
     int do_stir_pool = 0;
 
@@ -390,7 +390,6 @@ int ssleay_rand_bytes(unsigned char *buf, int num, int pseudo, int lock)
      * are fed into the hash function and the results are kept in the
      * global 'md'.
      */
-#if 0
     if (lock)
         CRYPTO_w_lock(CRYPTO_LOCK_RAND);
 
@@ -399,19 +398,19 @@ int ssleay_rand_bytes(unsigned char *buf, int num, int pseudo, int lock)
     CRYPTO_THREADID_current(&locking_threadid);
     CRYPTO_w_unlock(CRYPTO_LOCK_RAND2);
     crypto_lock_rand = 1;
-#endif
 
     if (!initialized) {
-//TODO : disable getpid
-//        RAND_poll();
+        // XXX: Workaround for SGX
+        RAND_poll();
         initialized = 1;
     }
 
     if (!stirred_pool)
         do_stir_pool = 1;
 
-//TODO : entropy related one
-#if 0
+    // XXX: Workaround for SGX
+    entropy = 100;
+
     ok = (entropy >= ENTROPY_NEEDED);
     if (!ok) {
         /*
@@ -429,7 +428,6 @@ int ssleay_rand_bytes(unsigned char *buf, int num, int pseudo, int lock)
         if (entropy < 0)
             entropy = 0;
     }
-#endif
 
     if (do_stir_pool) {
         /*

@@ -25,6 +25,7 @@
 #include "qemu-common.h"
 #include "cpu.h"
 #include "tcg.h"
+#include "tcg-plugin.h"
 #include "hw/hw.h"
 #include "hw/qdev.h"
 #include "qemu/osdep.h"
@@ -456,6 +457,8 @@ static const VMStateDescription vmstate_cpu_common_exception_index = {
     }
 };
 
+
+
 const VMStateDescription vmstate_cpu_common = {
     .name = "cpu_common",
     .version_id = 1,
@@ -749,6 +752,8 @@ void cpu_abort(CPUState *cpu, const char *fmt, ...)
 {
     va_list ap;
     va_list ap2;
+
+    if(guest_ins_count == 1) tcg_plugin_cpus_stopped();
 
     va_start(ap, fmt);
     va_copy(ap2, ap);

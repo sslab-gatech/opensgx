@@ -103,25 +103,25 @@ int MAIN(int argc, char **argv)
     OpenSSL_add_all_algorithms();
     args = argv + 1;
     while (!badarg && *args && *args[0] == '-') {
-        if (!strcmp(*args, "-outform")) {
+        if (!sgx_strcmp(*args, "-outform")) {
             if (args[1]) {
                 args++;
                 outformat = str2fmt(*args);
             } else
                 badarg = 1;
-        } else if (!strcmp(*args, "-pass")) {
+        } else if (!sgx_strcmp(*args, "-pass")) {
             if (!args[1])
                 goto bad;
             passarg = *(++args);
         }
 #ifndef OPENSSL_NO_ENGINE
-        else if (strcmp(*args, "-engine") == 0) {
+        else if (sgx_strcmp(*args, "-engine") == 0) {
             if (!args[1])
                 goto bad;
             e = setup_engine(bio_err, *(++args), 0);
         }
 #endif
-        else if (!strcmp(*args, "-paramfile")) {
+        else if (!sgx_strcmp(*args, "-paramfile")) {
             if (!args[1])
                 goto bad;
             args++;
@@ -129,18 +129,18 @@ int MAIN(int argc, char **argv)
                 goto bad;
             if (!init_keygen_file(bio_err, &ctx, *args, e))
                 goto end;
-        } else if (!strcmp(*args, "-out")) {
+        } else if (!sgx_strcmp(*args, "-out")) {
             if (args[1]) {
                 args++;
                 outfile = *args;
             } else
                 badarg = 1;
-        } else if (strcmp(*args, "-algorithm") == 0) {
+        } else if (sgx_strcmp(*args, "-algorithm") == 0) {
             if (!args[1])
                 goto bad;
             if (!init_gen_str(bio_err, &ctx, *(++args), e, do_param))
                 goto end;
-        } else if (strcmp(*args, "-pkeyopt") == 0) {
+        } else if (sgx_strcmp(*args, "-pkeyopt") == 0) {
             if (!args[1])
                 goto bad;
             if (!ctx) {
@@ -151,11 +151,11 @@ int MAIN(int argc, char **argv)
                 ERR_print_errors(bio_err);
                 goto end;
             }
-        } else if (strcmp(*args, "-genparam") == 0) {
+        } else if (sgx_strcmp(*args, "-genparam") == 0) {
             if (ctx)
                 goto bad;
             do_param = 1;
-        } else if (strcmp(*args, "-text") == 0)
+        } else if (sgx_strcmp(*args, "-text") == 0)
             text = 1;
         else {
             cipher = EVP_get_cipherbyname(*args + 1);

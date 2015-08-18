@@ -58,6 +58,8 @@
 
 #include "des_locl.h"
 
+#include "../sgx.h"
+
 /* HAS BUGS! DON'T USE - this is only present for use in des.c */
 void DES_3cbc_encrypt(DES_cblock *input, DES_cblock *output, long length,
                       DES_key_schedule ks1, DES_key_schedule ks2,
@@ -71,25 +73,25 @@ void DES_3cbc_encrypt(DES_cblock *input, DES_cblock *output, long length,
         DES_cbc_encrypt((unsigned char *)input,
                         (unsigned char *)output, length, &ks1, iv1, enc);
         if (length >= sizeof(DES_cblock))
-            memcpy(niv1, output[off], sizeof(DES_cblock));
+            sgx_memcpy(niv1, output[off], sizeof(DES_cblock));
         DES_cbc_encrypt((unsigned char *)output,
                         (unsigned char *)output, l8, &ks2, iv1, !enc);
         DES_cbc_encrypt((unsigned char *)output,
                         (unsigned char *)output, l8, &ks1, iv2, enc);
         if (length >= sizeof(DES_cblock))
-            memcpy(niv2, output[off], sizeof(DES_cblock));
+            sgx_memcpy(niv2, output[off], sizeof(DES_cblock));
     } else {
         if (length >= sizeof(DES_cblock))
-            memcpy(niv2, input[off], sizeof(DES_cblock));
+            sgx_memcpy(niv2, input[off], sizeof(DES_cblock));
         DES_cbc_encrypt((unsigned char *)input,
                         (unsigned char *)output, l8, &ks1, iv2, enc);
         DES_cbc_encrypt((unsigned char *)output,
                         (unsigned char *)output, l8, &ks2, iv1, !enc);
         if (length >= sizeof(DES_cblock))
-            memcpy(niv1, output[off], sizeof(DES_cblock));
+            sgx_memcpy(niv1, output[off], sizeof(DES_cblock));
         DES_cbc_encrypt((unsigned char *)output,
                         (unsigned char *)output, length, &ks1, iv1, enc);
     }
-    memcpy(*iv1, niv1, sizeof(DES_cblock));
-    memcpy(*iv2, niv2, sizeof(DES_cblock));
+    sgx_memcpy(*iv1, niv1, sizeof(DES_cblock));
+    sgx_memcpy(*iv2, niv2, sizeof(DES_cblock));
 }

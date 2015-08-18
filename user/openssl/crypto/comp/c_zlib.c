@@ -271,7 +271,7 @@ static int zlib_compress_block(COMP_CTX *ctx, unsigned char *out,
     }
     if (clear) {
         out[0] = 0;
-        memcpy(&(out[1]), in, ilen);
+        sgx_memcpy(&(out[1]), in, ilen);
         l = ilen + 1;
     }
 #  ifdef DEBUG_ZLIB
@@ -294,7 +294,7 @@ static int zlib_expand_block(COMP_CTX *ctx, unsigned char *out,
         if (i != Z_OK)
             return (-1);
     } else {
-        memcpy(out, &(in[1]), ilen - 1);
+        sgx_memcpy(out, &(in[1]), ilen - 1);
         l = ilen - 1;
     }
 #  ifdef DEBUG_ZLIB

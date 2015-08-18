@@ -149,7 +149,7 @@ int tls1_cbc_remove_padding(const SSL *s,
      */
     if ((s->options & SSL_OP_TLS_BLOCK_PADDING_BUG) && !s->expand) {
         /* First packet is even in size, so check */
-        if ((memcmp(s->s3->read_sequence, "\0\0\0\0\0\0\0\0", 8) == 0) &&
+        if ((sgx_memcmp(s->s3->read_sequence, "\0\0\0\0\0\0\0\0", 8) == 0) &&
             !(padding_length & 1)) {
             s->s3->flags |= TLS1_FLAGS_TLS_PADDING_BUG;
         }
@@ -267,7 +267,7 @@ void ssl3_cbc_copy_mac(unsigned char *out,
     div_spoiler <<= (sizeof(div_spoiler) - 1) * 8;
     rotate_offset = (div_spoiler + mac_start - scan_start) % md_size;
 
-    memset(rotated_mac, 0, md_size);
+    sgx_memset(rotated_mac, 0, md_size);
     for (i = scan_start, j = 0; i < orig_len; i++) {
         unsigned char mac_started = constant_time_ge_8(i, mac_start);
         unsigned char mac_ended = constant_time_ge_8(i, mac_end);
@@ -286,7 +286,7 @@ void ssl3_cbc_copy_mac(unsigned char *out,
         rotate_offset &= constant_time_lt(rotate_offset, md_size);
     }
 #else
-    memset(out, 0, md_size);
+    sgx_memset(out, 0, md_size);
     rotate_offset = md_size - rotate_offset;
     rotate_offset &= constant_time_lt(rotate_offset, md_size);
     for (i = 0; i < md_size; i++) {
@@ -614,9 +614,9 @@ void ssl3_cbc_digest_record(const EVP_MD_CTX *ctx,
          * single block.
          */
         bits += 8 * md_block_size;
-        memset(hmac_pad, 0, md_block_size);
+        sgx_memset(hmac_pad, 0, md_block_size);
         OPENSSL_assert(mac_secret_length <= sizeof(hmac_pad));
-        memcpy(hmac_pad, mac_secret, mac_secret_length);
+        sgx_memcpy(hmac_pad, mac_secret, mac_secret_length);
         for (i = 0; i < md_block_size; i++)
             hmac_pad[i] ^= 0x36;
 
@@ -624,13 +624,13 @@ void ssl3_cbc_digest_record(const EVP_MD_CTX *ctx,
     }
 
     if (length_is_big_endian) {
-        memset(length_bytes, 0, md_length_size - 4);
+        sgx_memset(length_bytes, 0, md_length_size - 4);
         length_bytes[md_length_size - 4] = (unsigned char)(bits >> 24);
         length_bytes[md_length_size - 3] = (unsigned char)(bits >> 16);
         length_bytes[md_length_size - 2] = (unsigned char)(bits >> 8);
         length_bytes[md_length_size - 1] = (unsigned char)bits;
     } else {
-        memset(length_bytes, 0, md_length_size);
+        sgx_memset(length_bytes, 0, md_length_size);
         length_bytes[md_length_size - 5] = (unsigned char)(bits >> 24);
         length_bytes[md_length_size - 6] = (unsigned char)(bits >> 16);
         length_bytes[md_length_size - 7] = (unsigned char)(bits >> 8);
@@ -646,22 +646,22 @@ void ssl3_cbc_digest_record(const EVP_MD_CTX *ctx,
              */
             unsigned overhang = header_length - md_block_size;
             md_transform(md_state.c, header);
-            memcpy(first_block, header + md_block_size, overhang);
-            memcpy(first_block + overhang, data, md_block_size - overhang);
+            sgx_memcpy(first_block, header + md_block_size, overhang);
+            sgx_memcpy(first_block + overhang, data, md_block_size - overhang);
             md_transform(md_state.c, first_block);
             for (i = 1; i < k / md_block_size - 1; i++)
                 md_transform(md_state.c, data + md_block_size * i - overhang);
         } else {
             /* k is a multiple of md_block_size. */
-            memcpy(first_block, header, 13);
-            memcpy(first_block + 13, data, md_block_size - 13);
+            sgx_memcpy(first_block, header, 13);
+            sgx_memcpy(first_block + 13, data, md_block_size - 13);
             md_transform(md_state.c, first_block);
             for (i = 1; i < k / md_block_size; i++)
                 md_transform(md_state.c, data + md_block_size * i - 13);
         }
     }
 
-    memset(mac_out, 0, sizeof(mac_out));
+    sgx_memset(mac_out, 0, sizeof(mac_out));
 
     /*
      * We now process the final hash blocks. For each block, we construct it
@@ -726,7 +726,7 @@ void ssl3_cbc_digest_record(const EVP_MD_CTX *ctx,
     EVP_DigestInit_ex(&md_ctx, ctx->digest, NULL /* engine */ );
     if (is_sslv3) {
         /* We repurpose |hmac_pad| to contain the SSLv3 pad2 block. */
-        memset(hmac_pad, 0x5c, sslv3_pad_length);
+        sgx_memset(hmac_pad, 0x5c, sslv3_pad_length);
 
         EVP_DigestUpdate(&md_ctx, mac_secret, mac_secret_length);
         EVP_DigestUpdate(&md_ctx, hmac_pad, sslv3_pad_length);

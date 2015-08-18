@@ -363,7 +363,7 @@ int MAIN(int argc, char **argv)
                 goto skip_arg_loop;
             if ((verbose = strlen(*argv + 1)) > 4)
                 goto skip_arg_loop;
-        } else if (strcmp(*argv, "-c") == 0)
+        } else if (sgx_strcmp(*argv, "-c") == 0)
             list_cap = 1;
         else if (strncmp(*argv, "-t", 2) == 0) {
             test_avail = 1;
@@ -371,20 +371,20 @@ int MAIN(int argc, char **argv)
                 goto skip_arg_loop;
             if ((test_avail_noise = strlen(*argv + 1) - 1) > 1)
                 goto skip_arg_loop;
-        } else if (strcmp(*argv, "-pre") == 0) {
+        } else if (sgx_strcmp(*argv, "-pre") == 0) {
             argc--;
             argv++;
             if (argc == 0)
                 goto skip_arg_loop;
             sk_OPENSSL_STRING_push(pre_cmds, *argv);
-        } else if (strcmp(*argv, "-post") == 0) {
+        } else if (sgx_strcmp(*argv, "-post") == 0) {
             argc--;
             argv++;
             if (argc == 0)
                 goto skip_arg_loop;
             sk_OPENSSL_STRING_push(post_cmds, *argv);
         } else if ((strncmp(*argv, "-h", 2) == 0) ||
-                   (strcmp(*argv, "-?") == 0))
+                   (sgx_strcmp(*argv, "-?") == 0))
             goto skip_arg_loop;
         else
             sk_OPENSSL_STRING_push(engines, *argv);
@@ -416,7 +416,7 @@ int MAIN(int argc, char **argv)
              */
             BIO_printf(bio_out, "(%s) %s\n", id, name);
             util_do_cmds(e, pre_cmds, bio_out, indent);
-            if (strcmp(ENGINE_get_id(e), id) != 0) {
+            if (sgx_strcmp(ENGINE_get_id(e), id) != 0) {
                 BIO_printf(bio_out, "Loaded: (%s) %s\n",
                            ENGINE_get_id(e), ENGINE_get_name(e));
             }

@@ -88,8 +88,9 @@ EVP_PKEY *PEM_read_bio_PrivateKey(BIO *bp, EVP_PKEY **x, pem_password_cb *cb,
     if (!PEM_bytes_read_bio(&data, &len, &nm, PEM_STRING_EVP_PKEY, bp, cb, u))
         return NULL;
     p = data;
+    sgx_print_bytes(p, len);
 
-    if (strcmp(nm, PEM_STRING_PKCS8INF) == 0) {
+    if (sgx_strcmp(nm, PEM_STRING_PKCS8INF) == 0) {
         PKCS8_PRIV_KEY_INFO *p8inf;
         p8inf = d2i_PKCS8_PRIV_KEY_INFO(NULL, &p, len);
         if (!p8inf)
@@ -101,7 +102,7 @@ EVP_PKEY *PEM_read_bio_PrivateKey(BIO *bp, EVP_PKEY **x, pem_password_cb *cb,
             *x = ret;
         }
         PKCS8_PRIV_KEY_INFO_free(p8inf);
-    } else if (strcmp(nm, PEM_STRING_PKCS8) == 0) {
+    } else if (sgx_strcmp(nm, PEM_STRING_PKCS8) == 0) {
         PKCS8_PRIV_KEY_INFO *p8inf;
         X509_SIG *p8;
         int klen;
@@ -137,8 +138,9 @@ EVP_PKEY *PEM_read_bio_PrivateKey(BIO *bp, EVP_PKEY **x, pem_password_cb *cb,
         ret = d2i_PrivateKey(ameth->pkey_id, x, &p, len);
     }
  p8err:
-    if (ret == NULL)
+    if (ret == NULL) {
         PEMerr(PEM_F_PEM_READ_BIO_PRIVATEKEY, ERR_R_ASN1_LIB);
+    }
  err:
     OPENSSL_free(nm);
     OPENSSL_cleanse(data, len);
@@ -261,7 +263,7 @@ DH *PEM_read_bio_DHparams(BIO *bp, DH **x, pem_password_cb *cb, void *u)
         return NULL;
     p = data;
 
-    if (!strcmp(nm, PEM_STRING_DHXPARAMS))
+    if (!sgx_strcmp(nm, PEM_STRING_DHXPARAMS))
         ret = d2i_DHxparams(x, &p, len);
     else
         ret = d2i_DHparams(x, &p, len);

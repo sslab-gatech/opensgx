@@ -68,11 +68,14 @@ static int ssl_set_cert(CERT *c, X509 *x509);
 static int ssl_set_pkey(CERT *c, EVP_PKEY *pkey);
 int SSL_use_certificate(SSL *ssl, X509 *x)
 {
+    //sgx_debug("1\n");
     if (x == NULL) {
+        sgx_debug("c 1\n");
         SSLerr(SSL_F_SSL_USE_CERTIFICATE, ERR_R_PASSED_NULL_PARAMETER);
         return (0);
     }
     if (!ssl_cert_inst(&ssl->cert)) {
+        sgx_debug("c 2\n");
         SSLerr(SSL_F_SSL_USE_CERTIFICATE, ERR_R_MALLOC_FAILURE);
         return (0);
     }
@@ -430,6 +433,7 @@ static int ssl_set_cert(CERT *c, X509 *x)
     c->pkeys[i].x509 = x;
     c->key = &(c->pkeys[i]);
 
+    sgx_debug("s 3\n");
     c->valid = 0;
     return (1);
 }
@@ -899,7 +903,7 @@ int SSL_CTX_use_serverinfo(SSL_CTX *ctx, const unsigned char *serverinfo,
         SSLerr(SSL_F_SSL_CTX_USE_SERVERINFO, ERR_R_MALLOC_FAILURE);
         return 0;
     }
-    memcpy(ctx->cert->key->serverinfo, serverinfo, serverinfo_length);
+    sgx_memcpy(ctx->cert->key->serverinfo, serverinfo, serverinfo_length);
     ctx->cert->key->serverinfo_length = serverinfo_length;
 
     /*
@@ -957,12 +961,12 @@ int SSL_CTX_use_serverinfo_file(SSL_CTX *ctx, const char *file)
                 break;
         }
         /* Check that PEM name starts with "BEGIN SERVERINFO FOR " */
-        if (strlen(name) < strlen(namePrefix)) {
+        if (sgx_strlen(name) < sgx_strlen(namePrefix)) {
             SSLerr(SSL_F_SSL_CTX_USE_SERVERINFO_FILE,
                    SSL_R_PEM_NAME_TOO_SHORT);
             goto end;
         }
-        if (strncmp(name, namePrefix, strlen(namePrefix)) != 0) {
+        if (sgx_strncmp(name, namePrefix, sgx_strlen(namePrefix)) != 0) {
             SSLerr(SSL_F_SSL_CTX_USE_SERVERINFO_FILE,
                    SSL_R_PEM_NAME_BAD_PREFIX);
             goto end;
@@ -982,7 +986,7 @@ int SSL_CTX_use_serverinfo_file(SSL_CTX *ctx, const char *file)
             SSLerr(SSL_F_SSL_CTX_USE_SERVERINFO_FILE, ERR_R_MALLOC_FAILURE);
             goto end;
         }
-        memcpy(serverinfo + serverinfo_length, extension, extension_length);
+        sgx_memcpy(serverinfo + serverinfo_length, extension, extension_length);
         serverinfo_length += extension_length;
 
         OPENSSL_free(name);

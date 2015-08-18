@@ -280,7 +280,7 @@ static int des_ede_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key,
         if (mode == EVP_CIPH_CBC_MODE) {
             des_t4_key_expand(&deskey[0], &dat->ks1);
             des_t4_key_expand(&deskey[1], &dat->ks2);
-            memcpy(&dat->ks3, &dat->ks1, sizeof(dat->ks1));
+            sgx_memcpy(&dat->ks3, &dat->ks1, sizeof(dat->ks1));
             dat->stream.cbc = enc ? des_t4_ede3_cbc_encrypt :
                 des_t4_ede3_cbc_decrypt;
             return 1;
@@ -295,7 +295,7 @@ static int des_ede_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key,
     DES_set_key_unchecked(&deskey[0], &dat->ks1);
     DES_set_key_unchecked(&deskey[1], &dat->ks2);
 # endif
-    memcpy(&dat->ks3, &dat->ks1, sizeof(dat->ks1));
+    sgx_memcpy(&dat->ks3, &dat->ks1, sizeof(dat->ks1));
     return 1;
 }
 
@@ -397,7 +397,7 @@ static int des_ede3_unwrap(EVP_CIPHER_CTX *ctx, unsigned char *out,
         return -1;
     if (!out)
         return inl - 16;
-    memcpy(ctx->iv, wrap_iv, 8);
+    sgx_memcpy(ctx->iv, wrap_iv, 8);
     /* Decrypt first block which will end up as icv */
     des_ede_cbc_cipher(ctx, icv, in, 8);
     /* Decrypt central blocks */
@@ -406,7 +406,7 @@ static int des_ede3_unwrap(EVP_CIPHER_CTX *ctx, unsigned char *out,
      * des_ede_cbc_cipher is in place.
      */
     if (out == in) {
-        memmove(out, out + 8, inl - 8);
+        sgx_memmove(out, out + 8, inl - 8);
         in -= 8;
     }
     des_ede_cbc_cipher(ctx, out, in + 8, inl - 16);
@@ -441,18 +441,18 @@ static int des_ede3_wrap(EVP_CIPHER_CTX *ctx, unsigned char *out,
     if (!out)
         return inl + 16;
     /* Copy input to output buffer + 8 so we have space for IV */
-    memmove(out + 8, in, inl);
+    sgx_memmove(out + 8, in, inl);
     /* Work out ICV */
     SHA1(in, inl, sha1tmp);
-    memcpy(out + inl + 8, sha1tmp, 8);
+    sgx_memcpy(out + inl + 8, sha1tmp, 8);
     OPENSSL_cleanse(sha1tmp, SHA_DIGEST_LENGTH);
     /* Generate random IV */
     RAND_bytes(ctx->iv, 8);
-    memcpy(out, ctx->iv, 8);
+    sgx_memcpy(out, ctx->iv, 8);
     /* Encrypt everything after IV in place */
     des_ede_cbc_cipher(ctx, out + 8, out + 8, inl + 8);
     BUF_reverse(out, NULL, inl + 16);
-    memcpy(ctx->iv, wrap_iv, 8);
+    sgx_memcpy(ctx->iv, wrap_iv, 8);
     des_ede_cbc_cipher(ctx, out, out, inl + 16);
     return inl + 16;
 }

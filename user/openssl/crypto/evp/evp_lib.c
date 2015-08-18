@@ -109,7 +109,7 @@ int EVP_CIPHER_get_asn1_iv(EVP_CIPHER_CTX *c, ASN1_TYPE *type)
         if (i != (int)l)
             return (-1);
         else if (i > 0)
-            memcpy(c->iv, c->oiv, l);
+            sgx_memcpy(c->iv, c->oiv, l);
     }
     return (i);
 }

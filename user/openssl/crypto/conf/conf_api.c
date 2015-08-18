@@ -70,6 +70,8 @@
 #include <openssl/conf_api.h>
 #include "e_os.h"
 
+#include "../sgx.h"
+
 static void value_free_hash_doall_arg(CONF_VALUE *a,
                                       LHASH_OF(CONF_VALUE) *conf);
 static void value_free_stack_doall(CONF_VALUE *a);
@@ -140,7 +142,7 @@ char *_CONF_get_string(const CONF *conf, const char *section,
             v = lh_CONF_VALUE_retrieve(conf->data, &vv);
             if (v != NULL)
                 return (v->value);
-            if (strcmp(section, "ENV") == 0) {
+            if (sgx_strcmp(section, "ENV") == 0) {
                 p = getenv(name);
                 if (p != NULL)
                     return (p);
@@ -191,13 +193,13 @@ static int conf_value_cmp(const CONF_VALUE *a, const CONF_VALUE *b)
     int i;
 
     if (a->section != b->section) {
-        i = strcmp(a->section, b->section);
+        i = sgx_strcmp(a->section, b->section);
         if (i)
             return (i);
     }
 
     if ((a->name != NULL) && (b->name != NULL)) {
-        i = strcmp(a->name, b->name);
+        i = sgx_strcmp(a->name, b->name);
         return (i);
     } else if (a->name == b->name)
         return (0);
@@ -280,11 +282,11 @@ CONF_VALUE *_CONF_new_section(CONF *conf, const char *section)
         goto err;
     if ((v = OPENSSL_malloc(sizeof(CONF_VALUE))) == NULL)
         goto err;
-    i = strlen(section) + 1;
+    i = sgx_strlen(section) + 1;
     if ((v->section = OPENSSL_malloc(i)) == NULL)
         goto err;
 
-    memcpy(v->section, section, i);
+    sgx_memcpy(v->section, section, i);
     v->name = NULL;
     v->value = (char *)sk;
 

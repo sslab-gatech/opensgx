@@ -99,7 +99,7 @@ int keyUnwrapCryptoPro(gost_ctx * ctx, const unsigned char *keyExchangeKey,
     gost_key(ctx, kek_ukm);
     gost_dec(ctx, wrappedKey + 8, sessionKey, 4);
     gost_mac_iv(ctx, 32, wrappedKey, sessionKey, 32, cek_mac);
-    if (memcmp(cek_mac, wrappedKey + 40, 4)) {
+    if (sgx_memcmp(cek_mac, wrappedKey + 40, 4)) {
         return 0;
     }
     return 1;

@@ -60,8 +60,6 @@
 #include "cryptlib.h"
 #include <openssl/buffer.h>
 
-#include "../sgx.h"
-
 /*
  * LIMIT_BEFORE_EXPANSION is the maximum n such that (n+3)/3*4 < 2**31. That
  * function is applied in several functions in this file and this limit

@@ -229,7 +229,7 @@ static int ok_read(BIO *b, char *out, int outl)
             i = ctx->buf_len - ctx->buf_off;
             if (i > outl)
                 i = outl;
-            memcpy(out, &(ctx->buf[ctx->buf_off]), i);
+            sgx_memcpy(out, &(ctx->buf[ctx->buf_off]), i);
             ret += i;
             out += i;
             outl -= i;
@@ -244,7 +244,7 @@ static int ok_read(BIO *b, char *out, int outl)
                  */
                 if (ctx->buf_len_save - ctx->buf_off_save > 0) {
                     ctx->buf_len = ctx->buf_len_save - ctx->buf_off_save;
-                    memmove(ctx->buf, &(ctx->buf[ctx->buf_off_save]),
+                    sgx_memmove(ctx->buf, &(ctx->buf[ctx->buf_off_save]),
                             ctx->buf_len);
                 } else {
                     ctx->buf_len = 0;
@@ -338,7 +338,7 @@ static int ok_write(BIO *b, const char *in, int inl)
         n = (inl + ctx->buf_len > OK_BLOCK_SIZE + OK_BLOCK_BLOCK) ?
             (int)(OK_BLOCK_SIZE + OK_BLOCK_BLOCK - ctx->buf_len) : inl;
 
-        memcpy((unsigned char *)(&(ctx->buf[ctx->buf_len])),
+        sgx_memcpy((unsigned char *)(&(ctx->buf[ctx->buf_len])),
                (unsigned char *)in, n);
         ctx->buf_len += n;
         inl -= n;
@@ -492,11 +492,11 @@ static int sig_out(BIO *b)
      * particularly now EVP_MD_CTX has been restructured.
      */
     RAND_pseudo_bytes(md->md_data, md->digest->md_size);
-    memcpy(&(ctx->buf[ctx->buf_len]), md->md_data, md->digest->md_size);
+    sgx_memcpy(&(ctx->buf[ctx->buf_len]), md->md_data, md->digest->md_size);
     longswap(&(ctx->buf[ctx->buf_len]), md->digest->md_size);
     ctx->buf_len += md->digest->md_size;
 
-    if (!EVP_DigestUpdate(md, WELLKNOWN, strlen(WELLKNOWN)))
+    if (!EVP_DigestUpdate(md, WELLKNOWN, sgx_strlen(WELLKNOWN)))
         goto berr;
     if (!EVP_DigestFinal_ex(md, &(ctx->buf[ctx->buf_len]), NULL))
         goto berr;
@@ -524,20 +524,20 @@ static int sig_in(BIO *b)
 
     if (!EVP_DigestInit_ex(md, md->digest, NULL))
         goto berr;
-    memcpy(md->md_data, &(ctx->buf[ctx->buf_off]), md->digest->md_size);
+    sgx_memcpy(md->md_data, &(ctx->buf[ctx->buf_off]), md->digest->md_size);
     longswap(md->md_data, md->digest->md_size);
     ctx->buf_off += md->digest->md_size;
 
-    if (!EVP_DigestUpdate(md, WELLKNOWN, strlen(WELLKNOWN)))
+    if (!EVP_DigestUpdate(md, WELLKNOWN, sgx_strlen(WELLKNOWN)))
         goto berr;
     if (!EVP_DigestFinal_ex(md, tmp, NULL))
         goto berr;
-    ret = memcmp(&(ctx->buf[ctx->buf_off]), tmp, md->digest->md_size) == 0;
+    ret = sgx_memcmp(&(ctx->buf[ctx->buf_off]), tmp, md->digest->md_size) == 0;
     ctx->buf_off += md->digest->md_size;
     if (ret == 1) {
         ctx->sigio = 0;
         if (ctx->buf_len != ctx->buf_off) {
-            memmove(ctx->buf, &(ctx->buf[ctx->buf_off]),
+            sgx_memmove(ctx->buf, &(ctx->buf[ctx->buf_off]),
                     ctx->buf_len - ctx->buf_off);
         }
         ctx->buf_len -= ctx->buf_off;
@@ -605,7 +605,7 @@ static int block_in(BIO *b)
         goto berr;
     if (!EVP_DigestFinal_ex(md, tmp, NULL))
         goto berr;
-    if (memcmp(&(ctx->buf[tl + OK_BLOCK_BLOCK]), tmp, md->digest->md_size) ==
+    if (sgx_memcmp(&(ctx->buf[tl + OK_BLOCK_BLOCK]), tmp, md->digest->md_size) ==
         0) {
         /* there might be parts from next block lurking around ! */
         ctx->buf_off_save = tl + OK_BLOCK_BLOCK + md->digest->md_size;

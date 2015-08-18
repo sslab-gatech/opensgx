@@ -100,7 +100,7 @@ int PKCS5_pbe_set0_algor(X509_ALGOR *algor, int alg, int iter,
     }
     sstr = ASN1_STRING_data(pbe->salt);
     if (salt)
-        memcpy(sstr, salt, saltlen);
+        sgx_memcpy(sstr, salt, saltlen);
     else if (RAND_pseudo_bytes(sstr, saltlen) < 0)
         goto err;
 

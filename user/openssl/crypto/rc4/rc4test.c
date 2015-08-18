@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
         RC4_set_key(&key, keys[i][0], &(keys[i][1]));
         sgx_memset(obuf, 0x00, sizeof(obuf));
         RC4(&key, data_len[i], &(data[i][0]), obuf);
-        if (memcmp(obuf, output[i], data_len[i] + 1) != 0) {
+        if (sgx_memcmp(obuf, output[i], data_len[i] + 1) != 0) {
             printf("error calculating RC4\n");
             printf("output:");
             for (j = 0; j < data_len[i] + 1; j++)
@@ -153,7 +153,7 @@ int main(int argc, char *argv[])
         RC4_set_key(&key, keys[3][0], &(keys[3][1]));
         sgx_memset(obuf, 0x00, sizeof(obuf));
         RC4(&key, i, &(data[3][0]), obuf);
-        if ((memcmp(obuf, output[3], i) != 0) || (obuf[i] != 0)) {
+        if ((sgx_memcmp(obuf, output[3], i) != 0) || (obuf[i] != 0)) {
             printf("error in RC4 length processing\n");
             printf("output:");
             for (j = 0; j < i + 1; j++)
@@ -177,7 +177,7 @@ int main(int argc, char *argv[])
         sgx_memset(obuf, 0x00, sizeof(obuf));
         RC4(&key, i, &(data[3][0]), obuf);
         RC4(&key, data_len[3] - i, &(data[3][i]), &(obuf[i]));
-        if (memcmp(obuf, output[3], data_len[3] + 1) != 0) {
+        if (sgx_memcmp(obuf, output[3], data_len[3] + 1) != 0) {
             printf("error in RC4 multi-call processing\n");
             printf("output:");
             for (j = 0; j < data_len[3] + 1; j++)
@@ -213,7 +213,7 @@ int main(int argc, char *argv[])
         }
         SHA1_Final(md, &c);
 
-        if (memcmp(md, expected, sizeof(md))) {
+        if (sgx_memcmp(md, expected, sizeof(md))) {
             printf("error in RC4 bulk test\n");
             printf("output:");
             for (j = 0; j < (int)sizeof(md); j++)

@@ -92,7 +92,7 @@ char *X509_NAME_oneline(X509_NAME *a, char *buf, int len)
             buf = b->data;
             OPENSSL_free(b);
         }
-        strncpy(buf, "NO X509_NAME", len);
+        sgx_strncpy(buf, "NO X509_NAME", len);
         buf[len - 1] = '\0';
         return buf;
     }
@@ -106,7 +106,7 @@ char *X509_NAME_oneline(X509_NAME *a, char *buf, int len)
             i2t_ASN1_OBJECT(tmp_buf, sizeof(tmp_buf), ne->object);
             s = tmp_buf;
         }
-        l1 = strlen(s);
+        l1 = sgx_strlen(s);
 
         type = ne->value->type;
         num = ne->value->length;
@@ -163,7 +163,7 @@ char *X509_NAME_oneline(X509_NAME *a, char *buf, int len)
         } else
             p = &(buf[lold]);
         *(p++) = '/';
-        memcpy(p, s, (unsigned int)l1);
+        sgx_memcpy(p, s, (unsigned int)l1);
         p += l1;
         *(p++) = '=';
 

@@ -157,18 +157,18 @@ static int pkey_cmac_ctrl_str(EVP_PKEY_CTX *ctx,
     if (!value) {
         return 0;
     }
-    if (!strcmp(type, "key")) {
+    if (!sgx_strcmp(type, "key")) {
         void *p = (void *)value;
-        return pkey_cmac_ctrl(ctx, EVP_PKEY_CTRL_SET_MAC_KEY, strlen(p), p);
+        return pkey_cmac_ctrl(ctx, EVP_PKEY_CTRL_SET_MAC_KEY, sgx_strlen(p), p);
     }
-    if (!strcmp(type, "cipher")) {
+    if (!sgx_strcmp(type, "cipher")) {
         const EVP_CIPHER *c;
         c = EVP_get_cipherbyname(value);
         if (!c)
             return 0;
         return pkey_cmac_ctrl(ctx, EVP_PKEY_CTRL_CIPHER, -1, (void *)c);
     }
-    if (!strcmp(type, "hexkey")) {
+    if (!sgx_strcmp(type, "hexkey")) {
         unsigned char *key;
         int r;
         long keylen;

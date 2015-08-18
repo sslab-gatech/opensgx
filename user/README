@@ -95,3 +95,14 @@ g. Customized ssl library
      $ ar cr sslLib.a *.o && mv sslLib.a sgx/user
    - After get sslLib.a (customized openssl for sgx), compile and use ssl library functions
      (See test/simple-openssl.c)
+
+h. local attestation
+   - Based on polarssl (modified polarssl, user/polarssl_sgx)
+   - Changing standard library calls into sgx ABI calls to put and run them inside the enclave
+   - Library repackaging
+     $ cd user/polarssl_sgx
+     $ make
+     $ cp *.o path/to/any/other/place && cd path/to/any/other/place
+     $ rename 's/^/polarssl_/' *.o
+     $ cp *.o sgx/user/attest && cp *.o sgx/user/attest_c
+   - For execution, ./attest/sgx-attest (server) first and then execute ./attest_c/sgx-attest-c (client)

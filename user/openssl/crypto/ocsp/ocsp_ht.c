@@ -263,7 +263,7 @@ static int parse_http_line1(char *line)
     char *p, *q, *r;
     /* Skip to first white space (passed protocol info) */
 
-    for (p = line; *p && !isspace((unsigned char)*p); p++)
+    for (p = line; *p && !sgx_isspace((unsigned char)*p); p++)
         continue;
     if (!*p) {
         OCSPerr(OCSP_F_PARSE_HTTP_LINE1, OCSP_R_SERVER_RESPONSE_PARSE_ERROR);
@@ -271,7 +271,7 @@ static int parse_http_line1(char *line)
     }
 
     /* Skip past white space to start of response code */
-    while (*p && isspace((unsigned char)*p))
+    while (*p && sgx_isspace((unsigned char)*p))
         p++;
 
     if (!*p) {
@@ -280,7 +280,7 @@ static int parse_http_line1(char *line)
     }
 
     /* Find end of response code: first whitespace after start of code */
-    for (q = p; *q && !isspace((unsigned char)*q); q++)
+    for (q = p; *q && !sgx_isspace((unsigned char)*q); q++)
         continue;
 
     if (!*q) {
@@ -298,7 +298,7 @@ static int parse_http_line1(char *line)
         return 0;
 
     /* Skip over any leading white space in message */
-    while (*q && isspace((unsigned char)*q))
+    while (*q && sgx_isspace((unsigned char)*q))
         q++;
 
     if (*q) {
@@ -307,7 +307,7 @@ static int parse_http_line1(char *line)
          */
 
         /* We know q has a non white space character so this is OK */
-        for (r = q + strlen(q) - 1; isspace((unsigned char)*r); r--)
+        for (r = q + sgx_strlen(q) - 1; sgx_isspace((unsigned char)*r); r--)
             *r = 0;
     }
     if (retcode != 200) {

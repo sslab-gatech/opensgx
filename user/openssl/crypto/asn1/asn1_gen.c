@@ -61,8 +61,6 @@
 #include <openssl/asn1.h>
 #include <openssl/x509v3.h>
 
-#include "../sgx.h"
-
 #define ASN1_GEN_FLAG           0x10000
 #define ASN1_GEN_FLAG_IMP       (ASN1_GEN_FLAG|1)
 #define ASN1_GEN_FLAG_EXP       (ASN1_GEN_FLAG|2)
@@ -352,13 +350,13 @@ static int asn1_cb(const char *elem, int len, void *bitstr)
         break;
 
     case ASN1_GEN_FLAG_FORMAT:
-        if (!strncmp(vstart, "ASCII", 5))
+        if (!sgx_strncmp(vstart, "ASCII", 5))
             arg->format = ASN1_GEN_FORMAT_ASCII;
-        else if (!strncmp(vstart, "UTF8", 4))
+        else if (!sgx_strncmp(vstart, "UTF8", 4))
             arg->format = ASN1_GEN_FORMAT_UTF8;
-        else if (!strncmp(vstart, "HEX", 3))
+        else if (!sgx_strncmp(vstart, "HEX", 3))
             arg->format = ASN1_GEN_FORMAT_HEX;
-        else if (!strncmp(vstart, "BITLIST", 3))
+        else if (!sgx_strncmp(vstart, "BITLIST", 3))
             arg->format = ASN1_GEN_FORMAT_BITLIST;
         else {
             ASN1err(ASN1_F_ASN1_CB, ASN1_R_UNKOWN_FORMAT);
@@ -600,7 +598,7 @@ static int asn1_str2tag(const char *tagstr, int len)
 
     tntmp = tnst;
     for (i = 0; i < sizeof(tnst) / sizeof(struct tag_name_st); i++, tntmp++) {
-        if ((len == tntmp->len) && !strncmp(tntmp->strnam, tagstr, len))
+        if ((len == tntmp->len) && !sgx_strncmp(tntmp->strnam, tagstr, len))
             return tntmp->tag;
     }
 

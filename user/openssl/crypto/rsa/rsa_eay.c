@@ -133,15 +133,15 @@ static int RSA_eay_init(RSA *rsa);
 static int RSA_eay_finish(RSA *rsa);
 static RSA_METHOD rsa_pkcs1_eay_meth = {
     "Eric Young's PKCS#1 RSA",
-    RSA_eay_public_encrypt + ENCLAVE_OFFSET,
-    RSA_eay_public_decrypt + ENCLAVE_OFFSET,     // signature verification
-    RSA_eay_private_encrypt + ENCLAVE_OFFSET,    // signing
-    RSA_eay_private_decrypt + ENCLAVE_OFFSET,
-    RSA_eay_mod_exp + ENCLAVE_OFFSET,
-    BN_mod_exp_mont + ENCLAVE_OFFSET,            // XXX probably we should not use Montgomery
+    RSA_eay_public_encrypt,
+    RSA_eay_public_decrypt,     // signature verification
+    RSA_eay_private_encrypt,    // signing
+    RSA_eay_private_decrypt,
+    RSA_eay_mod_exp,
+    BN_mod_exp_mont,            // XXX probably we should not use Montgomery
                                                  // if e == 3
-    RSA_eay_init + ENCLAVE_OFFSET,
-    RSA_eay_finish + ENCLAVE_OFFSET,
+    RSA_eay_init,
+    RSA_eay_finish,
 
     0,                          /* flags */
     NULL,

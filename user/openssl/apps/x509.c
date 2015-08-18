@@ -254,30 +254,30 @@ int MAIN(int argc, char **argv)
     argv++;
     num = 0;
     while (argc >= 1) {
-        if (strcmp(*argv, "-inform") == 0) {
+        if (sgx_strcmp(*argv, "-inform") == 0) {
             if (--argc < 1)
                 goto bad;
             informat = str2fmt(*(++argv));
-        } else if (strcmp(*argv, "-outform") == 0) {
+        } else if (sgx_strcmp(*argv, "-outform") == 0) {
             if (--argc < 1)
                 goto bad;
             outformat = str2fmt(*(++argv));
-        } else if (strcmp(*argv, "-keyform") == 0) {
+        } else if (sgx_strcmp(*argv, "-keyform") == 0) {
             if (--argc < 1)
                 goto bad;
             keyformat = str2fmt(*(++argv));
-        } else if (strcmp(*argv, "-req") == 0) {
+        } else if (sgx_strcmp(*argv, "-req") == 0) {
             reqfile = 1;
             need_rand = 1;
-        } else if (strcmp(*argv, "-CAform") == 0) {
+        } else if (sgx_strcmp(*argv, "-CAform") == 0) {
             if (--argc < 1)
                 goto bad;
             CAformat = str2fmt(*(++argv));
-        } else if (strcmp(*argv, "-CAkeyform") == 0) {
+        } else if (sgx_strcmp(*argv, "-CAkeyform") == 0) {
             if (--argc < 1)
                 goto bad;
             CAkeyformat = str2fmt(*(++argv));
-        } else if (strcmp(*argv, "-sigopt") == 0) {
+        } else if (sgx_strcmp(*argv, "-sigopt") == 0) {
             if (--argc < 1)
                 goto bad;
             if (!sigopts)
@@ -286,13 +286,13 @@ int MAIN(int argc, char **argv)
                 goto bad;
         }
 #ifdef OPENSSL_SSL_DEBUG_BROKEN_PROTOCOL
-        else if (strcmp(*argv, "-force_version") == 0) {
+        else if (sgx_strcmp(*argv, "-force_version") == 0) {
             if (--argc < 1)
                 goto bad;
             force_version = atoi(*(++argv)) - 1;
         }
 #endif
-        else if (strcmp(*argv, "-days") == 0) {
+        else if (sgx_strcmp(*argv, "-days") == 0) {
             if (--argc < 1)
                 goto bad;
             days = atoi(*(++argv));
@@ -300,56 +300,56 @@ int MAIN(int argc, char **argv)
                 BIO_printf(bio_err, "bad number of days\n");
                 goto bad;
             }
-        } else if (strcmp(*argv, "-passin") == 0) {
+        } else if (sgx_strcmp(*argv, "-passin") == 0) {
             if (--argc < 1)
                 goto bad;
             passargin = *(++argv);
-        } else if (strcmp(*argv, "-extfile") == 0) {
+        } else if (sgx_strcmp(*argv, "-extfile") == 0) {
             if (--argc < 1)
                 goto bad;
             extfile = *(++argv);
-        } else if (strcmp(*argv, "-extensions") == 0) {
+        } else if (sgx_strcmp(*argv, "-extensions") == 0) {
             if (--argc < 1)
                 goto bad;
             extsect = *(++argv);
-        } else if (strcmp(*argv, "-in") == 0) {
+        } else if (sgx_strcmp(*argv, "-in") == 0) {
             if (--argc < 1)
                 goto bad;
             infile = *(++argv);
-        } else if (strcmp(*argv, "-out") == 0) {
+        } else if (sgx_strcmp(*argv, "-out") == 0) {
             if (--argc < 1)
                 goto bad;
             outfile = *(++argv);
-        } else if (strcmp(*argv, "-signkey") == 0) {
+        } else if (sgx_strcmp(*argv, "-signkey") == 0) {
             if (--argc < 1)
                 goto bad;
             keyfile = *(++argv);
             sign_flag = ++num;
             need_rand = 1;
-        } else if (strcmp(*argv, "-CA") == 0) {
+        } else if (sgx_strcmp(*argv, "-CA") == 0) {
             if (--argc < 1)
                 goto bad;
             CAfile = *(++argv);
             CA_flag = ++num;
             need_rand = 1;
-        } else if (strcmp(*argv, "-CAkey") == 0) {
+        } else if (sgx_strcmp(*argv, "-CAkey") == 0) {
             if (--argc < 1)
                 goto bad;
             CAkeyfile = *(++argv);
-        } else if (strcmp(*argv, "-CAserial") == 0) {
+        } else if (sgx_strcmp(*argv, "-CAserial") == 0) {
             if (--argc < 1)
                 goto bad;
             CAserial = *(++argv);
-        } else if (strcmp(*argv, "-set_serial") == 0) {
+        } else if (sgx_strcmp(*argv, "-set_serial") == 0) {
             if (--argc < 1)
                 goto bad;
             if (!(sno = s2i_ASN1_INTEGER(NULL, *(++argv))))
                 goto bad;
-        } else if (strcmp(*argv, "-force_pubkey") == 0) {
+        } else if (sgx_strcmp(*argv, "-force_pubkey") == 0) {
             if (--argc < 1)
                 goto bad;
             fkeyfile = *(++argv);
-        } else if (strcmp(*argv, "-addtrust") == 0) {
+        } else if (sgx_strcmp(*argv, "-addtrust") == 0) {
             if (--argc < 1)
                 goto bad;
             if (!(objtmp = OBJ_txt2obj(*(++argv), 0))) {
@@ -360,7 +360,7 @@ int MAIN(int argc, char **argv)
                 trust = sk_ASN1_OBJECT_new_null();
             sk_ASN1_OBJECT_push(trust, objtmp);
             trustout = 1;
-        } else if (strcmp(*argv, "-addreject") == 0) {
+        } else if (sgx_strcmp(*argv, "-addreject") == 0) {
             if (--argc < 1)
                 goto bad;
             if (!(objtmp = OBJ_txt2obj(*(++argv), 0))) {
@@ -372,116 +372,116 @@ int MAIN(int argc, char **argv)
                 reject = sk_ASN1_OBJECT_new_null();
             sk_ASN1_OBJECT_push(reject, objtmp);
             trustout = 1;
-        } else if (strcmp(*argv, "-setalias") == 0) {
+        } else if (sgx_strcmp(*argv, "-setalias") == 0) {
             if (--argc < 1)
                 goto bad;
             alias = *(++argv);
             trustout = 1;
-        } else if (strcmp(*argv, "-certopt") == 0) {
+        } else if (sgx_strcmp(*argv, "-certopt") == 0) {
             if (--argc < 1)
                 goto bad;
             if (!set_cert_ex(&certflag, *(++argv)))
                 goto bad;
-        } else if (strcmp(*argv, "-nameopt") == 0) {
+        } else if (sgx_strcmp(*argv, "-nameopt") == 0) {
             if (--argc < 1)
                 goto bad;
             if (!set_name_ex(&nmflag, *(++argv)))
                 goto bad;
         }
 #ifndef OPENSSL_NO_ENGINE
-        else if (strcmp(*argv, "-engine") == 0) {
+        else if (sgx_strcmp(*argv, "-engine") == 0) {
             if (--argc < 1)
                 goto bad;
             engine = *(++argv);
         }
 #endif
-        else if (strcmp(*argv, "-C") == 0)
+        else if (sgx_strcmp(*argv, "-C") == 0)
             C = ++num;
-        else if (strcmp(*argv, "-email") == 0)
+        else if (sgx_strcmp(*argv, "-email") == 0)
             email = ++num;
-        else if (strcmp(*argv, "-ocsp_uri") == 0)
+        else if (sgx_strcmp(*argv, "-ocsp_uri") == 0)
             ocsp_uri = ++num;
-        else if (strcmp(*argv, "-serial") == 0)
+        else if (sgx_strcmp(*argv, "-serial") == 0)
             serial = ++num;
-        else if (strcmp(*argv, "-next_serial") == 0)
+        else if (sgx_strcmp(*argv, "-next_serial") == 0)
             next_serial = ++num;
-        else if (strcmp(*argv, "-modulus") == 0)
+        else if (sgx_strcmp(*argv, "-modulus") == 0)
             modulus = ++num;
-        else if (strcmp(*argv, "-pubkey") == 0)
+        else if (sgx_strcmp(*argv, "-pubkey") == 0)
             pubkey = ++num;
-        else if (strcmp(*argv, "-x509toreq") == 0)
+        else if (sgx_strcmp(*argv, "-x509toreq") == 0)
             x509req = ++num;
-        else if (strcmp(*argv, "-text") == 0)
+        else if (sgx_strcmp(*argv, "-text") == 0)
             text = ++num;
-        else if (strcmp(*argv, "-hash") == 0
-                 || strcmp(*argv, "-subject_hash") == 0)
+        else if (sgx_strcmp(*argv, "-hash") == 0
+                 || sgx_strcmp(*argv, "-subject_hash") == 0)
             subject_hash = ++num;
 #ifndef OPENSSL_NO_MD5
-        else if (strcmp(*argv, "-subject_hash_old") == 0)
+        else if (sgx_strcmp(*argv, "-subject_hash_old") == 0)
             subject_hash_old = ++num;
 #endif
-        else if (strcmp(*argv, "-issuer_hash") == 0)
+        else if (sgx_strcmp(*argv, "-issuer_hash") == 0)
             issuer_hash = ++num;
 #ifndef OPENSSL_NO_MD5
-        else if (strcmp(*argv, "-issuer_hash_old") == 0)
+        else if (sgx_strcmp(*argv, "-issuer_hash_old") == 0)
             issuer_hash_old = ++num;
 #endif
-        else if (strcmp(*argv, "-subject") == 0)
+        else if (sgx_strcmp(*argv, "-subject") == 0)
             subject = ++num;
-        else if (strcmp(*argv, "-issuer") == 0)
+        else if (sgx_strcmp(*argv, "-issuer") == 0)
             issuer = ++num;
-        else if (strcmp(*argv, "-fingerprint") == 0)
+        else if (sgx_strcmp(*argv, "-fingerprint") == 0)
             fingerprint = ++num;
-        else if (strcmp(*argv, "-dates") == 0) {
+        else if (sgx_strcmp(*argv, "-dates") == 0) {
             startdate = ++num;
             enddate = ++num;
-        } else if (strcmp(*argv, "-purpose") == 0)
+        } else if (sgx_strcmp(*argv, "-purpose") == 0)
             pprint = ++num;
-        else if (strcmp(*argv, "-startdate") == 0)
+        else if (sgx_strcmp(*argv, "-startdate") == 0)
             startdate = ++num;
-        else if (strcmp(*argv, "-enddate") == 0)
+        else if (sgx_strcmp(*argv, "-enddate") == 0)
             enddate = ++num;
-        else if (strcmp(*argv, "-checkend") == 0) {
+        else if (sgx_strcmp(*argv, "-checkend") == 0) {
             if (--argc < 1)
                 goto bad;
             checkoffset = atoi(*(++argv));
             checkend = 1;
-        } else if (strcmp(*argv, "-checkhost") == 0) {
+        } else if (sgx_strcmp(*argv, "-checkhost") == 0) {
             if (--argc < 1)
                 goto bad;
             checkhost = *(++argv);
-        } else if (strcmp(*argv, "-checkemail") == 0) {
+        } else if (sgx_strcmp(*argv, "-checkemail") == 0) {
             if (--argc < 1)
                 goto bad;
             checkemail = *(++argv);
-        } else if (strcmp(*argv, "-checkip") == 0) {
+        } else if (sgx_strcmp(*argv, "-checkip") == 0) {
             if (--argc < 1)
                 goto bad;
             checkip = *(++argv);
-        } else if (strcmp(*argv, "-noout") == 0)
+        } else if (sgx_strcmp(*argv, "-noout") == 0)
             noout = ++num;
-        else if (strcmp(*argv, "-trustout") == 0)
+        else if (sgx_strcmp(*argv, "-trustout") == 0)
             trustout = 1;
-        else if (strcmp(*argv, "-clrtrust") == 0)
+        else if (sgx_strcmp(*argv, "-clrtrust") == 0)
             clrtrust = ++num;
-        else if (strcmp(*argv, "-clrreject") == 0)
+        else if (sgx_strcmp(*argv, "-clrreject") == 0)
             clrreject = ++num;
-        else if (strcmp(*argv, "-alias") == 0)
+        else if (sgx_strcmp(*argv, "-alias") == 0)
             aliasout = ++num;
-        else if (strcmp(*argv, "-CAcreateserial") == 0)
+        else if (sgx_strcmp(*argv, "-CAcreateserial") == 0)
             CA_createserial = ++num;
-        else if (strcmp(*argv, "-clrext") == 0)
+        else if (sgx_strcmp(*argv, "-clrext") == 0)
             clrext = 1;
 #if 1                           /* stay backwards-compatible with 0.9.5; this
                                  * should go away soon */
-        else if (strcmp(*argv, "-crlext") == 0) {
+        else if (sgx_strcmp(*argv, "-crlext") == 0) {
             BIO_printf(bio_err, "use -clrext instead of -crlext\n");
             clrext = 1;
         }
 #endif
-        else if (strcmp(*argv, "-ocspid") == 0)
+        else if (sgx_strcmp(*argv, "-ocspid") == 0)
             ocspid = ++num;
-        else if (strcmp(*argv, "-badsig") == 0)
+        else if (sgx_strcmp(*argv, "-badsig") == 0)
             badsig = 1;
         else if ((md_alg = EVP_get_digestbyname(*argv + 1))) {
             /* ok */

@@ -67,6 +67,8 @@
 #include <openssl/bio.h>
 #include <openssl/asn1.h>
 
+#include "../sgx.h"
+
 /* Must be large enough for biggest tag+length */
 #define DEFAULT_ASN1_BUF_SIZE 20
 
@@ -339,7 +341,7 @@ static int asn1_bio_read(BIO *b, char *in, int inl)
 
 static int asn1_bio_puts(BIO *b, const char *str)
 {
-    return asn1_bio_write(b, str, strlen(str));
+    return asn1_bio_write(b, str, sgx_strlen(str));
 }
 
 static int asn1_bio_gets(BIO *b, char *str, int size)

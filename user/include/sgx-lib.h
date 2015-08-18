@@ -22,7 +22,10 @@
 #include <sgx.h>
 #include <sgx-user.h>
 #include <sgx-kern.h>
+#include <sgx-trampoline.h>
 #include <stdarg.h>
+
+#include <netinet/in.h>
 
 #define sgx_exit(ptr) {                         \
     asm volatile("movl %0, %%eax\n\t"           \
@@ -63,29 +66,78 @@
                   "c"((uint64_t)output));       \
 }
 
-extern unsigned long cur_heap_ptr;
-extern unsigned long heap_end;
+#define sgx_htons(A) ((((uint16_t)(A) & 0xff00) >> 8) | \
+                     (((uint16_t)(A) & 0x00ff) << 8))
 
-extern void sgx_print_hex(unsigned long addr);
+struct mem_control_block {
+    int is_available;
+    int size;
+};
+/*
+static unsigned long cur_heap_ptr = 0x0;
+static unsigned long heap_end = 0x0;
+static int has_initialized = 0;
+static void *managed_memory_start = 0;
+static int g_total_chunk = 0;
+*/
 extern void _enclu(enclu_cmd_t leaf, uint64_t rbx, uint64_t rcx, uint64_t rdx,
            out_regs_t *out_regs);
-extern void *sgx_malloc(int size);
+
 extern void *sgx_realloc(void *ptr, size_t size);
 extern void *sgx_memalign(size_t align, size_t size);
-extern void sgx_free(void *ptr);
 extern void sgx_puts(char buf[]);
+extern time_t sgx_time(time_t *t);
+extern void *sgx_memcpy (void *dest, const void *src, size_t size);
+extern void *sgx_memmove(void *dest, const void *src, size_t size);
+
+// I/O trampoline functions
+extern ssize_t sgx_write(int fd, const void *buf, size_t count);
+extern ssize_t sgx_read(int fd, void *buf, size_t count);
+extern int sgx_close(int fd);
+
+// Socket trampoline functions
+extern int sgx_socket(int domain, int type, int protocol);
+extern int sgx_bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
+extern int sgx_listen(int sockfd, int backlog);
+extern int sgx_accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
+extern int sgx_connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
+extern ssize_t sgx_send(int fd, const void *buf, size_t len, int flag);
+extern ssize_t sgx_recv(int fd, void *buf, size_t len, int flag);
+
+extern int sgx_printf(const char *format, ...);
+extern void sgx_putchar(char c);
+extern void sgx_print_hex(unsigned long addr);
+extern void *sgx_malloc(size_t numbytes);
+extern void sgx_free(void *ptr);
+extern void sgx_malloc_init();
+
+extern int sgx_tolower(int c);
+extern int sgx_toupper(int c);
+extern int sgx_islower(int c);
+extern int sgx_isupper(int c);
+extern int sgx_isdigit(int c);
+extern int sgx_isspace(int c);
+extern int sgx_isalnum(int c);
+extern int sgx_isxdigit(int c);
+
+extern void *sgx_memchr(const void *s, int c, size_t n);
+extern char *sgx_strchr (const char *s, int c_in);
+extern int sgx_inet_pton(int af, const char *src, void *dst);
+extern void sgx_qsort(void *base, size_t num, size_t size, int (*cmp)(const void *, const void *));
+extern int sgx_strcmp(const char *p1, const char *p2);
+extern int sgx_strncmp(const char *s1, const char *s2, size_t n);
+extern int sgx_strcasecmp (const char *s1, const char *s2);
+extern int sgx_strncasecmp (const char *s1, const char *s2, size_t n);
+extern char *sgx_strcpy(char *dest, const char *src);
+extern char *sgx_strncpy(char *s1, const char *s2, size_t n);
+extern void *sgx_memset (void *ptr, int value, size_t num);
 extern size_t sgx_strlen(const char *string);
 extern int sgx_strcmp (const char *str1, const char *str2);
 extern int sgx_memcmp (const void *ptr1, const void *ptr2, size_t num);
-extern void *sgx_memset (void *ptr, int value, size_t num);
-extern void *sgx_memcpy (void *dest, const void *src, size_t size);
-extern int sgx_recv(const char *port, const char *buf);
-extern int sgx_send(const char *ip, const char *port, const void *msg, size_t length);
-extern int sgx_socket();
-extern int sgx_bind(int sockfd, int port);
-extern int sgx_listen(int sockfd);
-extern int sgx_accept(int sockfd);
-extern int sgx_close(int fd);
-extern void sgx_close_sock(void);
-extern int sgx_printf(const char *format, ...);
-extern void sgx_putchar(char c);
+extern size_t sgx_strnlen (const char *str, size_t maxlen);
+extern char * sgx_strcat (char *dest, const char *src);
+extern char * sgx_strncat (char *s1, const char *s2, size_t n);
+
+extern int sgx_attest_target(struct sockaddr *quote_addr, socklen_t quote_addrlen, struct sockaddr *challenger_addr, socklen_t challenger_addrlen);
+extern int sgx_intra_for_quoting(struct sockaddr *server_addr, socklen_t addrlen);
+extern int sgx_remote(const struct sockaddr *target_addr, socklen_t addrlen);

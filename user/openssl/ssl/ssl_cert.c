@@ -206,7 +206,7 @@ CERT *ssl_cert_new(void)
         SSLerr(SSL_F_SSL_CERT_NEW, ERR_R_MALLOC_FAILURE);
         return (NULL);
     }
-    memset(ret, 0, sizeof(CERT));
+    sgx_memset(ret, 0, sizeof(CERT));
 
     ret->key = &(ret->pkeys[SSL_PKEY_RSA_ENC]);
     ret->references = 1;
@@ -225,7 +225,7 @@ CERT *ssl_cert_dup(CERT *cert)
         return (NULL);
     }
 
-    memset(ret, 0, sizeof(CERT));
+    sgx_memset(ret, 0, sizeof(CERT));
 
     ret->key = &ret->pkeys[cert->key - &cert->pkeys[0]];
     /*
@@ -318,7 +318,7 @@ CERT *ssl_cert_dup(CERT *cert)
             }
             ret->pkeys[i].serverinfo_length =
                 cert->pkeys[i].serverinfo_length;
-            memcpy(ret->pkeys[i].serverinfo,
+            sgx_memcpy(ret->pkeys[i].serverinfo,
                    cert->pkeys[i].serverinfo,
                    cert->pkeys[i].serverinfo_length);
         }
@@ -340,7 +340,7 @@ CERT *ssl_cert_dup(CERT *cert)
         ret->conf_sigalgs = OPENSSL_malloc(cert->conf_sigalgslen);
         if (!ret->conf_sigalgs)
             goto err;
-        memcpy(ret->conf_sigalgs, cert->conf_sigalgs, cert->conf_sigalgslen);
+        sgx_memcpy(ret->conf_sigalgs, cert->conf_sigalgs, cert->conf_sigalgslen);
         ret->conf_sigalgslen = cert->conf_sigalgslen;
     } else
         ret->conf_sigalgs = NULL;
@@ -349,7 +349,7 @@ CERT *ssl_cert_dup(CERT *cert)
         ret->client_sigalgs = OPENSSL_malloc(cert->client_sigalgslen);
         if (!ret->client_sigalgs)
             goto err;
-        memcpy(ret->client_sigalgs, cert->client_sigalgs,
+        sgx_memcpy(ret->client_sigalgs, cert->client_sigalgs,
                cert->client_sigalgslen);
         ret->client_sigalgslen = cert->client_sigalgslen;
     } else
@@ -361,7 +361,7 @@ CERT *ssl_cert_dup(CERT *cert)
         ret->ctypes = OPENSSL_malloc(cert->ctype_num);
         if (!ret->ctypes)
             goto err;
-        memcpy(ret->ctypes, cert->ctypes, cert->ctype_num);
+        sgx_memcpy(ret->ctypes, cert->ctypes, cert->ctype_num);
         ret->ctype_num = cert->ctype_num;
     }
 
@@ -641,7 +641,7 @@ SESS_CERT *ssl_sess_cert_new(void)
         return NULL;
     }
 
-    memset(ret, 0, sizeof *ret);
+    sgx_memset(ret, 0, sizeof *ret);
     ret->peer_key = &(ret->peer_pkeys[SSL_PKEY_RSA_ENC]);
     ret->references = 1;
 
@@ -1017,7 +1017,7 @@ int SSL_add_dir_cert_subjects_to_stack(STACK_OF(X509_NAME) *stack,
         char buf[1024];
         int r;
 
-        if (strlen(dir) + strlen(filename) + 2 > sizeof buf) {
+        if (sgx_strlen(dir) + sgx_strlen(filename) + 2 > sizeof buf) {
             SSLerr(SSL_F_SSL_ADD_DIR_CERT_SUBJECTS_TO_STACK,
                    SSL_R_PATH_TOO_LONG);
             goto err;

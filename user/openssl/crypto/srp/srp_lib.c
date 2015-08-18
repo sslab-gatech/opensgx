@@ -224,9 +224,9 @@ BIGNUM *SRP_Calc_x(BIGNUM *s, const char *user, const char *pass)
 
     EVP_MD_CTX_init(&ctxt);
     EVP_DigestInit_ex(&ctxt, EVP_sha1(), NULL);
-    EVP_DigestUpdate(&ctxt, user, strlen(user));
+    EVP_DigestUpdate(&ctxt, user, sgx_strlen(user));
     EVP_DigestUpdate(&ctxt, ":", 1);
-    EVP_DigestUpdate(&ctxt, pass, strlen(pass));
+    EVP_DigestUpdate(&ctxt, pass, sgx_strlen(pass));
     EVP_DigestFinal_ex(&ctxt, dig, NULL);
 
     EVP_DigestInit_ex(&ctxt, EVP_sha1(), NULL);
@@ -351,7 +351,7 @@ SRP_gN *SRP_get_default_gN(const char *id)
     if (id == NULL)
         return knowngN;
     for (i = 0; i < KNOWN_GN_NUMBER; i++) {
-        if (strcmp(knowngN[i].id, id) == 0)
+        if (sgx_strcmp(knowngN[i].id, id) == 0)
             return knowngN + i;
     }
     return NULL;

@@ -8,6 +8,8 @@
 #include <openssl/safestack.h>
 #include <openssl/e_os2.h>
 
+#include "../sgx.h"
+
 /*
  * Later versions of DEC C has started to add lnkage information to certain
  * functions, which makes it tricky to use them as values to regular function
@@ -15,9 +17,9 @@
  * correctly.
  */
 #ifdef OPENSSL_SYS_VMS_DECC
-# define OPENSSL_strcmp (int (*)(const char *,const char *))strcmp
+# define OPENSSL_strcmp (int (*)(const char *,const char *))sgx_strcmp
 #else
-# define OPENSSL_strcmp strcmp
+# define OPENSSL_strcmp sgx_strcmp
 #endif
 
 /*
@@ -124,7 +126,7 @@ static int obj_name_cmp(const void *a_void, const void *b_void)
             ret = sk_NAME_FUNCS_value(name_funcs_stack,
                                       a->type)->cmp_func(a->name, b->name);
         } else
-            ret = strcmp(a->name, b->name);
+            ret = sgx_strcmp(a->name, b->name);
     }
     return (ret);
 }
@@ -299,7 +301,7 @@ static int do_all_sorted_cmp(const void *n1_, const void *n2_)
     const OBJ_NAME *const *n1 = n1_;
     const OBJ_NAME *const *n2 = n2_;
 
-    return strcmp((*n1)->name, (*n2)->name);
+    return sgx_strcmp((*n1)->name, (*n2)->name);
 }
 
 void OBJ_NAME_do_all_sorted(int type,

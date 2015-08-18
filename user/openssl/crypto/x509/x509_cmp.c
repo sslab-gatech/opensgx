@@ -89,7 +89,7 @@ unsigned long X509_issuer_and_serial_hash(X509 *a)
     f = X509_NAME_oneline(a->cert_info->issuer, NULL, 0);
     if (!EVP_DigestInit_ex(&ctx, EVP_md5(), NULL))
         goto err;
-    if (!EVP_DigestUpdate(&ctx, (unsigned char *)f, strlen(f)))
+    if (!EVP_DigestUpdate(&ctx, (unsigned char *)f, sgx_strlen(f)))
         goto err;
     OPENSSL_free(f);
     if (!EVP_DigestUpdate
@@ -125,7 +125,7 @@ int X509_CRL_cmp(const X509_CRL *a, const X509_CRL *b)
 #ifndef OPENSSL_NO_SHA
 int X509_CRL_match(const X509_CRL *a, const X509_CRL *b)
 {
-    return memcmp(a->sha1_hash, b->sha1_hash, 20);
+    return sgx_memcmp(a->sha1_hash, b->sha1_hash, 20);
 }
 #endif
 
@@ -184,7 +184,7 @@ int X509_cmp(const X509 *a, const X509 *b)
     X509_check_purpose((X509 *)a, -1, 0);
     X509_check_purpose((X509 *)b, -1, 0);
 
-    rv = memcmp(a->sha1_hash, b->sha1_hash, SHA_DIGEST_LENGTH);
+    rv = sgx_memcmp(a->sha1_hash, b->sha1_hash, SHA_DIGEST_LENGTH);
     if (rv)
         return rv;
     /* Check for match against stored encoding too */
@@ -192,7 +192,7 @@ int X509_cmp(const X509 *a, const X509 *b)
         rv = (int)(a->cert_info->enc.len - b->cert_info->enc.len);
         if (rv)
             return rv;
-        return memcmp(a->cert_info->enc.enc, b->cert_info->enc.enc,
+        return sgx_memcmp(a->cert_info->enc.enc, b->cert_info->enc.enc,
                       a->cert_info->enc.len);
     }
     return rv;
@@ -222,7 +222,7 @@ int X509_NAME_cmp(const X509_NAME *a, const X509_NAME *b)
     if (ret)
         return ret;
 
-    return memcmp(a->canon_enc, b->canon_enc, a->canon_enclen);
+    return sgx_memcmp(a->canon_enc, b->canon_enc, a->canon_enclen);
 
 }
 

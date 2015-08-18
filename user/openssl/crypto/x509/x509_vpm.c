@@ -97,8 +97,8 @@ static int int_x509_param_set_hosts(X509_VERIFY_PARAM_ID *id, int mode,
      * XXX: Do we need to push an error onto the error stack?
      */
     if (namelen == 0)
-        namelen = name ? strlen(name) : 0;
-    else if (name && memchr(name, '\0', namelen > 1 ? namelen - 1 : namelen))
+        namelen = name ? sgx_strlen(name) : 0;
+    else if (name && sgx_memchr(name, '\0', namelen > 1 ? namelen - 1 : namelen))
         return 0;
     if (name && name[namelen - 1] == '\0')
         --namelen;
@@ -340,7 +340,7 @@ static int int_x509_param_set1(char **pdest, size_t *pdestlen,
     if (src) {
         if (srclen == 0) {
             tmp = BUF_strdup(src);
-            srclen = strlen(src);
+            srclen = sgx_strlen(src);
         } else
             tmp = BUF_memdup(src, srclen);
         if (!tmp)
@@ -581,7 +581,7 @@ static STACK_OF(X509_VERIFY_PARAM) *param_table = NULL;
 
 static int table_cmp(const X509_VERIFY_PARAM *a, const X509_VERIFY_PARAM *b)
 {
-    return strcmp(a->name, b->name);
+    return sgx_strcmp(a->name, b->name);
 }
 
 DECLARE_OBJ_BSEARCH_CMP_FN(X509_VERIFY_PARAM, X509_VERIFY_PARAM, table);
@@ -590,7 +590,7 @@ IMPLEMENT_OBJ_BSEARCH_CMP_FN(X509_VERIFY_PARAM, X509_VERIFY_PARAM, table);
 static int param_cmp(const X509_VERIFY_PARAM *const *a,
                      const X509_VERIFY_PARAM *const *b)
 {
-    return strcmp((*a)->name, (*b)->name);
+    return sgx_strcmp((*a)->name, (*b)->name);
 }
 
 int X509_VERIFY_PARAM_add0_table(X509_VERIFY_PARAM *param)

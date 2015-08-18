@@ -70,6 +70,8 @@
 # include <openssl/dsa.h>
 #endif
 
+#include "../sgx.h"
+
 #ifndef OPENSSL_NO_FP_API
 STACK_OF(X509_INFO) *PEM_X509_INFO_read(FILE *fp, STACK_OF(X509_INFO) *sk,
                                         pem_password_cb *cb, void *u)
@@ -125,8 +127,8 @@ STACK_OF(X509_INFO) *PEM_X509_INFO_read_bio(BIO *bp, STACK_OF(X509_INFO) *sk,
             goto err;
         }
  start:
-        if ((strcmp(name, PEM_STRING_X509) == 0) ||
-            (strcmp(name, PEM_STRING_X509_OLD) == 0)) {
+        if ((sgx_strcmp(name, PEM_STRING_X509) == 0) ||
+            (sgx_strcmp(name, PEM_STRING_X509_OLD) == 0)) {
             d2i = (D2I_OF(void)) d2i_X509;
             if (xi->x509 != NULL) {
                 if (!sk_X509_INFO_push(ret, xi))
@@ -136,7 +138,7 @@ STACK_OF(X509_INFO) *PEM_X509_INFO_read_bio(BIO *bp, STACK_OF(X509_INFO) *sk,
                 goto start;
             }
             pp = &(xi->x509);
-        } else if ((strcmp(name, PEM_STRING_X509_TRUSTED) == 0)) {
+        } else if ((sgx_strcmp(name, PEM_STRING_X509_TRUSTED) == 0)) {
             d2i = (D2I_OF(void)) d2i_X509_AUX;
             if (xi->x509 != NULL) {
                 if (!sk_X509_INFO_push(ret, xi))
@@ -146,7 +148,7 @@ STACK_OF(X509_INFO) *PEM_X509_INFO_read_bio(BIO *bp, STACK_OF(X509_INFO) *sk,
                 goto start;
             }
             pp = &(xi->x509);
-        } else if (strcmp(name, PEM_STRING_X509_CRL) == 0) {
+        } else if (sgx_strcmp(name, PEM_STRING_X509_CRL) == 0) {
             d2i = (D2I_OF(void)) d2i_X509_CRL;
             if (xi->crl != NULL) {
                 if (!sk_X509_INFO_push(ret, xi))
@@ -158,7 +160,7 @@ STACK_OF(X509_INFO) *PEM_X509_INFO_read_bio(BIO *bp, STACK_OF(X509_INFO) *sk,
             pp = &(xi->crl);
         } else
 #ifndef OPENSSL_NO_RSA
-        if (strcmp(name, PEM_STRING_RSA) == 0) {
+        if (sgx_strcmp(name, PEM_STRING_RSA) == 0) {
             d2i = (D2I_OF(void)) d2i_RSAPrivateKey;
             if (xi->x_pkey != NULL) {
                 if (!sk_X509_INFO_push(ret, xi))
@@ -174,12 +176,12 @@ STACK_OF(X509_INFO) *PEM_X509_INFO_read_bio(BIO *bp, STACK_OF(X509_INFO) *sk,
             xi->x_pkey = X509_PKEY_new();
             ptype = EVP_PKEY_RSA;
             pp = &xi->x_pkey->dec_pkey;
-            if ((int)strlen(header) > 10) /* assume encrypted */
+            if ((int)sgx_strlen(header) > 10) /* assume encrypted */
                 raw = 1;
         } else
 #endif
 #ifndef OPENSSL_NO_DSA
-        if (strcmp(name, PEM_STRING_DSA) == 0) {
+        if (sgx_strcmp(name, PEM_STRING_DSA) == 0) {
             d2i = (D2I_OF(void)) d2i_DSAPrivateKey;
             if (xi->x_pkey != NULL) {
                 if (!sk_X509_INFO_push(ret, xi))
@@ -195,12 +197,12 @@ STACK_OF(X509_INFO) *PEM_X509_INFO_read_bio(BIO *bp, STACK_OF(X509_INFO) *sk,
             xi->x_pkey = X509_PKEY_new();
             ptype = EVP_PKEY_DSA;
             pp = &xi->x_pkey->dec_pkey;
-            if ((int)strlen(header) > 10) /* assume encrypted */
+            if ((int)sgx_strlen(header) > 10) /* assume encrypted */
                 raw = 1;
         } else
 #endif
 #ifndef OPENSSL_NO_EC
-        if (strcmp(name, PEM_STRING_ECPRIVATEKEY) == 0) {
+        if (sgx_strcmp(name, PEM_STRING_ECPRIVATEKEY) == 0) {
             d2i = (D2I_OF(void)) d2i_ECPrivateKey;
             if (xi->x_pkey != NULL) {
                 if (!sk_X509_INFO_push(ret, xi))
@@ -216,7 +218,7 @@ STACK_OF(X509_INFO) *PEM_X509_INFO_read_bio(BIO *bp, STACK_OF(X509_INFO) *sk,
             xi->x_pkey = X509_PKEY_new();
             ptype = EVP_PKEY_EC;
             pp = &xi->x_pkey->dec_pkey;
-            if ((int)strlen(header) > 10) /* assume encrypted */
+            if ((int)sgx_strlen(header) > 10) /* assume encrypted */
                 raw = 1;
         } else
 #endif
@@ -347,7 +349,7 @@ int PEM_X509_INFO_write_bio(BIO *bp, X509_INFO *xi, EVP_CIPHER *enc,
             }
 
             /* create the right magic header stuff */
-            OPENSSL_assert(strlen(objstr) + 23 + 2 * enc->iv_len + 13 <=
+            OPENSSL_assert(sgx_strlen(objstr) + 23 + 2 * enc->iv_len + 13 <=
                            sizeof buf);
             buf[0] = '\0';
             PEM_proc_type(buf, PEM_TYPE_ENCRYPTED);

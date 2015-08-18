@@ -62,8 +62,6 @@
 # include <openssl/fips.h>
 #endif
 
-#include "../sgx.h"
-
 struct CMAC_CTX_st {
     /* Cipher context to use */
     EVP_CIPHER_CTX cctx;
@@ -140,10 +138,10 @@ int CMAC_CTX_copy(CMAC_CTX *out, const CMAC_CTX *in)
     if (!EVP_CIPHER_CTX_copy(&out->cctx, &in->cctx))
         return 0;
     bl = EVP_CIPHER_CTX_block_size(&in->cctx);
-    memcpy(out->k1, in->k1, bl);
-    memcpy(out->k2, in->k2, bl);
-    memcpy(out->tbl, in->tbl, bl);
-    memcpy(out->last_block, in->last_block, bl);
+    sgx_memcpy(out->k1, in->k1, bl);
+    sgx_memcpy(out->k2, in->k2, bl);
+    sgx_memcpy(out->tbl, in->tbl, bl);
+    sgx_memcpy(out->last_block, in->last_block, bl);
     out->nlast_block = in->nlast_block;
     return 1;
 }
@@ -226,7 +224,7 @@ int CMAC_Update(CMAC_CTX *ctx, const void *in, size_t dlen)
         nleft = bl - ctx->nlast_block;
         if (dlen < nleft)
             nleft = dlen;
-        memcpy(ctx->last_block + ctx->nlast_block, data, nleft);
+        sgx_memcpy(ctx->last_block + ctx->nlast_block, data, nleft);
         dlen -= nleft;
         ctx->nlast_block += nleft;
         /* If no more to process return */
@@ -245,7 +243,7 @@ int CMAC_Update(CMAC_CTX *ctx, const void *in, size_t dlen)
         data += bl;
     }
     /* Copy any data left to last block buffer */
-    memcpy(ctx->last_block, data, dlen);
+    sgx_memcpy(ctx->last_block, data, dlen);
     ctx->nlast_block = dlen;
     return 1;
 

@@ -66,8 +66,6 @@
 #include "cryptlib.h"
 #include "bn_lcl.h"
 
-#include "../sgx.h"
-
 #if defined(OPENSSL_NO_ASM) || !defined(OPENSSL_BN_ASM_PART_WORDS)
 /*
  * Here follows specialised variants of bn_add_words() and bn_sub_words().

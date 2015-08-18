@@ -280,8 +280,8 @@ int str2fmt(char *s)
     else if ((*s == 'M') || (*s == 'm'))
         return (FORMAT_MSBLOB);
     else if ((*s == '1')
-             || (strcmp(s, "PKCS12") == 0) || (strcmp(s, "pkcs12") == 0)
-             || (strcmp(s, "P12") == 0) || (strcmp(s, "p12") == 0))
+             || (sgx_strcmp(s, "PKCS12") == 0) || (sgx_strcmp(s, "pkcs12") == 0)
+             || (sgx_strcmp(s, "P12") == 0) || (sgx_strcmp(s, "p12") == 0))
         return (FORMAT_PKCS12);
     else if ((*s == 'E') || (*s == 'e'))
         return (FORMAT_ENGINE);
@@ -621,7 +621,7 @@ static char *app_get_pass(BIO *err, char *arg, int keepbio);
 int app_passwd(BIO *err, char *arg1, char *arg2, char **pass1, char **pass2)
 {
     int same;
-    if (!arg2 || !arg1 || strcmp(arg1, arg2))
+    if (!arg2 || !arg1 || sgx_strcmp(arg1, arg2))
         same = 0;
     else
         same = 1;
@@ -686,7 +686,7 @@ static char *app_get_pass(BIO *err, char *arg, int keepbio)
             btmp = BIO_new(BIO_f_buffer());
             pwdbio = BIO_push(btmp, pwdbio);
 #endif
-        } else if (!strcmp(arg, "stdin")) {
+        } else if (!sgx_strcmp(arg, "stdin")) {
             pwdbio = BIO_new_fp(stdin, BIO_NOCLOSE);
             if (!pwdbio) {
                 BIO_printf(err, "Can't open BIO for stdin\n");
@@ -1525,7 +1525,7 @@ ENGINE *setup_engine(BIO *err, const char *engine, int debug)
     ENGINE *e = NULL;
 
     if (engine) {
-        if (strcmp(engine, "auto") == 0) {
+        if (sgx_strcmp(engine, "auto") == 0) {
             BIO_printf(err, "enabling auto ENGINE support\n");
             ENGINE_register_all_complete();
             return NULL;
@@ -1613,7 +1613,7 @@ static int index_serial_cmp(const OPENSSL_CSTRING *a,
 
     for (aa = a[DB_serial]; *aa == '0'; aa++) ;
     for (bb = b[DB_serial]; *bb == '0'; bb++) ;
-    return (strcmp(aa, bb));
+    return (sgx_strcmp(aa, bb));
 }
 
 static int index_name_qual(char **a)
@@ -1628,7 +1628,7 @@ static unsigned long index_name_hash(const OPENSSL_CSTRING *a)
 
 int index_name_cmp(const OPENSSL_CSTRING *a, const OPENSSL_CSTRING *b)
 {
-    return (strcmp(a[DB_name], b[DB_name]));
+    return (sgx_strcmp(a[DB_name], b[DB_name]));
 }
 
 static IMPLEMENT_LHASH_HASH_FN(index_serial, OPENSSL_CSTRING)
@@ -2256,7 +2256,7 @@ int args_verify(char ***pargs, int *pargc,
     char *hostname = NULL;
     char *email = NULL;
     char *ipasc = NULL;
-    if (!strcmp(arg, "-policy")) {
+    if (!sgx_strcmp(arg, "-policy")) {
         if (!argn)
             *badarg = 1;
         else {
@@ -2267,7 +2267,7 @@ int args_verify(char ***pargs, int *pargc,
             }
         }
         (*pargs)++;
-    } else if (strcmp(arg, "-purpose") == 0) {
+    } else if (sgx_strcmp(arg, "-purpose") == 0) {
         X509_PURPOSE *xptmp;
         if (!argn)
             *badarg = 1;
@@ -2282,7 +2282,7 @@ int args_verify(char ***pargs, int *pargc,
             }
         }
         (*pargs)++;
-    } else if (strcmp(arg, "-verify_depth") == 0) {
+    } else if (sgx_strcmp(arg, "-verify_depth") == 0) {
         if (!argn)
             *badarg = 1;
         else {
@@ -2293,7 +2293,7 @@ int args_verify(char ***pargs, int *pargc,
             }
         }
         (*pargs)++;
-    } else if (strcmp(arg, "-attime") == 0) {
+    } else if (sgx_strcmp(arg, "-attime") == 0) {
         if (!argn)
             *badarg = 1;
         else {
@@ -2309,56 +2309,56 @@ int args_verify(char ***pargs, int *pargc,
             at_time = (time_t)timestamp;
         }
         (*pargs)++;
-    } else if (strcmp(arg, "-verify_hostname") == 0) {
+    } else if (sgx_strcmp(arg, "-verify_hostname") == 0) {
         if (!argn)
             *badarg = 1;
         hostname = argn;
         (*pargs)++;
-    } else if (strcmp(arg, "-verify_email") == 0) {
+    } else if (sgx_strcmp(arg, "-verify_email") == 0) {
         if (!argn)
             *badarg = 1;
         email = argn;
         (*pargs)++;
-    } else if (strcmp(arg, "-verify_ip") == 0) {
+    } else if (sgx_strcmp(arg, "-verify_ip") == 0) {
         if (!argn)
             *badarg = 1;
         ipasc = argn;
         (*pargs)++;
-    } else if (!strcmp(arg, "-ignore_critical"))
+    } else if (!sgx_strcmp(arg, "-ignore_critical"))
         flags |= X509_V_FLAG_IGNORE_CRITICAL;
-    else if (!strcmp(arg, "-issuer_checks"))
+    else if (!sgx_strcmp(arg, "-issuer_checks"))
         flags |= X509_V_FLAG_CB_ISSUER_CHECK;
-    else if (!strcmp(arg, "-crl_check"))
+    else if (!sgx_strcmp(arg, "-crl_check"))
         flags |= X509_V_FLAG_CRL_CHECK;
-    else if (!strcmp(arg, "-crl_check_all"))
+    else if (!sgx_strcmp(arg, "-crl_check_all"))
         flags |= X509_V_FLAG_CRL_CHECK | X509_V_FLAG_CRL_CHECK_ALL;
-    else if (!strcmp(arg, "-policy_check"))
+    else if (!sgx_strcmp(arg, "-policy_check"))
         flags |= X509_V_FLAG_POLICY_CHECK;
-    else if (!strcmp(arg, "-explicit_policy"))
+    else if (!sgx_strcmp(arg, "-explicit_policy"))
         flags |= X509_V_FLAG_EXPLICIT_POLICY;
-    else if (!strcmp(arg, "-inhibit_any"))
+    else if (!sgx_strcmp(arg, "-inhibit_any"))
         flags |= X509_V_FLAG_INHIBIT_ANY;
-    else if (!strcmp(arg, "-inhibit_map"))
+    else if (!sgx_strcmp(arg, "-inhibit_map"))
         flags |= X509_V_FLAG_INHIBIT_MAP;
-    else if (!strcmp(arg, "-x509_strict"))
+    else if (!sgx_strcmp(arg, "-x509_strict"))
         flags |= X509_V_FLAG_X509_STRICT;
-    else if (!strcmp(arg, "-extended_crl"))
+    else if (!sgx_strcmp(arg, "-extended_crl"))
         flags |= X509_V_FLAG_EXTENDED_CRL_SUPPORT;
-    else if (!strcmp(arg, "-use_deltas"))
+    else if (!sgx_strcmp(arg, "-use_deltas"))
         flags |= X509_V_FLAG_USE_DELTAS;
-    else if (!strcmp(arg, "-policy_print"))
+    else if (!sgx_strcmp(arg, "-policy_print"))
         flags |= X509_V_FLAG_NOTIFY_POLICY;
-    else if (!strcmp(arg, "-check_ss_sig"))
+    else if (!sgx_strcmp(arg, "-check_ss_sig"))
         flags |= X509_V_FLAG_CHECK_SS_SIGNATURE;
-    else if (!strcmp(arg, "-trusted_first"))
+    else if (!sgx_strcmp(arg, "-trusted_first"))
         flags |= X509_V_FLAG_TRUSTED_FIRST;
-    else if (!strcmp(arg, "-suiteB_128_only"))
+    else if (!sgx_strcmp(arg, "-suiteB_128_only"))
         flags |= X509_V_FLAG_SUITEB_128_LOS_ONLY;
-    else if (!strcmp(arg, "-suiteB_128"))
+    else if (!sgx_strcmp(arg, "-suiteB_128"))
         flags |= X509_V_FLAG_SUITEB_128_LOS;
-    else if (!strcmp(arg, "-suiteB_192"))
+    else if (!sgx_strcmp(arg, "-suiteB_192"))
         flags |= X509_V_FLAG_SUITEB_192_LOS;
-    else if (!strcmp(arg, "-partial_chain"))
+    else if (!sgx_strcmp(arg, "-partial_chain"))
         flags |= X509_V_FLAG_PARTIAL_CHAIN;
     else
         return 0;

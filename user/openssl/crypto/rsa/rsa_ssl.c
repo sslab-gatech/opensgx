@@ -99,7 +99,7 @@ int RSA_padding_add_SSLv23(unsigned char *to, int tlen,
     p += 8;
     *(p++) = '\0';
 
-    memcpy(p, from, (unsigned int)flen);
+    sgx_memcpy(p, from, (unsigned int)flen);
     return (1);
 }
 
@@ -145,7 +145,7 @@ int RSA_padding_check_SSLv23(unsigned char *to, int tlen,
         RSAerr(RSA_F_RSA_PADDING_CHECK_SSLV23, RSA_R_DATA_TOO_LARGE);
         return (-1);
     }
-    memcpy(to, p, (unsigned int)j);
+    sgx_memcpy(to, p, (unsigned int)j);
 
     return (j);
 }

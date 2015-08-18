@@ -162,7 +162,7 @@ IMPLEMENT_dtls1_meth_func(DTLS1_VERSION,
 int dtls1_connect(SSL *s)
 {
     BUF_MEM *buf = NULL;
-    unsigned long Time = (unsigned long)time(NULL);
+    unsigned long Time = (unsigned long)sgx_time(NULL);
     void (*cb) (const SSL *ssl, int type, int val) = NULL;
     int ret = -1;
     int new_state, state, skip = 0;
@@ -264,7 +264,7 @@ int dtls1_connect(SSL *s)
             s->ctx->stats.sess_connect++;
             s->init_num = 0;
             /* mark client_random uninitialized */
-            memset(s->s3->client_random, 0, sizeof(s->s3->client_random));
+            sgx_memset(s->s3->client_random, 0, sizeof(s->s3->client_random));
             s->d1->send_cookie = 0;
             s->hit = 0;
             s->d1->change_cipher_spec_ok = 0;
@@ -834,7 +834,7 @@ static int dtls1_get_hello_verify(SSL *s)
         goto f_err;
     }
 
-    memcpy(s->d1->cookie, data, cookie_len);
+    sgx_memcpy(s->d1->cookie, data, cookie_len);
     s->d1->cookie_len = cookie_len;
 
     s->d1->send_cookie = 1;

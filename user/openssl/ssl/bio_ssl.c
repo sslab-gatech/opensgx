@@ -108,7 +108,7 @@ static int ssl_new(BIO *bi)
         BIOerr(BIO_F_SSL_NEW, ERR_R_MALLOC_FAILURE);
         return (0);
     }
-    memset(bs, 0, sizeof(BIO_SSL));
+    sgx_memset(bs, 0, sizeof(BIO_SSL));
     bi->init = 0;
     bi->ptr = (char *)bs;
     bi->flags = 0;
@@ -180,7 +180,7 @@ static int ssl_read(BIO *b, char *out, int outl)
         if ((sb->renegotiate_timeout > 0) && (!r)) {
             unsigned long tm;
 
-            tm = (unsigned long)time(NULL);
+            tm = (unsigned long)sgx_time(NULL);
             if (tm > sb->last_time + sb->renegotiate_timeout) {
                 sb->last_time = tm;
                 sb->num_renegotiates++;
@@ -253,7 +253,7 @@ static int ssl_write(BIO *b, const char *out, int outl)
         if ((bs->renegotiate_timeout > 0) && (!r)) {
             unsigned long tm;
 
-            tm = (unsigned long)time(NULL);
+            tm = (unsigned long)sgx_time(NULL);
             if (tm > bs->last_time + bs->renegotiate_timeout) {
                 bs->last_time = tm;
                 bs->num_renegotiates++;
@@ -327,7 +327,7 @@ static long ssl_ctrl(BIO *b, int cmd, long num, void *ptr)
         if (num < 60)
             num = 5;
         bs->renegotiate_timeout = (unsigned long)num;
-        bs->last_time = (unsigned long)time(NULL);
+        bs->last_time = (unsigned long)sgx_time(NULL);
         break;
     case BIO_C_SET_SSL_RENEGOTIATE_BYTES:
         ret = bs->renegotiate_count;
@@ -494,7 +494,7 @@ static int ssl_puts(BIO *bp, const char *str)
 {
     int n, ret;
 
-    n = strlen(str);
+    n = sgx_strlen(str);
     ret = BIO_write(bp, str, n);
     return (ret);
 }

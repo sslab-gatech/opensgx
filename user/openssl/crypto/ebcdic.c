@@ -254,7 +254,7 @@ const unsigned char os_toebcdic[256] = {
  * Translate a memory block from EBCDIC (host charset) to ASCII (net charset)
  * dest and srce may be identical, or separate memory blocks, but should not
  * overlap. These functions intentionally have an interface compatible to
- * memcpy(3).
+ * sgx_memcpy(3).
  */
 
 void *ebcdic2ascii(void *dest, const void *srce, size_t count)

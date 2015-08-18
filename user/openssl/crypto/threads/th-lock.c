@@ -251,7 +251,7 @@ void CRYPTO_thread_setup(void)
     int i;
     char filename[20];
 
-    strcpy(filename, "/tmp/mttest.XXXXXX");
+    sgx_strcpy(filename, "/tmp/mttest.XXXXXX");
     mktemp(filename);
 
     usconfig(CONF_STHREADIOOFF);
