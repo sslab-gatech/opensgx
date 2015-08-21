@@ -94,7 +94,8 @@ b_dump.o: ../../include/openssl/opensslv.h ../../include/openssl/ossl_typ.h
 b_dump.o: ../../include/openssl/safestack.h ../../include/openssl/stack.h
 b_dump.o: ../../include/openssl/symhacks.h ../cryptlib.h ../sgx.h b_dump.c
 b_dump.o: bio_lcl.h
-b_print.o: ../../e_os.h ../../include/openssl/bio.h ../../include/openssl/bn.h
+b_print.o: ../../e_os.h ../../include/openssl/../sgx.h
+b_print.o: ../../include/openssl/bio.h ../../include/openssl/bn.h
 b_print.o: ../../include/openssl/buffer.h ../../include/openssl/crypto.h
 b_print.o: ../../include/openssl/e_os2.h ../../include/openssl/err.h
 b_print.o: ../../include/openssl/lhash.h ../../include/openssl/opensslconf.h

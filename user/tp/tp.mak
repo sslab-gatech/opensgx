@@ -8,7 +8,7 @@ all: $(TP_ALL) tp/loader
 tp/loader: tp/loader.o $(SGX_OBJS) $(SSL_OBJS) tp/tp-trampoline.o
 	$(CC) $(CFLAGS) $^ -o $@
 
-tp/sgx-%: tp/sgx-%.o $(SGX_OBJS) $(SSL_OBJS) $(TP_LIBS) $(TP_OBJS) $(LIB_OBJS)
+tp/sgx-%: tp/sgx-%.o $(SGX_OBJS) $(SSL_OBJS) $(TP_LIBS) $(TP_OBJS) $(LIB_OBJS) $(SSL_SGX_OBJS) 
 	$(CC) $(CFLAGS) -static -Wl,-T,tp/tp.lds $^ -o $@
 
 tp/sgx-%.o: tp/sgx-%.c $(SGX_LIBS) $(SGX_OBJS) $(LIB_OBJS)

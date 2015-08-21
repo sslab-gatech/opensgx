@@ -3953,6 +3953,117 @@ _EXIT:
 #endif
 }
 
+static
+void sgx_eldb(CPUX86State *env)
+{
+    //EAX: eldb/eldu(In)
+    //RBX: pageinfo addr(In)
+    //RCX: Epc page addr(In)
+    //RDX: VA  slot addr(In)
+    //EAX: Error code(Out)
+    epc_t* tmp_srcpge;
+    epc_t  ciphertext;
+    secs_t* tmp_secs;
+    pcmd_t* tmp_pcmd;
+    mac_header_t tmp_header;
+    uint64_t tmp_ver;
+    uint64_t tmp_mac[2];
+    uint64_t epc_index, va_index, secs_index;
+
+    if(!is_aligned(env->regs[R_EBX], 32) || !is_aligned(env->regs[R_ECX], PAGE_SIZE)) {
+        raise_exception(env, EXCP0D_GPF);
+    }
+
+    check_within_epc((void *)env->regs[R_ECX], env);
+    if(!is_aligned(env->regs[R_EDX], 8)) {
+        raise_exception(env, EXCP0D_GPF);
+    }
+    check_within_epc((void *)env->regs[R_EDX], env);
+
+    tmp_srcpge = ((pageinfo_t *)env->regs[R_EBX])->srcpge;
+    tmp_secs = ((pageinfo_t *)env->regs[R_EBX])->secs;
+    tmp_pcmd = ((pageinfo_t *)env->regs[R_EBX])->secinfo;
+
+    if(!is_aligned(tmp_pcmd, sizeof(pcmd_t)) || !is_aligned(tmp_srcpge, PAGE_SIZE)) {
+        raise_exception(env, EXCP0D_GPF);
+    }
+    //TODO: (* Check concurrency of EPC and VASLOT by other SGX instructions *)
+
+    epc_index = epcm_search(env->regs[R_ECX], env);
+    va_index = epcm_search(env->regs[R_EDX], env);
+    if(epcm[epc_index].valid == 1 ||
+       epcm[va_index].valid == 0 || epcm[va_index].page_type != PT_VA) {
+        raise_exception(env, EXCP0D_GPF);
+    }
+
+    memset(&tmp_header, 0 , sizeof(tmp_header));
+    tmp_header.secinfo.flags.page_type = tmp_pcmd->secinfo.flags.page_type;
+    tmp_header.secinfo.flags.r = tmp_pcmd->secinfo.flags.r;
+    tmp_header.secinfo.flags.w = tmp_pcmd->secinfo.flags.w;
+    tmp_header.secinfo.flags.x = tmp_pcmd->secinfo.flags.x;
+    tmp_header.linaddr = ((pageinfo_t *)(env->regs[R_EBX]))-> linaddr;
+
+    if(tmp_header.secinfo.flags.page_type == PT_REG || 
+       tmp_header.secinfo.flags.page_type == PT_TCS) {
+        if(!is_aligned(tmp_secs, PAGE_SIZE)) {
+            raise_exception(env, EXCP0D_GPF);
+        }
+        check_within_epc((void *)tmp_secs, env);
+        secs_index = epcm_search(tmp_secs, env);
+        if(epcm[secs_index].valid == 0 || epcm[secs_index].page_type == PT_SECS) {
+            raise_exception(env, EXCP0D_GPF);
+        }
+    }
+    else if(tmp_header.secinfo.flags.page_type == PT_SECS ||
+            tmp_header.secinfo.flags.page_type == PT_VA) {
+        if(tmp_secs != 0)
+            raise_exception(env, EXCP0D_GPF);
+    }
+    else {
+        raise_exception(env, EXCP0D_GPF);
+    }
+    if (tmp_header.secinfo.flags.page_type == PT_REG ||
+        tmp_header.secinfo.flags.page_type == PT_TCS) { 
+        tmp_header.eid = tmp_secs->eid_reserved.eid_pad.eid;
+    }
+    else {
+        tmp_header.eid = 0;
+    }
+    memcpy(ciphertext, tmp_srcpge, PAGE_SIZE);
+    tmp_ver = env->regs[R_EDX];
+    
+    decrypt_epc(ciphertext, PAGE_SIZE, (unsigned char *)&tmp_header, sizeof(tmp_header),
+                (unsigned char *)tmp_mac, gcm_key, NULL, (unsigned char *)env->regs[R_ECX]); 
+
+    if(!memcmp(tmp_mac, tmp_pcmd->mac, 16)) {
+        env->regs[R_EAX] = ERR_SGX_MAC_COMPARE_FAIL;
+        goto ERROR_EXIT;
+    }
+    if(env->regs[R_EDX] != 0) { //XXX ? 
+        raise_exception(env, EXCP0D_GPF);
+    }
+    else {
+        env->regs[R_EDX] = tmp_ver;
+    }
+    epcm[epc_index].page_type = tmp_header.secinfo.flags.page_type;
+    epcm[epc_index].read    = tmp_header.secinfo.flags.r;
+    epcm[epc_index].write   = tmp_header.secinfo.flags.w;
+    epcm[epc_index].execute = tmp_header.secinfo.flags.x;
+    epcm[epc_index].enclave_addr = tmp_header.linaddr;
+
+    if(env->regs[R_EAX] == 0x07) 
+        epcm[epc_index].blocked = 1;
+    else
+        epcm[epc_index].blocked = 0;
+
+    epcm[epc_index].valid = 1;
+    env->regs[R_EAX] = 0;
+    env->eflags &= ~(CC_Z);
+
+    ERROR_EXIT:
+        env->eflags &= ~(CC_C | CC_P | CC_A | CC_O | CC_S);
+}
+
 /*
 static void sgx_eremove(CPUX86State *env)
 {
@@ -4740,6 +4851,9 @@ void helper_sgx_encls(CPUX86State *env)
         case ENCLS_EINIT:
             sgx_einit(env);
             break;
+        case ENCLS_ELDB:
+        case ENCLS_ELDU:
+            sgx_eldb(env);
         case ENCLS_EREMOVE:
            //sgx_eremove(env);
             break;

@@ -88,21 +88,12 @@ g. Customized ssl library
    - Changing standard library calls into sgx ABI calls to put and run them inside the enclave
    - Library repackaging
      $ cd user/openssl
-     $ ./config no-dso no-asm no-engines
+     $ ./config no-comp no-asm no-shared no-hw no-engines no-threads no-dso
      $ make
-     $ cp libcrypto.a path/to/any/other/place && cd path/to/any/other/place
-     $ ar -x libcrypto.a && rename 's/^/ssl_/' *.o
-     $ ar cr sslLib.a *.o && mv sslLib.a sgx/user
-   - After get sslLib.a (customized openssl for sgx), compile and use ssl library functions
-     (See test/simple-openssl.c)
+   - After get libcrypto.a (customized openssl for sgx), compile and use ssl library functions
+     (See tp/README or tor/README)
 
 h. local attestation
    - Based on polarssl (modified polarssl, user/polarssl_sgx)
    - Changing standard library calls into sgx ABI calls to put and run them inside the enclave
-   - Library repackaging
-     $ cd user/polarssl_sgx
-     $ make
-     $ cp *.o path/to/any/other/place && cd path/to/any/other/place
-     $ rename 's/^/polarssl_/' *.o
-     $ cp *.o sgx/user/attest && cp *.o sgx/user/attest_c
-   - For execution, ./attest/sgx-attest (server) first and then execute ./attest_c/sgx-attest-c (client)
+   - For execution, see test/simple-challenger, test/simple-quotingEnclave, and test/simple-targetEnclave.
