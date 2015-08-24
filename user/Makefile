@@ -28,9 +28,9 @@ ALL  := $(BINS) sgx-tool sgx-test-runtime
 
 all: $(ALL)
 
-include tor/tor.mak
+#include tor/tor.mak
 
-include tp/tp.mak
+#include tp/tp.mak
 
 sgx-test-runtime: sgx-test-runtime.o $(SGX_OBJS) $(SSL_OBJS)
 	$(CC) $(CFLAGS) $^ -o $@
