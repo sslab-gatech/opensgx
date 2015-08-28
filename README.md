@@ -48,9 +48,9 @@ $ ./opensgx -c user/demo/hello.c
 generate hello.sgx
 $ ./opensgx -s user/demo/hello.sgx --key sign.key
 generate hello.conf
-$ ./opensgx user/demo/hello.conf
+$ ./opensgx user/demo/hello.sgx user/demo/hello.conf
 run the program
-$ ./opensgx -i user/demo/hello.conf
+$ ./opensgx -i user/demo/hello.sgx user/demo/hello.conf
 run the program with counting the number of executed guest instructions
 ~~~~~
 
