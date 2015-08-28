@@ -1,4 +1,4 @@
-SGX_LIBS := sgxLib.o sslLib.a 
+SGX_LIBS := sgxLib.o sslLib.a
 SGX_RUNTIME := sgx-runtime.o sgx-test-runtime.o
 SGX_OBJS := sgx-user.o sgx-kern.o sgx-kern-epc.o sgx-utils.o sgx-trampoline.o sgx-crypto.o
 
@@ -24,13 +24,16 @@ HDRS := $(wildcard include/sgx*.h)
 BINS := $(patsubst %.c,%,$(wildcard test/*.c)) \
         $(patsubst %.c,%,$(wildcard test/test_kern/*.c)) \
         $(patsubst %.c,%,$(wildcard non_enclave/*.c))
-ALL  := $(BINS) sgx-tool sgx-test-runtime
+ALL  := $(BINS) sgx-tool sgx-test-runtime sgx-runtime
 
 all: $(ALL)
 
 #include tor/tor.mak
 
 #include tp/tp.mak
+
+sgx-runtime: sgx-runtime.o $(SGX_OBJS) $(SSL_OBJS)
+	$(CC) $(CFLAGS) $^ -o $@
 
 sgx-test-runtime: sgx-test-runtime.o $(SGX_OBJS) $(SSL_OBJS)
 	$(CC) $(CFLAGS) $^ -o $@
@@ -42,7 +45,7 @@ polarssl_sgx/%.o: polarssl_sgx/%.c
 	$(CC) -c  -I./polarssl_sgx/include -fPIC -Wall -o $@ $<
 
 #lib/%.o: lib/%.c sgxLib.o $(SSL_SGX_OBJS)
-lib/%.o: lib/%.c 
+lib/%.o: lib/%.c
 	$(CC) -c $(CFLAGS) -o $@ $<
 
 %.o: %.c $(HDRS)

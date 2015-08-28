@@ -292,11 +292,12 @@ void generate_enclavehash(void *hash, void *code, int code_pages,
     int sec_npages = 1;
     int tcs_npages = 1;
     int tls_npages = get_tls_npages(tmp_tcs);
-    int ssa_npages = STACK_PAGE_FRAMES_PER_THREAD;
+    int ssa_npages = 2;
+    int stack_npages = STACK_PAGE_FRAMES_PER_THREAD;
     int heap_npages = HEAP_PAGE_FRAMES;
 
     int npages = sec_npages + tcs_npages + tls_npages + code_pages +
-                 ssa_npages + heap_npages;
+                 ssa_npages + stack_npages + heap_npages;
 
     // Initialize hash value.
     memset(hash, 0, 32);
@@ -366,6 +367,15 @@ void generate_enclavehash(void *hash, void *code, int code_pages,
     // Measrue ssa pages.
     page = (void *)empty_page;
     for (int i = 0; i < ssa_npages; i++) {
+        memset(&current_page, 0, PAGE_SIZE);
+        memcpy(&current_page, &page, sizeof(uintptr_t));
+        measure_page_add(hash, &current_page, &tmp_secinfo, page_offset);
+        page_offset += PAGE_SIZE;
+    }
+
+    // Measure stack pages.
+    page = (void *)empty_page;
+    for (int i = 0; i < stack_npages; i++) {
         memset(&current_page, 0, PAGE_SIZE);
         memcpy(&current_page, &page, sizeof(uintptr_t));
         measure_page_add(hash, &current_page, &tmp_secinfo, page_offset);

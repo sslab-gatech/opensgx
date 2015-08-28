@@ -147,7 +147,7 @@ SECTIONS
   . = DATA_SEGMENT_RELRO_END (24, .);
   .got.plt        : { *(.got.plt)  *(.igot.plt) }
 
-  . = 0x20008000;
+  . = 0x4000c000;
   .enc_text   : ALIGN(0x1000)
     {
       ENCT_START = .;
