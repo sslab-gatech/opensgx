@@ -3,7 +3,8 @@ ROOT=$(dirname "$0")
 SGXTOOL=$ROOT/user/sgx-tool
 SGX=$ROOT/sgx
 DEVICEKEY=$ROOT/user/conf/device.key
-SGXRUNTIME=$ROOT/user/sgx-test-runtime
+SGXTESTRUNTIME=$ROOT/user/sgx-test-runtime
+SGXRUNTIME=$ROOT/user/sgx-runtime
 
 key_gen() {
   FILENAME=sign.key
@@ -165,7 +166,7 @@ loading() {
   array=($entry)
   entry=${array[0]}
 
-  $SGX $SGXRUNTIME $1 $size $offset $code_start $code_end $data_start $data_end $entry
+  $SGX $SGXTESTRUNTIME $1 $size $offset $code_start $code_end $data_start $data_end $entry
 }
 
 case "$1" in
