@@ -11,6 +11,9 @@ test/passMan/app
 test/passMan/libenclave.so
 test/passMan/pmTest
 
+qemu/roms/seabios/config.mak
+qemu/roms/vgabios/config.mak
+
 # Tor files
 Tor/tor-0.2.5.10/doc/*
 Tor/tor-0.2.5.10/micro-revision.i
