@@ -7,10 +7,13 @@
 *.swn
 *.swo
 a.out
+user/sgx-runtime
+user/sgx-test-runtime
 test/passMan/app
 test/passMan/libenclave.so
 test/passMan/pmTest
 
+# qemu
 qemu/roms/seabios/config.mak
 qemu/roms/vgabios/config.mak
 

@@ -1,0 +1,7 @@
+- qemu: GNU GPL v2
+- qemu/roms/SLOF (IBM)
+- qemu/tcg (BSD-like)
+- openssl: (OpenSSL License and SSLeay)
+
+NOTE. all derivitives inherit corresponding license, but
+our code follow MIT.
