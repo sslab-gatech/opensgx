@@ -78,7 +78,7 @@ char *fmt_bytes(uint8_t *bytes, int size)
 
 char *dump_sigstruct(sigstruct_t *s)
 {
-    char *msg = malloc(4096);
+    char *msg = malloc(5120);
     if (!msg)
         return NULL;
 
@@ -106,7 +106,7 @@ char *dump_sigstruct(sigstruct_t *s)
     char *q1            = fmt_bytes(s->q1, 384);
     char *q2            = fmt_bytes(s->q2, 384);
 
-    snprintf(msg, 4096,"\
+    snprintf(msg, 5120,"\
 HEADER        : %s\n\
 VENDOR        : %s\n\
 DATE          : %s\n\
