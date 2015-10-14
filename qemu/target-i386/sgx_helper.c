@@ -32,7 +32,7 @@ static epc_map * enclaveTrackEntry = NULL;      // Tracking pointers For enclave
 static eid_einit_t * entry_eid = NULL;
 static uint64_t EPC_BaseAddr;
 static uint64_t EPC_EndAddr;
-/* Collaborate them */
+// Collaborate them
 static bool enclave_init = false;
 //static bool enclave_Access = false;
 static bool einit_Success = false;
@@ -65,18 +65,20 @@ static const unsigned char gcm_key[] = {
 0x5f, 0x8a, 0xe6, 0xd1, 0x65, 0x8b, 0xb2, 0x6d, 0xe6, 0xf8, 0xa0, 0x69,
 0xa3, 0x52, 0x02, 0x93};
 
-void handleError(char *errMsg)
+static
+void handleError(const char *errMsg)
 {
     printf("%s\n", errMsg);
     exit(-1);
 }
 
+static
 int encrypt_epc(unsigned char *plaintext, int plaintext_len, unsigned char *aad,
-            int aad_len, unsigned char *key, unsigned char *iv,
+            int aad_len, const unsigned char *key, unsigned char *iv,
             unsigned char *ciphertext, unsigned char *tag) {
     EVP_CIPHER_CTX *ctx;
     int len;
-    int ciphertext_len; 
+    int ciphertext_len;
 
     if(!(ctx = EVP_CIPHER_CTX_new())) {
         handleError("Context Creation Error !!!");
@@ -96,26 +98,26 @@ int encrypt_epc(unsigned char *plaintext, int plaintext_len, unsigned char *aad,
     if(EVP_EncryptUpdate(ctx, ciphertext, &len, plaintext, plaintext_len) !=1 ) {
         handleError("Encryption Error !!!");
     }
-    ciphertext_len = len; 
+    ciphertext_len = len;
 
 
-    /* Finalise the encryption. Normally ciphertext bytes may be written at
-     * this stage, but this does not occur in GCM mode
-     */
+    // Finalise the encryption. Normally ciphertext bytes may be written at
+    // this stage, but this does not occur in GCM mode
     if(EVP_EncryptFinal_ex(ctx, ciphertext + len, &len) != 1) {
         handleError("Finalize Error !!!");
     }
-    /* Get the tag  */
-    if(EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, 16, tag) != 1) { 
+    // Get the tag
+    if(EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, 16, tag) != 1) {
         handleError("Getting Tag Error !!!");
     }
-    /* Clean up */
+    // Clean up
     EVP_CIPHER_CTX_free(ctx);
     return ciphertext_len;
 }
 
+static
 int decrypt_epc(unsigned char *ciphertext, int ciphertext_len, unsigned char *aad,
-            int aad_len, unsigned char *tag, unsigned char *key, unsigned char *iv,
+            int aad_len, unsigned char *tag, const unsigned char *key, unsigned char *iv,
             unsigned char *plaintext)
 {
     EVP_CIPHER_CTX *ctx;
@@ -128,7 +130,7 @@ int decrypt_epc(unsigned char *ciphertext, int ciphertext_len, unsigned char *aa
         handleError("Context Creation Error !!!");
     }
     // init the decrypt operation
-    if(!EVP_DecryptInit_ex(ctx, EVP_aes_128_gcm(), NULL, NULL, NULL)) { 
+    if(!EVP_DecryptInit_ex(ctx, EVP_aes_128_gcm(), NULL, NULL, NULL)) {
         handleError("EVIP Decrypt Init Error !!!");
     }
     // Set iv length.
@@ -137,7 +139,7 @@ int decrypt_epc(unsigned char *ciphertext, int ciphertext_len, unsigned char *aa
     }
     if(EVP_DecryptInit_ex(ctx, NULL, NULL, key, iv) != 1) {
         handleError("Key & IV Init Error !!!");
-    } 
+    }
     if(EVP_DecryptUpdate(ctx, NULL, &len, aad, aad_len) !=1 ) {
         handleError("Aad Addtion Error !!!");
     }
@@ -149,11 +151,10 @@ int decrypt_epc(unsigned char *ciphertext, int ciphertext_len, unsigned char *aa
     if(!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, 16, tag)) {
         handleError("Setting Tag Error !!!");
     }
-    /*
-      A non positive return value from EVP_DecryptFinal_ex 
-      should be considered as a failure to authenticate 
-      ciphertext and/or AAD
-    */
+
+    //  A non positive return value from EVP_DecryptFinal_ex
+    //  should be considered as a failure to authenticate
+    //  ciphertext and/or AAD
     ret = EVP_DecryptFinal_ex(ctx, plaintext + len, &len);
 
     // clean up
@@ -289,26 +290,28 @@ bool is_within_same_epc(void *target_addr1, void *target_addr2, CPUX86State *env
     check_within_epc(target_addr2, env);
 
     int i = 0, target_index1 = 0, target_index2 = 0 ;
-    int start_addr, end_addr; 
-  
-    start_addr = EPC_BaseAddr; 
+    int start_addr, end_addr;
+
+    start_addr = EPC_BaseAddr;
     end_addr = EPC_BaseAddr + PAGE_SIZE;
     for (i = 0 ; i < NUM_EPC; i++) {
-       if( target_index1 && target_index2) //found two indices. 
+       if (target_index1 && target_index2) //found two indices.
            break;
-       if((!target_index1) && (target_addr1 > start_addr) && (target_addr1 < end_addr)) {
+       if((!target_index1) && ((uintptr_t)target_addr1 > start_addr) &&
+		  ((uintptr_t)target_addr1 < end_addr)) {
            target_index1 = i;
        }
-       if((!target_index2) && (target_addr2 > start_addr) && (target_addr2 < end_addr)) {
+       if((!target_index2) && ((uintptr_t)target_addr2 > start_addr) &&
+		  ((uintptr_t)target_addr2 < end_addr)) {
            target_index2 = i;
        }
        start_addr += PAGE_SIZE;
        end_addr += PAGE_SIZE;
     }
-    printf("first target addr:%lx\t index:%d\n", target_addr1, target_index1);
-    printf("second target addr:%lx\t index:%d\n", target_addr2, target_index2);
+    printf("first target addr:%lx\t index:%d\n", (uintptr_t)target_addr1, target_index1);
+    printf("second target addr:%lx\t index:%d\n", (uintptr_t)target_addr2, target_index2);
 
-    return (target_index1 == target_index2); 
+    return (target_index1 == target_index2);
 }
 
 // Canonical Check
@@ -438,12 +441,15 @@ void set_ssa_base(void)
 }
 
 // Update the SSA Base
+// Unused.
+#if 0
 static
 void update_ssa_base(void)
 {
     enclave_ssa_base = (enclave_ssa_base < NUM_EPC) ?
                        enclave_ssa_base + 1 : NUM_EPC;
 }
+#endif
 
 static
 void xsave(bool mode, uint64_t xfrm, uint64_t page)
@@ -683,6 +689,8 @@ void set_epcm_entry(epcm_entry_t *epcm_entry, bool valid, bool read, bool write,
     epcm_entry->enclave_addr = addr;
 }
 
+// Unused.
+#if 0
 static
 bool checkRWAccessible(uint64_t page, CPUX86State *env)
 {
@@ -694,19 +702,25 @@ bool checkRWAccessible(uint64_t page, CPUX86State *env)
         return 0;
     }
 }
+#endif
 
+// Unused.
+#if 0
 static
 uint64_t getPhysicalAddr(CPUX86State *env, uint64_t virtualPage)
 {
     return get_page_addr_code(env, virtualPage);
 }
+#endif
 
 // Unused currently, broken thread support
+#if 0
 static
 bool releaseLocks(void)
 {
     return 0;
 }
+#endif
 
 // Check within DS Segment
 static
@@ -1088,7 +1102,7 @@ void helper_mem_execute(CPUX86State *env, target_ulong a0)
                 raise_exception(env, EXCP0D_GPF);
             }
             else if((epcm[epcm_index].execute) == 0){
-                sgx_dbg(trace, "EPCM execute property is violated at %p", mem_addr);
+                sgx_dbg(trace, "EPCM execute property is violated at %p", (void *)mem_addr);
                 raise_exception(env, EXCP0D_GPF);
             }
         }
@@ -1127,11 +1141,11 @@ void helper_mem_access(CPUX86State *env, target_ulong a0, int operation)
                 raise_exception(env, EXCP0D_GPF);
             }
             else if((operation == ld_) && (epcm[epcm_index].read) == 0){
-                sgx_dbg(trace, "EPCM read property is violated at %p", mem_addr);
+                sgx_dbg(trace, "EPCM read property is violated at %p", (void *)mem_addr);
                 //raise_exception(env, EXCP0D_GPF);  // blocked temporarily just for reaching the end of epcm rwx test
             }
             else if((operation == st_) && (epcm[epcm_index].write) == 0){
-                sgx_dbg(trace, "EPCM write property is violated at %p", mem_addr);
+                sgx_dbg(trace, "EPCM write property is violated at %p", (void *)mem_addr);
                 //raise_exception(env, EXCP0D_GPF);  // blocked temporarily just for reaching the end of epcm rwx test
             }
         }
@@ -1447,9 +1461,9 @@ void sgx_eacceptcopy(CPUX86State *env)
     }
 
     //XXX: isn't it redundant ?
-    check_within_epc(env->regs[R_EBX], env);
-    check_within_epc(env->regs[R_ECX], env);
-    check_within_epc(env->regs[R_EDX], env);
+    check_within_epc((void *)env->regs[R_EBX], env);
+    check_within_epc((void *)env->regs[R_ECX], env);
+    check_within_epc((void *)env->regs[R_EDX], env);
 
     sec_index = epcm_search((void *)env->regs[R_EBX], env);
     if(epcm[sec_index].valid == 0 || epcm[sec_index].read == 0 || epcm[sec_index].pending != 0 || 
@@ -1459,12 +1473,12 @@ void sgx_eacceptcopy(CPUX86State *env)
     }
 
     memset(&scratch_secinfo, 0, sizeof(secinfo_t));
-    memcpy(&scratch_secinfo, env->regs[R_EBX], sizeof(secinfo_t));
+    memcpy(&scratch_secinfo, (void *)env->regs[R_EBX], sizeof(secinfo_t));
 
     //check for mis-configured secinfo flags
     is_reserved_zero(scratch_secinfo.reserved, sizeof(((secinfo_t *)0)->reserved), env);
     if((scratch_secinfo.flags.r == 0 && scratch_secinfo.flags.w != 0) ||
-       scratch_secinfo.flags.page_type != PT_REG) { 
+       scratch_secinfo.flags.page_type != PT_REG) {
         raise_exception(env, EXCP0D_GPF);
     }
 
@@ -1485,7 +1499,7 @@ void sgx_eacceptcopy(CPUX86State *env)
         goto Done;
     }
     //TODO: check destination EPC page for concurrency 
-    
+
     //Re-check security attributes of the destination EPC page
     //check security attributes of the destination EPC page
     if(epcm[dst_index].valid == 0 || epcm[dst_index].pending != 1 || epcm[dst_index].modified != 0 ||
@@ -1527,14 +1541,16 @@ void sgx_eenter(CPUX86State *env)
     uint64_t tmp_gslimit;
     uint64_t tmp_ssa;
     uint64_t tmp_xsize;
-    uint64_t tmp_ssa_page;
     uint64_t tmp_gpr;
     uint64_t tmp_target;
     uint64_t eid;
     uint16_t index_gpr;
-    uint16_t iter;
-    uint16_t index_secs;
     uint16_t index_tcs;
+    // Unused variables.
+    //uint16_t iter;
+    //uint16_t index_secs;
+    //uint64_t tmp_ssa_page;
+
 
     // XXX. uint64_t* -> void*
     uint64_t *aep = (uint64_t *)env->regs[R_ECX];
@@ -1629,7 +1645,8 @@ void sgx_eenter(CPUX86State *env)
     // Obtain the Base and Limits of FS and GS Sections
     // Check proposed FS/GS segments fall within DS
     secs_t *tmp_secs =  get_secs_address(&epcm[index_tcs]); // TODO: Change when the ENCLS is implemented - pageinfo_t
-    index_secs = epcm_search(tmp_secs, env);
+    // XXX: unused
+	// index_secs = epcm_search(tmp_secs, env);
 
     // Alignment - OSSA With Page Size
     if (!is_aligned((void *)(tmp_secs->baseAddr + tcs->ossa), PAGE_SIZE)) {
@@ -2173,11 +2190,11 @@ void sgx_egetkey(CPUX86State *env)
            (uint8_t *)&keyrequest->miscmask, 4);
 
     // TODO
-    sgx_dbg(trace, "tmp_miscselect %x",tmp_miscselect );
+    sgx_dbg(trace, "tmp_miscselect %x", tmp_miscselect);
     // TODO
-    sgx_dbg(trace, "tmp_currentsecs %x",tmp_currentsecs->miscselect );
+    sgx_dbg(trace, "tmp_currentsecs %x", tmp_currentsecs->miscselect);
     // TODO
-    sgx_dbg(trace, "keyrequest->miscmask %x",keyrequest->miscmask );
+    sgx_dbg(trace, "keyrequest->miscmask %x", keyrequest->miscmask);
     sgx_dbg(trace, "tmp_currentsecs->attributes %x", tmp_currentsecs->attributes);
     keydep_t keydep;
     memset(&keydep, 0, sizeof(keydep_t));
@@ -2431,25 +2448,25 @@ void sgx_emodpe(CPUX86State *env)
             sgx_dbg(trace, "EPC addr is not in CR_ELRANGE: %lx", (long unsigned int)env->regs[R_EBX]);
             raise_exception(env, EXCP0D_GPF);
     }
-    check_within_epc(env->regs[R_EBX], env);
-    check_within_epc(env->regs[R_ECX], env);
-    
+    check_within_epc((void *)env->regs[R_EBX], env);
+    check_within_epc((void *)env->regs[R_ECX], env);
+
     sec_index = epcm_search((void *)env->regs[R_EBX], env);
-    if(epcm[sec_index].valid == 0 || epcm[sec_index].read == 0 || epcm[sec_index].pending != 0 || 
+    if(epcm[sec_index].valid == 0 || epcm[sec_index].read == 0 || epcm[sec_index].pending != 0 ||
        epcm[sec_index].modified != 0 || epcm[sec_index].blocked != 0 || epcm[sec_index].page_type != PT_REG ||
        epcm[sec_index].enclave_secs != env->cregs.CR_ACTIVE_SECS || epcm[sec_index].enclave_addr == env->regs[R_EBX]) {
             raise_exception(env, EXCP0D_GPF);
     }
 
     memset(&scratch_secinfo, 0, sizeof(secinfo_t));
-    memcpy(&scratch_secinfo, env->regs[R_EBX], sizeof(secinfo_t));
+    memcpy(&scratch_secinfo, (void *)env->regs[R_EBX], sizeof(secinfo_t));
 
     is_reserved_zero(&(scratch_secinfo.reserved), sizeof(((secinfo_t *)0)->reserved), env);
 
     //check security attributes of the EPC page
     epc_index = epcm_search((void*)env->regs[R_ECX], env);
     if(epcm[epc_index].valid == 0 || epcm[epc_index].pending != 0 || epcm[epc_index].modified != 0 ||
-       epcm[epc_index].blocked != 0 || epcm[epc_index].page_type != PT_REG || 
+       epcm[epc_index].blocked != 0 || epcm[epc_index].page_type != PT_REG ||
        epcm[epc_index].enclave_secs != env->cregs.CR_ACTIVE_SECS) {
             raise_exception(env, EXCP0D_GPF);
     }
@@ -2615,16 +2632,17 @@ void sgx_eresume(CPUX86State *env)
     uint64_t tmp_gsbase;
     uint64_t tmp_gslimit;
     uint64_t tmp_ssa;
-    uint64_t tmp_xsize;
-    uint64_t tmp_ssa_page;
     uint64_t tmp_gpr;
     uint64_t eid;
     uint64_t tmp_target;
     uint16_t index_gpr;
-    uint16_t iter;
-    uint16_t index_secs;
     uint16_t index_tcs;
     operation = eresume;
+    // Unused variables.
+    //uint16_t iter;
+    //uint16_t index_secs;
+    //uint64_t tmp_ssa_page;
+    //uint64_t tmp_xsize;
 
     sgx_dbg(trace, "Current ESP: %lx   EBP: %lx", env->regs[R_ESP], env->regs[R_EBP]);
     // Store the inputs
@@ -2725,9 +2743,10 @@ void sgx_eresume(CPUX86State *env)
     // Obtain the Base and Limits of FS and GS Sections
     // Check proposed FS/GS segments fall within DS
     secs_t *tmp_secs =  get_secs_address(&epcm[index_tcs]);//Change when the ENCLS is implemented - pag
-    index_secs = epcm_search(tmp_secs, env);
+
+	//index_secs = epcm_search(tmp_secs, env); // XXX: unused.
 #if DEBUG
-    sgx_dbg(trace, "INDEX_SECS: %d", index_secs);
+    // sgx_dbg(trace, "INDEX_SECS: %d", index_secs);
 #endif
     // Alignment - OSSA With Page Size
     if (!is_aligned((void *)(tmp_secs->baseAddr + tcs->ossa), PAGE_SIZE)) {
@@ -2771,10 +2790,11 @@ void sgx_eresume(CPUX86State *env)
 
     // Compute linear address of SSA frame
     tmp_ssa = (tcs->ossa) + (tmp_secs->baseAddr + PAGE_SIZE * tmp_secs->ssaFrameSize * (tcs->cssa - 1));
-    tmp_xsize = compute_xsave_frame_size(env, tmp_secs->attributes);
+    // XXX: unused.
+	//tmp_xsize = compute_xsave_frame_size(env, tmp_secs->attributes);
 
 #if DEBUG
-    sgx_dbg(trace, "SSA_: %lx  XSize: %lu", tmp_ssa, tmp_xsize);
+    //sgx_dbg(trace, "SSA_: %lx  XSize: %lu", tmp_ssa, tmp_xsize);
 #endif
 
 // TODO: Implement XSAVE/XSTOR related spec
@@ -3989,8 +4009,8 @@ void sgx_eldb(CPUX86State *env)
     }
     //TODO: (* Check concurrency of EPC and VASLOT by other SGX instructions *)
 
-    epc_index = epcm_search(env->regs[R_ECX], env);
-    va_index = epcm_search(env->regs[R_EDX], env);
+    epc_index = epcm_search((void *)env->regs[R_ECX], env);
+    va_index = epcm_search((void *)env->regs[R_EDX], env);
     if(epcm[epc_index].valid == 1 ||
        epcm[va_index].valid == 0 || epcm[va_index].page_type != PT_VA) {
         raise_exception(env, EXCP0D_GPF);
@@ -4031,7 +4051,7 @@ void sgx_eldb(CPUX86State *env)
     }
     memcpy(ciphertext, tmp_srcpge, PAGE_SIZE);
     tmp_ver = env->regs[R_EDX];
-    
+
     decrypt_epc(ciphertext, PAGE_SIZE, (unsigned char *)&tmp_header, sizeof(tmp_header),
                 (unsigned char *)tmp_mac, gcm_key, NULL, (unsigned char *)env->regs[R_ECX]); 
 
@@ -4327,16 +4347,16 @@ void sgx_emodpr(CPUX86State *env)
     secs_t   *tmp_secs;
     secinfo_t scratch_secinfo;
     memset(&scratch_secinfo, 0, sizeof(secinfo_t));
- 
+
     if(!is_aligned(env->regs[R_EBX], 64)) {
         raise_exception(env, EXCP0D_GPF);
     }
     if(!is_aligned(env->regs[R_ECX], PAGE_SIZE)) {
         raise_exception(env, EXCP0D_GPF);
     }
-    check_within_epc(env->regs[R_ECX], env);
+    check_within_epc((void *)env->regs[R_ECX], env);
 
-    memcpy(&scratch_secinfo, env->regs[R_EBX], sizeof(secinfo_t));
+    memcpy(&scratch_secinfo, (void *)env->regs[R_EBX], sizeof(secinfo_t));
 
     // (* Check for mis-configured SECINFO flags*)
     is_reserved_zero(scratch_secinfo.reserved, sizeof(((secinfo_t *)0)->reserved), env);
@@ -4350,12 +4370,12 @@ void sgx_emodpr(CPUX86State *env)
     if(epcm[page_index].valid == 0) {
         raise_exception(env, EXCP0D_GPF);
     }
-    // TODO: Check the EPC page for concurrency 
-    
+    // TODO: Check the EPC page for concurrency
+
     if(epcm[page_index].pending != 0 || epcm[page_index].modified != 0) {
         env->eflags = 1;
         env->regs[R_EAX] = ERR_SGX_PAGE_NOT_MODIFIABLE;
-        goto Done; 
+        goto Done;
     }
     if(epcm[page_index].page_type != PT_REG) {
         raise_exception(env, EXCP0D_GPF);
@@ -4364,11 +4384,11 @@ void sgx_emodpr(CPUX86State *env)
     //we don't have init field in secs.attributes..
     //TODO: if(tmp_secs.attributes.init == 0)
     //TODO: check concurrency with ETRACK
-    
+
     epcm[page_index].read &= scratch_secinfo.flags.r;
     epcm[page_index].write &= scratch_secinfo.flags.w;
     epcm[page_index].execute &= scratch_secinfo.flags.x;
-    
+
     env->eflags &= ~(CC_Z);
     env->regs[R_EAX] = 0;
 
@@ -4449,7 +4469,6 @@ b. EMODT may only be called on VALID pages
 static
 void sgx_emodt(CPUX86State *env)
 {
-    
     // RBX: SECINFO addr(In, EA)
     // RCX: EPC Addr(In, EA)
     // EAX: Error Code(Out)
@@ -4486,7 +4505,6 @@ void sgx_emodt(CPUX86State *env)
     }
 
     // TODO:(* Check concurrency with SGX1 instructions on the EPC page *)
-    
     epcm_index = epcm_search(target_addr, env);
     if (epcm[epcm_index].page_type == PT_REG || epcm[epcm_index].page_type == PT_TCS) {
         raise_exception(env, EXCP0E_PAGE);
@@ -4494,7 +4512,7 @@ void sgx_emodt(CPUX86State *env)
 
     // (* Check for mis-configured SECINFO flags*)
     if ((epcm[epcm_index].read == 0) && (scratch_secinfo.flags.r == 0) &&
-        (scratch_secinfo.flags.w != 0)) { 
+        (scratch_secinfo.flags.w != 0)) {
         env->eflags = 1;
         env->regs[R_EAX] = ERR_SGX_PAGE_NOT_MODIFIABLE;
         goto Done;
@@ -4521,11 +4539,10 @@ void sgx_emodt(CPUX86State *env)
 
     env->eflags &= ~(CC_Z);
     env->regs[R_EAX] = 0;
-   
 
-    Done: 
+
+    Done:
     env->eflags &= ~(CC_C | CC_P | CC_A | CC_O | CC_S );
-    
 }
 
 static
@@ -4579,21 +4596,21 @@ void sgx_ewb(CPUX86State *env)
     uint64_t tmp_pcmd_enclaveid;
     mac_header_t tmp_header; //MAC Header
     memset(&tmp_header, 0, 128);
-    uint64_t tmp_ver;
+    uint64_t tmp_ver = 0;
 
-    if (!(is_aligned(env->regs[R_EBX], 32)) || 
+    if (!(is_aligned(env->regs[R_EBX], 32)) ||
         !(is_aligned(env->regs[R_ECX], PAGE_SIZE))) {
         raise_exception(env, EXCP0D_GPF);
     }
-    check_within_epc(env->regs[R_ECX], env);
+    check_within_epc((void *)env->regs[R_ECX], env);
 
     if (!(is_aligned(env->regs[R_EDX], 8))) {
         raise_exception(env, EXCP0D_GPF);
-    } 
-    check_within_epc(env->regs[R_EDX], env);
+    }
+    check_within_epc((void *)env->regs[R_EDX], env);
 
     /* EPCPAGE and VASLOT should not resolve to the same EPC page */
-    if(is_within_same_epc(env->regs[R_ECX], env->regs[R_EDX], env)) {
+    if(is_within_same_epc((void *)env->regs[R_ECX], (void *)env->regs[R_EDX], env)) {
         raise_exception(env, EXCP0D_GPF);
     }
     tmp_srcpge = ((pageinfo_t*)(env->regs[R_EBX]))->srcpge;
@@ -4604,10 +4621,10 @@ void sgx_ewb(CPUX86State *env)
     }
     /* TODO: Check for concurrent SGX instruction access to the page */
     /* TODO: Check if the VA Page is being removed or changed*/
-    epc_index = epcm_search(env->regs[R_ECX], env);
-    va_index = epcm_search(env->regs[R_EDX], env);
+    epc_index = epcm_search((void *)env->regs[R_ECX], env);
+    va_index = epcm_search((void *)env->regs[R_EDX], env);
     /* Verify that EPCPAGE and VASLOT page are valid EPC pages and DS:RDX is VA */
-    if((epcm[epc_index].valid == 0) || (epcm[va_index].valid == 0) || 
+    if((epcm[epc_index].valid == 0) || (epcm[va_index].valid == 0) ||
        (epcm[va_index].page_type != PT_VA)) {
         raise_exception(env, EXCP0D_GPF);
     }
@@ -4619,8 +4636,8 @@ void sgx_ewb(CPUX86State *env)
 
     env->eflags &= ~(CC_Z | CC_C | CC_P | CC_A | CC_O | CC_S);
     env->regs[R_EAX] = 0x0;
-   
-    /* Perform page-type-specific checks */ 
+
+    /* Perform page-type-specific checks */
     if((epcm[epc_index].page_type == PT_REG || epcm[epc_index].page_type == PT_TCS)) {
         /* check to see if the page is evictable */
         if(epcm[epc_index].blocked == 0) {
@@ -4651,13 +4668,14 @@ void sgx_ewb(CPUX86State *env)
     tmp_header.secinfo.flags.x = epcm[epc_index].execute;
     // it seems rsvd in the spec indicates reserved field.. but not sure..
     //TMP_HEADER.SECINFO.FLAGS.RSVD = 0;
- 
+
     /* Encrypt the page, AES-GCM produces 2 values, {ciphertext, MAC}. */
     encrypt_epc((unsigned char *)env->regs[R_ECX], PAGE_SIZE, (unsigned char *)&tmp_header,
-                sizeof(tmp_header), gcm_key, NULL, tmp_srcpge, tmp_pcmd->mac);
+                sizeof(tmp_header), gcm_key, NULL, (unsigned char *)tmp_srcpge,
+				(unsigned char *)tmp_pcmd->mac);
 
     memset(&tmp_pcmd->secinfo, 0 , sizeof(secinfo_t));
-    tmp_pcmd->secinfo.flags.page_type = epcm[epc_index].page_type; 
+    tmp_pcmd->secinfo.flags.page_type = epcm[epc_index].page_type;
     tmp_pcmd->secinfo.flags.r = epcm[epc_index].read;
     tmp_pcmd->secinfo.flags.w = epcm[epc_index].write;
     tmp_pcmd->secinfo.flags.x = epcm[epc_index].execute;
@@ -4702,8 +4720,8 @@ static void sanity_check(void)
     assert(sizeof(attributes_t) == 16);
     assert(sizeof(tcs_t) == 4096);
     assert(sizeof(tcs_flags_t) == 8);
-    printf("exininfo_t size: %d\n", sizeof(exitinfo_t));
-    printf("grpsgx_t size: %d\n", sizeof(gprsgx_t));
+    printf("exininfo_t size: %lu\n", sizeof(exitinfo_t));
+    printf("grpsgx_t size: %lu\n", sizeof(gprsgx_t));
     assert(sizeof(gprsgx_t) == 192);
     assert(sizeof(ssa_t) == 4096);
     assert(sizeof(pageinfo_t) == 32);

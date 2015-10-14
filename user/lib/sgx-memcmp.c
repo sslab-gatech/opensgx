@@ -62,7 +62,7 @@ typedef unsigned char byte;
    A and B are known to be different.
    This is needed only on little-endian machines.  */
 
-static int memcmp_bytes (op_t, op_t) __THROW;
+//static int memcmp_bytes (op_t, op_t) __THROW;
 
 static int
 memcmp_bytes (op_t a, op_t b)
@@ -82,7 +82,7 @@ memcmp_bytes (op_t a, op_t b)
   return a0 - b0;
 }
 
-static int memcmp_common_alignment (long, long, size_t) __THROW;
+//static int memcmp_common_alignment (long, long, size_t) __THROW;
 
 /* memcmp_common_alignment -- Compare blocks at SRCP1 and SRCP2 with LEN `op_t'
    objects (not LEN bytes!).  Both SRCP1 and SRCP2 should be aligned for
@@ -166,7 +166,7 @@ memcmp_common_alignment (long int srcp1, long int srcp2, size_t len)
   return 0;
 }
 
-static int memcmp_not_common_alignment (long, long, size_t) __THROW;
+//static int memcmp_not_common_alignment (long, long, size_t) __THROW;
 
 /* memcmp_not_common_alignment -- Compare blocks at SRCP1 and SRCP2 with LEN
    `op_t' objects (not LEN bytes!).  SRCP2 should be aligned for memory
