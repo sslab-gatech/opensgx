@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SGX=$(dirname "$0")/../sgx
+SGX=$(dirname "$0")/../opensgx
 PYTHON=python
 
 print_usage() {
@@ -27,7 +27,7 @@ run_test() {
 
   mkdir -p log
   BASE=log/$(basename $FILE)
-  $SGX $1 >$BASE.stdout 2>$BASE.stderr
+  $SGX -t $1 >$BASE.stdout 2>$BASE.stderr
   EXIT=$?
   EXPECT=0
 
@@ -104,6 +104,14 @@ case "$1" in
       printf "%-30s: please test it with simple_client together\n" "$OUT" 
       continue  
       fi 
+      if [[ "$OUT" == "test/simple-quotingEnclave" ]]; then
+      printf "%-30s: please test it with simple_targetEnclave together\n" "$OUT" 
+      continue  
+      fi 
+      if [[ "$OUT" == "test/simple-targetEnclave" ]]; then
+      printf "%-30s: please test it with simple_quotingEnclave together\n" "$OUT" 
+      continue  
+      fi 
       if [[ "$OUT" == "test/simple-openssl" ]]; then
       printf "%-30s: temporarily blocked\n" "$OUT" 
       continue  
@@ -151,6 +159,6 @@ case "$1" in
     ;;
   *)
     make $1
-    $SGX $1
+    $SGX -t $1
     ;;
 esac
