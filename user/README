@@ -41,7 +41,7 @@ c. Current settings
    - Stack per thread size:
 
 d. ECP Memory layout
-   - Consider the case of adding one encalve.
+   - Consider the case of adding one enclave.
 
    =========================================
                   EPC Addr Begin
@@ -79,7 +79,7 @@ f. Security features
                        RESERVED, MISCSELECT*, MISCMASK*, RESERVED2,
                        ATTRIBUTE, ATTRIBUTEMASK, ENCLAVEHASH, RESERVED3,
                        ISVPROID, ISVSVN
-   - Enclave measurement: sigstruct.encalvehash == secs.mrenclave
+   - Enclave measurement: sigstruct.enclavehash == secs.mrenclave
      - Before execute EINIT, EEXTEND is used to measure enclave and update the
        sec.mrenclave vaule.
 

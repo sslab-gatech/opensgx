@@ -1237,7 +1237,7 @@ void sgx_egetkey_common_check(CPUX86State *env, uint64_t *reg,
     }
 
     /* If reg is not properly aligned, then GP(0) */
-    // FIXME: enforce memory alignment with array declaration inside the encalve.
+    // FIXME: enforce memory alignment with array declaration inside the enclave.
     // is_aligned((void *)reg, alignment, env);
 
     /* Check reg is an EPC address */
