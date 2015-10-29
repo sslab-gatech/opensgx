@@ -487,7 +487,7 @@ int sys_create_enclave(void *base, unsigned int code_pages,
     // allocate secs
     int enclave_size = PAGE_SIZE * npages;
     printf("DEBUG npages is %d\n",npages);
-    printf("encalve size is %x\n", PAGE_SIZE * npages);
+    printf("enclave size is %x\n", PAGE_SIZE * npages);
 
     void *enclave_addr = epc_to_vaddr(enclave);
 
