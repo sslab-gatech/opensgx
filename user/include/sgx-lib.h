@@ -141,3 +141,6 @@ extern char * sgx_strncat (char *s1, const char *s2, size_t n);
 extern int sgx_attest_target(struct sockaddr *quote_addr, socklen_t quote_addrlen, struct sockaddr *challenger_addr, socklen_t challenger_addrlen);
 extern int sgx_intra_for_quoting(struct sockaddr *server_addr, socklen_t addrlen);
 extern int sgx_remote(const struct sockaddr *target_addr, socklen_t addrlen);
+
+extern int sgx_enclave_read(void *buf, int len);
+extern int sgx_enclave_write(void *buf, int len);

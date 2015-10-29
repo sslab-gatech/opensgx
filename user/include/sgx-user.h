@@ -33,3 +33,8 @@ extern void exception_handler(void);
 
 extern void sgx_enter(tcs_t *tcs, void (*aep)());
 extern void sgx_resume(tcs_t *tcs, void (*aep)());
+
+extern int sgx_host_read(void *buf, int len);
+extern int sgx_host_write(void *buf, int len);
+
+extern void *OpenSGX_loader(char *binary, int size, long offset, int n_of_pages);
