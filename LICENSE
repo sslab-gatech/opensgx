@@ -2,7 +2,7 @@
 - qemu/roms/SLOF (IBM)
 - qemu/tcg (BSD-like)
 - openssl: (OpenSSL License and SSLeay)
-- polarssl: (ARMmbed mbedtls): Apache 2.0 license 
+- polarssl 1.3.8: (GNU general public license)
 
 NOTE. all derivitives inherit corresponding license, but
 our code follow MIT.
