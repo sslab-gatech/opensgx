@@ -139,8 +139,29 @@ Authors
 - Ming-Wei Shih <mingwei.shih@gatech.edu>
 - JaeHyuk Lee <jhl9105@kaist.ac.kr>
 - Changho Choi <zpzigi@kaist.ac.kr>
+- Youjung Shin
 - Taesoo Kim <taesoo@gatech.edu>
-- Dongsu Han <dongsu.han@gmail.com>
+- Dongsu Han <dongsuh@ee.kaist.ac.kr>
 - Brent Kang <brentkang@gmail.com>
 
 NOTE. All authors at Gatech and KAIST equally contributed to the project
+
+Publications
+-------
+- Paper on OpenSGX
+```
+OpenSGX: An Open Platform for SGX Research
+Prerit Jain, Soham Desai, Seongmin Kim, Ming-Wei Shih, JaeHyuk Lee, Changho Choi, Youjung Shin, Taesoo Kim, Brent Byunghoon Kang, Dongsu Han
+NDSS 2016
+
+
+@inproceedings{opensgx,
+        title        = {{OpenSGX: An Open Platform for SGX Research}},
+        author       = {Prerit Jain and  Soham Desai and Seongmin Kim and  Ming-Wei Shih and  JaeHyuk Lee and  Changho Choi and Youjung Shin and Taesoo Kim and Brent Byunghoon Kang and Dongsu Han},
+        booktitle    = {Proceedings of the Network and Distributed System Security Symposium},
+        month        = feb,
+        year         = 2016,
+        address      = {San Diego, CA},
+}
+```
+
