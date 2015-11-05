@@ -120,10 +120,10 @@ are several ways you can do:
 - Send patches. Could directly send us pull requests for minor changes. For larger
   changes, please contact us offline so we can discuss in more detail.
 
-We specially appreciate those who actively make contributions to the project
-- Jon Gjengset (jon@thesquareplanet.com)
-- Jethro Beekman (jbeekman@eecs.berkeley.edu)
-- Patrick Bridges (patrickb314@gmail.com)
+We specially appreciate those who actively make contributions to the project:
+- Jon Gjengset
+- Jethro Beekman
+- Patrick Bridges
 
 Contact
 -------
