@@ -1,12 +1,6 @@
 OpenSGX: An open platform for Intel SGX
 =======================================
 
-Contribution Guides
--------------------
-- coding style
-- make sure all the test/unit cases pass
-- license
-
 Environments & Prerequisites
 ----------------------------
 - Tested: Ubuntu 14.04-15.04, Arch
@@ -115,6 +109,21 @@ Pointers
     - user/conf/    : Configuration files.
     - user/test/    : Test cases.
     - user/demo/    : Demo case.
+
+Contribution
+-------
+We are more than happy to see any comments or feedback, as to improve
+this project. To make contributions and take part in the project, there
+are several ways you can do:
+- Report bugs. Could either directly send us email or, even better, create an issue
+  on github site. We will try our hard to take care of any report.
+- Send patches. Could directly send us pull requests for minor changes. For larger
+  changes, please contact us offline so we can discuss in more detail.
+
+We specially appreciate those who actively make contributions to the project
+- Jon Gjengset (jon@thesquareplanet.com)
+- Jethro Beekman (jbeekman@eecs.berkeley.edu)
+- Patrick Bridges (patrickb314@gmail.com)
 
 Contact
 -------

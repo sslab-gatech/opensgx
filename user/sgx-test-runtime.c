@@ -77,10 +77,5 @@ int main(int argc, char **argv)
     void (*aep)() = exception_handler;
     sgx_enter(tcs, aep);
 
-    char *buf = malloc(11);
-    sgx_host_read(buf, 11);
-    printf("%s", buf);
-
-//    free(tcs);
     return 0;
 }
