@@ -1,4 +1,4 @@
-SGX EMULATOR USER-LEVEL DESIGN
+OPENSGX USER-LEVEL DESIGN
 
 # Start-up process
 
@@ -31,8 +31,6 @@ b. Create Launch Enclave : syscall_create_enclave()
    4. Add stack frames
       - Add stack frames (REG pages)
       - Use EADD to add pages. (allocate epc pages)
-
-   # TODO: Reserve pages for heap.
 
 c. Current settings
    - Total epc size:
