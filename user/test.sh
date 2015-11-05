@@ -8,9 +8,7 @@ print_usage() {
 [usage] $0 [option]... [binary]
 -a|--all  : test all cases
 -h|--help : print help
--i|--instuct-test : run an instruction test
--ai|--all-instruction-tests : run all instruction test cases
---perf|--performance-measure : measure SGX emulator performance metrics 
+--perf|--performance-measure : measure SGX emulator performance metrics
 [test]    : run a test case
 EOF
   for f in test/*.c; do
@@ -20,7 +18,7 @@ EOF
 
 run_test() {
   FILE=$1
-  if [ ! -f $FILE ]; 
+  if [ ! -f $FILE ];
   then
     echo -n "Binary $FILE missing. (Build and retry) "
   fi
@@ -52,23 +50,8 @@ perf_test() {
   $SGX $1 >$BASE.stdout 2>$BASE.stderr
   echo "$1"
   echo "-----------------------"
-  awk '/count/ {print}' $BASE.stdout 
-  awk '/region/ {print}' $BASE.stdout 
-}
-
-run_instruct_test() {
-  mkdir -p log
-  BASE=log/$(basename $1)
-  $SGX $1 > $BASE.log 2>&1
-  $PYTHON $1.py $(basename $1) > /dev/null 2>&1
-  EXIT=$?
-  EXPECT=0
-
-  if [[ $EXIT == $EXPECT ]]; then
-    echo -n "$(tput setaf 2)OK$(tput sgr0)"
-  else
-    echo -n "$(tput setaf 1)FAIL ($EXIT)$(tput sgr0)"
-  fi
+  awk '/count/ {print}' $BASE.stdout
+  awk '/region/ {print}' $BASE.stdout
 }
 
 if [[ $# == 0 ]]; then
@@ -85,59 +68,42 @@ case "$1" in
     for f in test/*.c; do
       OUT=${f%%.c}
       if [[ "$OUT" == "test/simple-recv" ]]; then
-      printf "%-30s: please test it with simple_send together\n" "$OUT" 
-      continue  
-      fi 
+      printf "%-30s: please test it with simple_send together\n" "$OUT"
+      continue
+      fi
       if [[ "$OUT" == "test/simple-attest" ]]; then
-      printf "%-30s: please test it with attest_nonEnc together\n" "$OUT" 
-      continue  
-      fi 
+      printf "%-30s: please test it with attest_nonEnc together\n" "$OUT"
+      continue
+      fi
       if [[ "$OUT" == "test/simple-network" ]]; then
-      printf "%-30s: please test it with attest_network together\n" "$OUT" 
-      continue  
-      fi 
+      printf "%-30s: please test it with attest_network together\n" "$OUT"
+      continue
+      fi
       if [[ "$OUT" == "test/simple-quote" ]]; then
-      printf "%-30s: please test it with simple_send together\n" "$OUT" 
-      continue  
-      fi 
+      printf "%-30s: please test it with simple_send together\n" "$OUT"
+      continue
+      fi
       if [[ "$OUT" == "test/simple-server" ]]; then
-      printf "%-30s: please test it with simple_client together\n" "$OUT" 
-      continue  
-      fi 
+      printf "%-30s: please test it with simple_client together\n" "$OUT"
+      continue
+      fi
       if [[ "$OUT" == "test/simple-quotingEnclave" ]]; then
-      printf "%-30s: please test it with simple_targetEnclave together\n" "$OUT" 
-      continue  
-      fi 
+      printf "%-30s: please test it with simple_targetEnclave together\n" "$OUT"
+      continue
+      fi
       if [[ "$OUT" == "test/simple-targetEnclave" ]]; then
-      printf "%-30s: please test it with simple_quotingEnclave together\n" "$OUT" 
-      continue  
-      fi 
+      printf "%-30s: please test it with simple_quotingEnclave together\n" "$OUT"
+      continue
+      fi
       if [[ "$OUT" == "test/simple-openssl" ]]; then
-      printf "%-30s: temporarily blocked\n" "$OUT" 
-      continue  
-      fi 
+      printf "%-30s: temporarily blocked\n" "$OUT"
+      continue
+      fi
       if [[ "$OUT" == "test/simple-aes" ]]; then
-      printf "%-30s: temporarily blocked\n" "$OUT" 
-      continue  
-      fi 
+      printf "%-30s: temporarily blocked\n" "$OUT"
+      continue
+      fi
       printf "%-30s: %s\n" "$OUT" "$(run_test $OUT)"
-    done
-    ;;
-  -i|--instruct-test)
-    if [[ $# -lt 2 ]]; then
-      for f in test/test_kern/*.c; do
-        printf " %-30s: %s\n" "$f" 
-      done
-      exit 0
-    fi
-    OUT=test/test_kern/$2
-    make $OUT
-    printf "%-30s: %s\n" "$OUT" "$(run_instruct_test $OUT)"
-    ;;
-  -ai|--all-instruction-tests)
-    for f in test/test_kern/*.c; do
-      OUT=${f%%.c}
-      printf "%-30s: %s\n" "$OUT" "$(run_instruct_test $OUT)"
     done
     ;;
   --perf|--performance-measure)
@@ -146,7 +112,7 @@ case "$1" in
       TARGET=${f%%.c}
       if [[ "test/$2" == "$TARGET" ]]; then
          perf_test $TARGET
-         MATCH=1 
+         MATCH=1
       elif [[ "$2" == "$TARGET" ]]; then
          perf_test $TARGET
          MATCH=1
