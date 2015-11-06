@@ -52,8 +52,8 @@ void init_epc(int nepc) {
     }
 
 
-    sgx_dbg(trace, "g_epc: %p", (void *)g_epc);
-    
+    sgx_dbg(kern, "g_epc: %p", (void *)g_epc);
+
 
     if (!g_epc)
         err(1, "failed to allocate EPC");

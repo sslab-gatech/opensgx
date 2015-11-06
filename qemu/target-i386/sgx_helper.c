@@ -1880,11 +1880,15 @@ void sgx_eenter(CPUX86State *env)
 //    uint64_t funcPtr = (uint64_t)func;
 #endif
 
+#if DEBUG
+{
     int i;
     for (i = 0; i < 20; i ++) {
         fprintf(stderr, "%02X ", cpu_ldub_data(env, env->eip + i));
     }
     fprintf(stderr, "\n");
+}
+#endif
 
     // Save the outside RSP and RBP so they can be restored on interrupt or EEXIT
     ((gprsgx_t *)env->cregs.CR_GPR_PA)->ursp = env->regs[R_ESP];
@@ -2398,6 +2402,7 @@ void sgx_egetkey(CPUX86State *env)
     sgx_derivekey(&keydep, tmp_key);
     memcpy((uint8_t *)outputdata, tmp_key, 16);
 
+#if DEBUG
     {
         sgx_msg(info, "Get key:");
         int l;
@@ -2406,6 +2411,7 @@ void sgx_egetkey(CPUX86State *env)
             //fprintf(stderr, "%02X", (unsigned char *)outputdata[l]);
         fprintf(stderr, "\n");
     }
+#endif
 
     env->regs[R_EAX] = 0;
     env->eflags &= ~CC_Z;
@@ -2542,6 +2548,8 @@ void sgx_ereport(CPUX86State *env)
     memset(tmp_report.reserved2, 0, 32);
     memset(tmp_report.reserved3, 0, 96);
     memset(tmp_report.reserved4, 0, 60);
+
+#if DEBUG
     {
 	uint8_t report[512];
 	memset(report, 0, 512);
@@ -2551,6 +2559,8 @@ void sgx_ereport(CPUX86State *env)
         for (k = 0; k < 432; k++)
             fprintf(stderr, "%02X", report[k]);
     }
+#endif
+
     uint8_t *pkcs1_5_padding = alloc_pkcs1_5_padding();
 
     // key dependencies init
@@ -2580,6 +2590,7 @@ void sgx_ereport(CPUX86State *env)
     /* Calculate Derived Key */
     sgx_derivekey(&tmp_keydependencies, (unsigned char *)tmp_reportkey);
 
+#if DEBUG
     {
         sgx_msg(info, "Expected report key:");
         int l;
@@ -2587,6 +2598,7 @@ void sgx_ereport(CPUX86State *env)
             fprintf(stderr, "%02X", tmp_reportkey[l]);
         fprintf(stderr, "\n");
     }
+#endif
 
     aes_cmac128_context ctx;
 
@@ -2600,12 +2612,14 @@ void sgx_ereport(CPUX86State *env)
 
     memcpy((uint8_t *)outputdata, report, 512);
 
+#if DEBUG
     {
         sgx_msg(info, "Generated report:");
         int k;
         for (k = 0; k < 432; k++)
             fprintf(stderr, "%02X", report[k]);
     }
+#endif
 
     env->cregs.CR_CURR_EIP = env->cregs.CR_NEXT_EIP;
     env->cregs.CR_ENC_INSN_RET = true;
@@ -3758,6 +3772,7 @@ void sgx_einit(CPUX86State *env)
     // TODO : Make sure no other instruction is accessing MRENCLAVE or ATTRIBUTES.INIT
 
     // Verify MRENCLAVE from SIGSTRUCT
+#if DEBUG
     {
         unsigned char hash_measured[32];
         memcpy(hash_measured, tmp_mrEnclave, 32);
@@ -3767,6 +3782,7 @@ void sgx_einit(CPUX86State *env)
             fprintf(stderr, "%02X", (uint8_t)hash_measured[k]);
         fprintf(stderr, "\n");
     }
+#endif
 
     bool is_debugging = is_debuggable_enclave_hash(tmp_sig.enclaveHash);
 
@@ -3886,6 +3902,7 @@ void sgx_einit(CPUX86State *env)
     aes_cmac128_update(&ctx, (uint8_t *)&tmp_token, 192);
     aes_cmac128_final(&ctx, tmp_cmac);
 
+#if DEBUG
     {
         sgx_msg(info, "Expected launch key:");
         int l;
@@ -3893,6 +3910,7 @@ void sgx_einit(CPUX86State *env)
             fprintf(stderr, "%02X", launch_key[l]);
         fprintf(stderr, "\n");
     }
+#endif
 
 #if 0
     // Expected einittoken mac
@@ -4720,8 +4738,6 @@ static void sanity_check(void)
     assert(sizeof(attributes_t) == 16);
     assert(sizeof(tcs_t) == 4096);
     assert(sizeof(tcs_flags_t) == 8);
-    printf("exininfo_t size: %lu\n", sizeof(exitinfo_t));
-    printf("grpsgx_t size: %lu\n", sizeof(gprsgx_t));
     assert(sizeof(gprsgx_t) == 192);
     assert(sizeof(ssa_t) == 4096);
     assert(sizeof(pageinfo_t) == 32);

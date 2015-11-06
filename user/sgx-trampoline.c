@@ -221,13 +221,12 @@ void sgx_trampoline()
     unsigned long epc_heap_end = 0;
     unsigned long pending_page = 0;
 
-    sgx_msg(info, "Trampoline Entered");
+    sgx_msg(user, "Trampoline Entered");
     sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
     clear_abi_in_fields(stub);
 
-    
-    fprintf(stderr, "++++++ Function code: %s\n",
-            fcode_to_str(stub->fcode));
+
+    sgx_dbg(user, "Function code: %s", fcode_to_str(stub->fcode));
     //dbg_dump_stub_out(stub);
 
     switch (stub->fcode) {

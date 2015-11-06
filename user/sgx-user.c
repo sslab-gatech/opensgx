@@ -222,25 +222,6 @@ void update_einittoken(einittoken_t *token)
     // TODO : Set KEYID field
 }
 
-static
-int isInstructionValid(unsigned long addr)
-{
-    char target[256];
-    char cmd[1024];
-    char *script = "check_inst.sh";
-    char *file_name = "sgx-ssl.inst";
-
-    snprintf(target, sizeof(target), "%lx:", addr);
-    fprintf(stderr, "%s\n", target);
-
-    snprintf(cmd, 1024, "sh %s %s %s", script, file_name, target);
-
-    if (system(cmd) != 0)
-        return 1;
-
-    return 0;
-}
-
 tcs_t *init_enclave(void *base, unsigned int offset, unsigned int n_of_pages, char *conf)
 {
     assert(sizeof(tcs_t) == PAGE_SIZE);

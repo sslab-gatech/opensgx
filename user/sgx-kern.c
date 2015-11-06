@@ -41,7 +41,7 @@ static
 void encls(encls_cmd_t leaf, uint64_t rbx, uint64_t rcx,
            uint64_t rdx, out_regs_t* out)
 {
-   sgx_dbg(ttrace,
+   sgx_dbg(kern,
            "leaf=%d, rbx=0x%"PRIx64", rcx=0x%"PRIx64", rdx=0x%"PRIx64")",
            leaf, rbx, rcx, rdx);
 
@@ -309,7 +309,7 @@ bool add_page_to_epc(void *page, epc_t *epc, epc_t *secs, page_type_t pt)
     if (pt == PT_REG) {
         secinfo->flags.x = true;
         // change permissions of a page table entry
-        sgx_dbg(ttrace, "+x to %p", (void *)epc);
+        sgx_dbg(kern, "+x to %p", (void *)epc);
         if (mprotect(epc, PAGE_SIZE, PROT_READ|PROT_WRITE|PROT_EXEC) == -1)
             err(1, "failed to add executable permission");
     }
@@ -319,7 +319,7 @@ bool add_page_to_epc(void *page, epc_t *epc, epc_t *secs, page_type_t pt)
     pageinfo->secs    = (uint64_t)epc_to_vaddr(secs);
     pageinfo->linaddr = (uint64_t)epc_to_vaddr(epc);
 
-    sgx_dbg(eadd, "add/copy %p -> %p", page, epc_to_vaddr(epc));
+    sgx_dbg(kern, "add/copy %p -> %p", page, epc_to_vaddr(epc));
     //if (sgx_dbg_eadd)
     //    hexdump(stderr, page, 32);
 
@@ -385,15 +385,15 @@ bool add_empty_pages_to_epc(int eid, int npages, epc_t *secs,
             return false;
         if (i == 0 && mt == MT_HEAP) {
             epc_heap_beg = epc;
-            printf("DEBUG epc heap beg is set as %p\n",(void *)epc_heap_beg);
+            sgx_dbg(kern, "epc_heap_beg is set as %p",(void *)epc_heap_beg);
         }
         if ((i == npages - 1) && mt == MT_HEAP) {
             epc_heap_end = (epc_t *)((char *)epc + PAGE_SIZE - 1);
-            printf("DEBUG epc heap end is set as %p\n",(void *)epc_heap_end);
+            sgx_dbg(kern, "epc_heap_end is set as %p",(void *)epc_heap_end);
         }
         if ((i == npages - 1) && mt == MT_STACK) {
             epc_stack_end = epc;
-            printf("DEBUG eps stack end is set as %p\n", (void *)epc_stack_end);
+            sgx_dbg(kern, "eps_stack_end is set as %p", (void *)epc_stack_end);
         }
     }
     return true;
@@ -486,8 +486,7 @@ int sys_create_enclave(void *base, unsigned int code_pages,
 
     // allocate secs
     int enclave_size = PAGE_SIZE * npages;
-    printf("DEBUG npages is %d\n",npages);
-    printf("enclave size is %x\n", PAGE_SIZE * npages);
+    sgx_dbg(kern, "npages: %d enclave size: %x", npages, PAGE_SIZE * npages);
 
     void *enclave_addr = epc_to_vaddr(enclave);
 
@@ -601,8 +600,7 @@ int sys_stat_enclave(int keid, keid_t *stat)
 
 unsigned long sys_add_epc(int keid) {
     kenclaves[keid].kin_n++;
-    epc_t *secs = kenclaves[keid].secs; 
-    printf("DEBUG passed keid is %d\n", keid);
+    epc_t *secs = kenclaves[keid].secs;
 
     epc_t *free_epc_page = alloc_epc_page(keid);
     if (free_epc_page == NULL) {
@@ -615,7 +613,7 @@ unsigned long sys_add_epc(int keid) {
         kenclaves[keid].kout_n++;
         return 0;
     }
-    printf("DEBUG get epc works\n");
+
     if (!aug_page_to_epc(epc, secs)) {
         kenclaves[keid].kout_n++;
         return 0;

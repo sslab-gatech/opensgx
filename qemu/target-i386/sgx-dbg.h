@@ -22,18 +22,20 @@
 
 #ifdef SGX_DEBUG
 
- enum { sgx_dbg_welcome  = 1 }; // welcome
+ enum { sgx_dbg_welcome  = 0 }; // welcome
  enum { sgx_dbg_ttrace   = 0 }; // verbose trace msg
  enum { sgx_dbg_mtrace   = 0 }; // memory trace msg
- enum { sgx_dbg_trace    = 1 }; // light trace msg
- enum { sgx_dbg_info     = 1 }; // info
+ enum { sgx_dbg_trace    = 0 }; // light trace msg
+ enum { sgx_dbg_info     = 0 }; // info
  enum { sgx_dbg_warn     = 1 }; // warning
- enum { sgx_dbg_dbg      = 1 }; // dbg msg
+ enum { sgx_dbg_dbg      = 0 }; // dbg msg
  enum { sgx_dbg_err      = 1 }; // err msg
  enum { sgx_dbg_rsa      = 0 }; // rsa-related msg
- enum { sgx_dbg_test     = 1 }; // unit test msg
- enum { sgx_dbg_eenter   = 1 }; // sgx eenter instruction
- enum { sgx_dbg_eadd     = 1 }; // sgx eadd instruction
+ enum { sgx_dbg_test     = 0 }; // unit test msg
+ enum { sgx_dbg_eenter   = 0 }; // sgx eenter instruction
+ enum { sgx_dbg_eadd     = 0 }; // sgx eadd instruction
+ enum { sgx_dbg_kern     = 0 }; // sgx-kerl debug msg
+ enum { sgx_dbg_user     = 0 }; // sgx-user debug msg
 
 # define sgx_dbg( filter, msg, ... )            \
     do {                                        \
