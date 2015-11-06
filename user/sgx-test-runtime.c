@@ -59,10 +59,6 @@ int main(int argc, char **argv)
     int edata_page_n = ((edata_size - 1) / PAGE_SIZE) + 1;
     int n_of_pages = ecode_page_n + edata_page_n;
     long entry_offset = strtol(entry, NULL, 16) - strtol(code_start, NULL, 16);
-
-    printf("ecode_size: %ld edata_size: %ld entry_offset: %lx\n", ecode_size,
-                                                                  edata_size, entry_offset);
-
     long code_offset = strtol(offset, NULL, 16);
     int binary_size = atoi(size);
 
