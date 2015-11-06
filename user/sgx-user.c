@@ -284,7 +284,6 @@ tcs_t *init_enclave(void *base, unsigned int offset, unsigned int n_of_pages, ch
     sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
     stub->tcs = stat.tcs;
 
-    //sgx_enter(stat.tcs, aep);
     free(tcs);
 
     return stat.tcs;
@@ -399,12 +398,11 @@ tcs_t *test_init_enclave(void *base, unsigned int offset, unsigned int n_of_code
     if (sys_stat_enclave(keid, &stat) < 0)
         err(1, "failed to stat enclave");
 
-// Enable here for stub !
-// please check STUB_ADDR is mmaped in the main before enable below
+    // Enable here for stub !
+    // please check STUB_ADDR is mmaped in the main before enable below
     sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
     stub->tcs = stat.tcs;
 
-    sgx_enter(stat.tcs, aep);
     free(ctx);
     free(tcs);
 
