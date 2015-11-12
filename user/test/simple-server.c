@@ -40,7 +40,7 @@ void enclave_main()
 
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
-    addr.sin_port = htons(port);
+    addr.sin_port = sgx_htons(port);
     addr.sin_addr.s_addr = INADDR_ANY;
 
     if (bind(srvr_fd, (struct sockaddr *)&addr, sizeof(addr)) != 0) {

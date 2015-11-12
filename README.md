@@ -14,12 +14,13 @@ $ cd qemu
 $ ./configure-arch
 $ make -j $(nproc)
 
-Compile sgx library
+Back to opensgx/
 $ cd ..
+
+Compile sgx library
 $ make -C libsgx
 
 Compile user-level code
-$ cd ..
 $ make -C user
 ~~~~~
 

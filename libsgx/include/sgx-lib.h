@@ -67,8 +67,8 @@
                   "c"((uint64_t)output));       \
 }
 
-#define htons(A) ((((uint16_t)(A) & 0xff00) >> 8) | \
-                  (((uint16_t)(A) & 0x00ff) << 8))
+#define sgx_htons(A) ((((uint16_t)(A) & 0xff00) >> 8) | \
+                      (((uint16_t)(A) & 0x00ff) << 8))
 
 struct mem_control_block {
     int is_available;

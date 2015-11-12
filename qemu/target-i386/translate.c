@@ -7335,12 +7335,6 @@ static target_ulong disas_insn(CPUX86State *env, DisasContext *s,
             break;
         }
 
-        /* POLARSSL Crypto Libraries */
-        if (modrm == 0xcc) {
-            gen_helper_crypto(cpu_env);
-            break;
-        }
-
         switch(op) {
         case 0: /* sgdt */
             if (mod == 3)

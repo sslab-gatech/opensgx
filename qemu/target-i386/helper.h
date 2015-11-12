@@ -229,9 +229,6 @@ DEF_HELPER_1(sgx_trace_pc, void, tl)
 /*RDRAND Helper */
 DEF_HELPER_3(rdrand, void, env, i32, i32)
 
-/* Crypto library helper */
-DEF_HELPER_1(crypto, void, env)
-
 /* For memory read/write protection */
 DEF_HELPER_3(mem_access, void, env, tl, int)
 
