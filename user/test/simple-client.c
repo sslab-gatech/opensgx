@@ -39,7 +39,7 @@ void enclave_main()
 
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
-    addr.sin_port = htons(port);
+    addr.sin_port = sgx_htons(port);
 
     if (inet_pton(AF_INET, ip, &addr.sin_addr) <= 0) {
         sgx_exit(NULL);
