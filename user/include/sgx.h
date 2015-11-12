@@ -34,16 +34,9 @@
 
 #define OPENSGX_ABI_VERSION 1
 #define SGX_USERLIB
-#include "../../qemu/target-i386/sgx.h"
 
-#include "../../qemu/target-i386/crypto.h"
-
-typedef struct {
-    uint32_t oeax;
-    uint64_t orbx;
-    uint64_t orcx;
-    uint64_t ordx;
-} out_regs_t;
+#include <sgx-shared.h>
+#include <sgx-dbg.h>
 
 // round size to pages
 static inline
@@ -66,7 +59,7 @@ typedef struct {
     unsigned int eextend_n;
     unsigned int einit_n;
     unsigned int eaug_n;
- 
+
     unsigned int enclu_n;
     unsigned int eenter_n;
     unsigned int eresume_n;

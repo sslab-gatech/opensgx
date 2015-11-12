@@ -13,14 +13,14 @@ void enclave_main()
     // In this example, PUTS operation will be tested
     char buf[] = "hello world";
     stub->fcode = FUNC_PUTS;
-    sgx_memcpy(stub->out_data1, buf, sizeof(buf));
+    memcpy(stub->out_data1, buf, sizeof(buf));
 
     // Enclave exit & jump into userspace trampoline
     sgx_exit(stub->trampoline);
 
     char buf2[] = "good night";
     stub->fcode = FUNC_PUTS;
-    sgx_memcpy(stub->out_data1, buf2, sizeof(buf2));
+    memcpy(stub->out_data1, buf2, sizeof(buf2));
 
     sgx_exit(stub->trampoline);
 

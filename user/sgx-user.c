@@ -222,60 +222,6 @@ void update_einittoken(einittoken_t *token)
     // TODO : Set KEYID field
 }
 
-tcs_t *init_enclave(void *base, unsigned int offset, unsigned int n_of_pages, char *conf)
-{
-    assert(sizeof(tcs_t) == PAGE_SIZE);
-
-    // allocate TCS
-    tcs_t *tcs = (tcs_t *)memalign(PAGE_SIZE, sizeof(tcs_t));
-    if (!tcs)
-        err(1, "failed to allocate tcs");
-
-    memset(tcs, 0, sizeof(tcs_t));
-
-    // XXX. tcs structure is freed at the end! maintain as part of
-    // keid structure
-    _tcs_app = (uint64_t)tcs;
-
-    // Calculate the offset for setting oentry of tcs
-    //size_t offset = (uintptr_t)entry - (uintptr_t)codes;
-    set_tcs_fields(tcs, offset);
-
-    // XXX. exception handler is app specific? then pass it through
-    // argument.
-    void (*aep)() = exception_handler;
-
-    // load sigstruct from file
-    sigstruct_t *sigstruct = load_sigstruct(conf);
-
-    // load einittoken from file
-    einittoken_t *token = load_einittoken(conf);
-
-    //sgx_dbg(trace, "entry: %p", entry);
-
-    int keid = sys_create_enclave(base, n_of_pages, tcs, sigstruct, token, false);
-    if (keid < 0)
-        err(1, "failed to create enclave");
-
-    keid_t stat;
-    if (sys_stat_enclave(keid, &stat) < 0)
-        err(1, "failed to stat enclave");
-
-    // please check STUB_ADDR is mmaped in the main before enable below
-    sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
-    stub->tcs = stat.tcs;
-
-    free(tcs);
-
-    return stat.tcs;
-}
-
-// Test an enclave w/o any sigstruct
-//   - mock sign
-//   - compute mac
-//   - execute entry
-//   - return upon exit
-
 static
 void print_eid_stat(keid_t stat) {
      printf("--------------------------------------------\n");
@@ -307,10 +253,12 @@ void print_eid_stat(keid_t stat) {
      printf("Total EPC Heap region\t: 0x%lx\n",total_epc_heap);
 }
 
-
-tcs_t *test_init_enclave(void *base, unsigned int offset, unsigned int n_of_code_pages)
+tcs_t *init_enclave(void *base, unsigned int offset, unsigned int n_of_pages, char *conf)
 {
     assert(sizeof(tcs_t) == PAGE_SIZE);
+
+    sigstruct_t *sigstruct;
+    einittoken_t *token;
 
     // allocate TCS
     tcs_t *tcs = (tcs_t *)memalign(PAGE_SIZE, sizeof(tcs_t));
@@ -324,73 +272,77 @@ tcs_t *test_init_enclave(void *base, unsigned int offset, unsigned int n_of_code
     _tcs_app = (uint64_t)tcs;
 
     // Calculate the offset for setting oentry of tcs
-    //size_t offset = (uintptr_t)entry - (uintptr_t)codes;
     set_tcs_fields(tcs, offset);
-    sgx_dbg(trace, "offset: %lx", (unsigned int)offset);
 
     // XXX. exception handler is app specific? then pass it through
     // argument.
     void (*aep)() = exception_handler;
 
-    // generate RSA key pair
-    rsa_key_t pubkey;
-    rsa_key_t seckey;
+    if (conf != NULL) {
+        // load sigstruct from file
+        sigstruct = load_sigstruct(conf);
 
-    // load rsa key from conf
-    rsa_context *ctx = load_rsa_keys("conf/test.key", pubkey, seckey, KEY_LENGTH_BITS);
-    {
-        char *pubkey_str = fmt_bytes(pubkey, sizeof(pubkey));
-        char *seckey_str = fmt_bytes(seckey, sizeof(pubkey));
+        // load einittoken from file
+        token = load_einittoken(conf);
+    } else {
+        // Configuration file is not provided, generate a fake
+        // configuration for testing purpose.
 
-        sgx_dbg(info, "pubkey: %.40s..", pubkey_str);
-        sgx_dbg(info, "seckey: %.40s..", seckey_str);
+        // generate RSA key pair
+        rsa_key_t pubkey;
+        rsa_key_t seckey;
 
-        free(pubkey_str);
-        free(seckey_str);
+        // load rsa key from conf
+        rsa_context *ctx = load_rsa_keys("conf/test.key", pubkey, seckey,
+                                         KEY_LENGTH_BITS);
+        {
+            char *pubkey_str = fmt_bytes(pubkey, sizeof(pubkey));
+            char *seckey_str = fmt_bytes(seckey, sizeof(pubkey));
+
+            sgx_dbg(info, "pubkey: %.40s..", pubkey_str);
+            sgx_dbg(info, "seckey: %.40s..", seckey_str);
+
+            free(pubkey_str);
+            free(seckey_str);
+        }
+
+        // set sigstruct which will be used for signing
+        sigstruct = alloc_sigstruct();
+        if (!sigstruct)
+            err(1, "failed to allocate sigstruct");
+
+        // for testing, all zero = bypass
+        memset(sigstruct->enclaveHash, 0, sizeof(sigstruct->enclaveHash));
+
+        // signing with private key
+        rsa_sig_t sig;
+        rsa_sign(ctx, sig, (unsigned char *)sigstruct, sizeof(sigstruct_t));
+
+        // set sigstruct after signing
+        update_sigstruct(sigstruct, pubkey, sig);
+
+        // set einittoken which will be used for MAC
+        token = alloc_einittoken(pubkey, sigstruct);
+        if (!token)
+            err(1, "failed to allocate einittoken");
     }
 
-    // set sigstruct which will be used for signing
-    sigstruct_t *sigstruct = alloc_sigstruct();
-    if (!sigstruct)
-        err(1, "failed to allocate sigstruct");
-
-    // for testing, all zero = bypass
-    memset(sigstruct->enclaveHash, 0, sizeof(sigstruct->enclaveHash));
-
-    // signing with private key
-    rsa_sig_t sig;
-    rsa_sign(ctx, sig, (unsigned char *)sigstruct, sizeof(sigstruct_t));
-
-    // set sigstruct after signing
-    update_sigstruct(sigstruct, pubkey, sig);
-
-    // set einittoken which will be used for MAC
-    einittoken_t *token = alloc_einittoken(pubkey, sigstruct);
-    if (!token)
-        err(1, "failed to allocate einittoken");
-
-    //sgx_dbg(trace, "entry: %p", entry);
-
-    int keid = sys_create_enclave(base, n_of_code_pages, tcs, sigstruct, token, false);
+    int keid = sys_create_enclave(base, n_of_pages, tcs, sigstruct, token, false);
     if (keid < 0)
         err(1, "failed to create enclave");
-    cur_keid = keid;
 
+    keid_t stat;
     if (sys_stat_enclave(keid, &stat) < 0)
         err(1, "failed to stat enclave");
 
-    // Enable here for stub !
+    // stats report
+    print_eid_stat(stat);
+
     // please check STUB_ADDR is mmaped in the main before enable below
     sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
     stub->tcs = stat.tcs;
 
-    free(ctx);
     free(tcs);
-
-    if (sys_stat_enclave(keid, &stat) < 0)
-        err(1, "failed to stat enclave");
-
-    print_eid_stat(stat);
 
     return stat.tcs;
 }
@@ -421,28 +373,3 @@ int sgx_host_write(void *buf, int len)
     return len;
 }
 
-void *OpenSGX_loader(char *binary, int size, long offset, int n_of_pages)
-{
-    FILE *fp = NULL;
-    unsigned char *buffer;
-    int n;
-    unsigned char *base_addr;
-
-    buffer = malloc(size);
-    memset(buffer, 0, size);
-
-    fp = fopen(binary, "rb");
-    if (fp == NULL)
-        return 0;
-
-    n = fread(buffer, size, 1, fp);
-    // XXX: fread will return 0 when MAX_BUFFER_SIZE > BINARY SIZE
-    if (n < 0)
-        return 0;
-
-    base_addr = (unsigned char *)memalign(PAGE_SIZE, n_of_pages * PAGE_SIZE);
-    memset(base_addr, 0, n_of_pages * PAGE_SIZE);
-    memcpy(base_addr, buffer + offset, n_of_pages * PAGE_SIZE);
-
-    return base_addr;
-}

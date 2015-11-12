@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include <malloc.h>
 
 #include <sgx-user.h>
 #include <sgx-utils.h>

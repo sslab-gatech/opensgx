@@ -9,14 +9,18 @@ Environments & Prerequisites
   - Fedora: yum-builddep qemu
 
 ~~~~~{.sh}
+Compile QEMU
 $ cd qemu
 $ ./configure-arch
 $ make -j $(nproc)
 
-$ cd ../user/polarssl_sgx
-$ make
-$ cd ../..
-$ make
+Compile sgx library
+$ cd ..
+$ make -C libsgx
+
+Compile user-level code
+$ cd ..
+$ make -C user
 ~~~~~
 
 Run your first OpenSGX program
@@ -59,8 +63,6 @@ $ ./test.sh --help
 [usage] ./test.sh [option]... [binary]
 -a|--all  : test all cases
 -h|--help : print help
--i|--instuct-test : run an instruction test
--ai|--all-instruction-tests  : run all instruction test cases
 --perf|--performance-measure : measure SGX emulator performance metrics
 [test]
  test/exception-div-zero.c     :  An enclave test case for divide by zero exception.

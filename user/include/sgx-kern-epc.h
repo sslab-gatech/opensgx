@@ -22,7 +22,7 @@
 #define SGX_KERNEL
 #include <sgx.h>
 
-#define EPC_ADDR       0x40008000
+#define EPC_ADDR       0x4fffc000
 
 // linear address is in fact just addr of epc page (physical page)
 static inline

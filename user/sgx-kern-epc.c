@@ -44,8 +44,8 @@ void init_epc(int nepc) {
     //g_epc = memalign(PAGE_SIZE, g_num_epc * sizeof(epc_t));
 
     g_epc = (epc_t *)mmap((void *)EPC_ADDR, g_num_epc * sizeof(epc_t),
-                               PROT_READ|PROT_WRITE,
-                               MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
+                          PROT_READ|PROT_WRITE,
+                          MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
     if(g_epc == MAP_FAILED) {
         perror("EPC ALLOC FAIL");
         exit(EXIT_FAILURE);

@@ -28,7 +28,6 @@ extern void enclu(enclu_cmd_t leaf, uint64_t rbx, uint64_t rcx, uint64_t rdx,
                   out_regs_t* out_regs);
 tcs_t *init_enclave(void *base_addr, unsigned int entry_offset, unsigned int n_of_pages, char *conf);
 
-extern tcs_t *test_init_enclave(void *base_addr, unsigned int entry_offset, unsigned int n_of_code_pages);
 extern void exception_handler(void);
 
 extern void sgx_enter(tcs_t *tcs, void (*aep)());
@@ -37,4 +36,3 @@ extern void sgx_resume(tcs_t *tcs, void (*aep)());
 extern int sgx_host_read(void *buf, int len);
 extern int sgx_host_write(void *buf, int len);
 
-extern void *OpenSGX_loader(char *binary, int size, long offset, int n_of_pages);

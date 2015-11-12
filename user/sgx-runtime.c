@@ -22,12 +22,11 @@
 #include <sgx-user.h>
 #include <sgx-utils.h>
 #include <sgx-crypto.h>
+#include <sgx-loader.h>
 #include <sys/types.h>
 #include <netdb.h>
 #include <unistd.h>
 #include <sgx-malloc.h>
-
-#include <sgx-lib.h>
 
 #define is_aligned(addr, bytes) \
      ((((uintptr_t)(const void *)(addr)) & (bytes - 1)) == 0)
@@ -35,38 +34,34 @@
 int main(int argc, char **argv)
 {
     char *binary;
-    char *size;
-    char *offset;
-    char *code_start;
-    char *code_end;
-    char *data_start;
-    char *data_end;
-    char *entry;
-    char *base_addr;
+    char *conf;
+    void *entry;
+    void *base_addr;
+    size_t npages;
+    unsigned long entry_offset;
+    int toff;
 
-    binary     = argv[1];
-    size       = argv[2];
-    offset     = argv[3];
-    code_start = argv[4];
-    code_end   = argv[5];
-    data_start = argv[6];
-    data_end   = argv[7];
-    entry      = argv[8];
+    if (argc < 1) {
+        err(1, "Please specifiy binary to load\n");
+    }
+    binary = argv[1];
 
-    long ecode_size = strtol(code_end, NULL, 16) - strtol(code_start, NULL, 16);
-    long edata_size = strtol(data_end, NULL, 16) - strtol(data_start, NULL, 16);
-    int ecode_page_n = ((ecode_size - 1) / PAGE_SIZE) + 1;
-    int edata_page_n = ((edata_size - 1) / PAGE_SIZE) + 1;
-    int n_of_pages = ecode_page_n + edata_page_n;
-    long entry_offset = strtol(entry, NULL, 16) - strtol(code_start, NULL, 16);
-    long code_offset = strtol(offset, NULL, 16);
-    int binary_size = atoi(size);
+    if (argc > 1) {
+        conf = argv[2];
+    } else {
+        conf = NULL;
+    }
 
     if(!sgx_init())
         err(1, "failed to init sgx");
-    base_addr = OpenSGX_loader(binary, binary_size, code_offset, n_of_pages);
 
-    tcs_t *tcs = init_enclave(base_addr, entry_offset, n_of_pages, argv[9]);
+    base_addr = load_elf_enclave(binary, &npages, &entry, &toff);
+    if (base_addr == NULL) {
+        err(1, "Please provide valid binary/configuration files.");
+    }
+
+    entry_offset = entry - base_addr;
+    tcs_t *tcs = init_enclave(base_addr, entry_offset, npages, conf);
     if (!tcs)
         err(1, "failed to run enclave");
 

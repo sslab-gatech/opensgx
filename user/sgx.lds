@@ -1,21 +1,17 @@
 OUTPUT_FORMAT("elf64-x86-64", "elf64-x86-64",
 	      "elf64-x86-64")
 OUTPUT_ARCH(i386:x86-64)
-ENTRY(_start)
+ENTRY(enclave_start)
 SEARCH_DIR("/usr/x86_64-linux-gnu/lib64"); SEARCH_DIR("=/usr/local/lib/x86_64-linux-gnu"); SEARCH_DIR("=/usr/local/lib64"); SEARCH_DIR("=/lib/x86_64-linux-gnu"); SEARCH_DIR("=/lib64"); SEARCH_DIR("=/usr/lib/x86_64-linux-gnu"); SEARCH_DIR("=/usr/lib64"); SEARCH_DIR("=/usr/local/lib"); SEARCH_DIR("=/lib"); SEARCH_DIR("=/usr/lib");
-/*
-MEMORY
-{
-  ENC_CODE (rx) : 0x40000000, LENGTH = 0x1000
-  ENC_DATA (rw) : 0x40000000, LENGTH = 0x1000
-}
-*/
 SECTIONS
 {
-  /* Read-only sections, merged into text segment: */
-  PROVIDE (__executable_start = SEGMENT_START("text-segment", 0x400000)); . = SEGMENT_START("text-segment", 0x400000) + SIZEOF_HEADERS;
-/*
-*/  
+  /* Read-only sections, merged into text segment. The address we must start
+   * at is the EPC address + 4 pages (SECS, TCS, 2*TLS). Since GNU LD wants to
+   * align the load segment to a large page boundary, we EPC must be
+   * allocated 4 4k pages prior to a large page boundary, and if the EPC
+   * location changes in the SGX code, this address will need to change! */
+  PROVIDE (__executable_start = SEGMENT_START("text-segment", 0x50000000));
+  . = SEGMENT_START("text-segment", 0x50000000) + SIZEOF_HEADERS;
   .interp         : { *(.interp) }
   .note.gnu.build-id : { *(.note.gnu.build-id) }
   .hash           : { *(.hash) }
@@ -61,7 +57,7 @@ SECTIONS
     *(.text.exit .text.exit.*)
     *(.text.startup .text.startup.*)
     *(.text.hot .text.hot.*)
-    *(EXCLUDE_FILE(test/*.o demo/*.o *Lib.o polarssl_sgx/*.o lib/*.o).stub .text.* .gnu.linkonce.t.*)
+    *(.text .stub .text.* .gnu.linkonce.t.*)
     /* .gnu.warning sections are handled specially by elf32.em.  */
     *(.gnu.warning)
   } =0x90909090
@@ -72,6 +68,8 @@ SECTIONS
   PROVIDE (__etext = .);
   PROVIDE (_etext = .);
   PROVIDE (etext = .);
+  .rodata         : { *(.rodata .rodata.* .gnu.linkonce.r.*) }
+  .rodata1        : { *(.rodata1) }
   .eh_frame_hdr : { *(.eh_frame_hdr) }
   .eh_frame       : ONLY_IF_RO { KEEP (*(.eh_frame)) }
   .gcc_except_table   : ONLY_IF_RO { *(.gcc_except_table
@@ -81,7 +79,8 @@ SECTIONS
   .exception_ranges*) }
   /* Adjust the address for the data segment.  We want to adjust up to
      the same address within the page on the next page up.  */
-  . = ALIGN (CONSTANT (MAXPAGESIZE)) - ((CONSTANT (MAXPAGESIZE) - .) & (CONSTANT (MAXPAGESIZE) - 1)); . = DATA_SEGMENT_ALIGN (CONSTANT (MAXPAGESIZE), CONSTANT (COMMONPAGESIZE));
+  . = ALIGN (0x1000);
+  . = DATA_SEGMENT_ALIGN(0x1000, 0x1000);
   /* Exception handling  */
   .eh_frame       : ONLY_IF_RW { KEEP (*(.eh_frame)) }
   .gcc_except_table   : ONLY_IF_RW { *(.gcc_except_table .gcc_except_table.*) }
@@ -146,37 +145,19 @@ SECTIONS
   .got            : { *(.got) *(.igot) }
   . = DATA_SEGMENT_RELRO_END (24, .);
   .got.plt        : { *(.got.plt)  *(.igot.plt) }
-
-  . = 0x4000c000;
-  .enc_text   : ALIGN(0x1000)
-    {
-      ENCT_START = .;
-      test/*.o(.text)
-      demo/*.o(.text)
-      polarssl_sgx/*.o(.text)
-      lib/*.o(.text)
-      *(.enc_text)
-      *Lib.o(.text)
-      ENCT_END = ALIGN(0x1000);
-    } =0x90909090
-  .enc_data   : ALIGN(0x1000)
-    {
-      ENCD_START = .;
-      test/*.o(.data .data.rel.local .bss .rodata COMMON)
-      demo/*.o(.data .data.rel.local .bss .rodata COMMON)
-      polarssl_sgx/*.o(.data .data.rel.local .bss .rodata COMMON)
-      lib/*.o(.data .data.rel.local .bss .rodata COMMON)
-      *(.enc_data)
-      *Lib.o(.data .data.rel.local .bss .rodata COMMON)
-      ENCD_END = ALIGN(0x1000);
-    } =0x90909090
-
+  .data           :
+  {
+    *(.data .data.* .gnu.linkonce.d.*)
+    SORT(CONSTRUCTORS)
+  }
+  .data1          : { *(.data1) }
+  _edata = .; PROVIDE (edata = .);
   __bss_start = .;
   .bss            :
   {
    *(.dynbss)
-   *(EXCLUDE_FILE(test/*.o demo/*.o polarssl_sgx/*.o lib/*.o *Lib.o).bss.* .gnu.linkonce.b.*)
-/*   *(EXCLUDE_FILE(test/*.o *Lib.o polarssl_sgx/*.o)COMMON) */
+   *(.bss .bss.* .gnu.linkonce.b.*)
+   *(COMMON)
    /* Align here to ensure that the .bss section occupies space up to
       _end.  Align after .bss to ensure correct alignment even if the
       .bss section disappears because there are no input sections.
@@ -184,17 +165,6 @@ SECTIONS
       pad the .data section.  */
    . = ALIGN(. != 0 ? 64 / 8 : 1);
   }
-
-  .data           :
-  {
-    *(EXCLUDE_FILE(test/*.o demo/*.o polarssl_sgx/*.o lib/*.o *Lib.o).data.* .gnu.linkonce.d.*)
-    SORT(CONSTRUCTORS)
-  }
-  .data1          : { *(.data1) }
-  _edata = .; PROVIDE (edata = .);
-
-  .rodata         : { *(EXCLUDE_FILE(test/*.o demo/*.o polarssl_sgx/*.o lib/*.o *Lib.o).rodata.* .gnu.linkonce.r.*) }
-  .rodata1        : { *(.rodata1) }
 
   .lbss   :
   {

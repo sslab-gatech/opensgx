@@ -21,9 +21,6 @@
 
 #include <sgx.h>
 
-//#define NUM_BYTES 8
-//#define ENCLAVE_OFFSET 0x20004000
-
 extern void reverse(unsigned char *in, size_t bytes);
 extern unsigned char *swap_endian(unsigned char *in, size_t bytes);
 extern void fmt_hash(uint8_t hash[32], char out[65]);

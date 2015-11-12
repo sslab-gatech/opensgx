@@ -30,23 +30,23 @@ void enclave_main()
     char buf[256];
     struct sockaddr_in addr;
 
-    srvr_fd = sgx_socket(PF_INET, SOCK_STREAM, 0);
+    srvr_fd = socket(PF_INET, SOCK_STREAM, 0);
 
-    sgx_memset(buf, '0',sizeof(buf));
+    memset(buf, '0',sizeof(buf));
     if (srvr_fd == -1) {
         sgx_exit(NULL);
     }
 
-    sgx_memset(&addr, 0, sizeof(addr));
+    memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
-    addr.sin_port = sgx_htons(port);
+    addr.sin_port = htons(port);
 
-    if (sgx_inet_pton(AF_INET, ip, &addr.sin_addr) <= 0) {
+    if (inet_pton(AF_INET, ip, &addr.sin_addr) <= 0) {
         sgx_exit(NULL);
     }
 
-    if (sgx_connect(srvr_fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
-        sgx_close(srvr_fd);
+    if (connect(srvr_fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+        close(srvr_fd);
         sgx_exit(NULL);
     }
 
@@ -55,16 +55,16 @@ void enclave_main()
         sgx_exit(NULL);
     }
 
-    n = sgx_write(srvr_fd, "Test server message\n", 21);
+    n = write(srvr_fd, "Test server message\n", 21);
     if (n < 0)
         sgx_puts("failed to write\n");
 
-    n = sgx_read(srvr_fd, buf, 255);
+    n = read(srvr_fd, buf, 255);
     if (n < 0)
         sgx_puts("failed to read\n");
 
     sgx_puts(buf);
 
-    sgx_close(srvr_fd);
+    close(srvr_fd);
     sgx_exit(NULL);
 }

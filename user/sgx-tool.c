@@ -27,6 +27,7 @@
 #include <sgx-user.h>
 #include <sgx-crypto.h>
 #include <sgx-utils.h>
+#include <sgx-loader.h>
 
 void cmd_genkey(char *bits)
 {
@@ -79,60 +80,27 @@ void cmd_pkg(char *bin)
     // TODO
 }
 
-void cmd_measure(char *binary, char *size, char *offset, char *code_start, char *code_end,
-                 char *data_start, char *data_end, char *entry)
+void cmd_measure(char *binary)
 {
-    FILE *fp = NULL;
-    unsigned char *buffer;
-    long nbytes;
-    int n;
-
-    nbytes = atoi(size);
-    buffer = malloc(nbytes);
-    memset(buffer, 0, nbytes);
-
-    fp = fopen(binary, "rb");
-    if (fp == NULL)
-        return;
-
-    n = fread(buffer, nbytes, 1, fp);
-    // XXX: fread will return 0 when MAX_BUFFER_SIZE > BINARY SIZE
-	if (n < 0)
-        return;
-
-    long ecode_size = strtol(code_end, NULL, 16) - strtol(code_start, NULL, 16);
-    long edata_size = strtol(data_end, NULL, 16) - strtol(data_start, NULL, 16);
-    int ecode_page_n = ((ecode_size - 1) / PAGE_SIZE) + 1;
-    int edata_page_n = ((edata_size - 1) / PAGE_SIZE) + 1;
-    int n_of_pages = ecode_page_n + edata_page_n;
-    long code_offset = strtol(offset, NULL, 16);
-    long entry_offset = strtol(entry, NULL, 16) -  strtol(code_start, NULL, 16);
-
-    printf("ecode_size: %ld edata_size: %ld offset: %ld entry_offset: %ld\n", ecode_size,
-                                                                              edata_size, code_offset, entry_offset);
-
-    unsigned char *code;
+    void *code;
+    void *entry;
+    size_t npages;
+    unsigned long entry_offset;
     unsigned char hash[32];
+    int toff;
 
-    code = (unsigned char *)malloc(n_of_pages * PAGE_SIZE);
-    memset(code, 0, n_of_pages * PAGE_SIZE);
-    memcpy(code, buffer + code_offset, n_of_pages * PAGE_SIZE);
+    code = load_elf_enclave(binary, &npages, &entry, &toff);
+    if (code == NULL) {
+        err(1, "Please provide valid a binary file.");
+    }
 
-    generate_enclavehash(hash, code, n_of_pages, entry_offset);
+    entry_offset = entry - code;
+    generate_enclavehash(hash, code, npages, entry_offset);
 
     // generate sgx-[binary].conf
     // # ENTRY: (size, offset)
     // HASH: XXX
     // PUBKEY: ...
-
-    uint64_t target_size = ecode_size + edata_size;
-    printf("# target binary\n");
-    printf("offset: %lX size: %ld bytes\n", code_offset, target_size);
-
-    int i;
-    for (i = 0; i < 20; i++)
-        printf("%02X ", code[i]);
-    printf("\n");
 
     char *hash_str = fmt_bytes(hash, 32);
     printf("# generated measurement\n");
@@ -515,7 +483,7 @@ void cmd_help()
     printf("  -h|--help         : help message\n");
     printf("  -p|--pkg          : package a static binary\n");
     printf("  -m|--measure      : measure a binary with given region\n");
-    printf("                      (-m BINARY --begin=START_ADDR --size=BINARY_SIZE --entry=ENTRY_ADDR)\n");
+    printf("                      (-m BINARY)\n");
     printf("  -s|--sign         : generate rsa sign on a sigstruct with private key\n");
     printf("                      (-s SIGSTRUECT --key=KEYFILE)\n");
     printf("  -M|--mac          : generate mac on a einittoken with Launch Key\n");
@@ -532,13 +500,6 @@ int main(int argc, char *argv[])
         {"help"         , no_argument      , 0, 'h'},
         {"pkg"          , required_argument, 0, 'p'},
         {"measure"      , required_argument, 0, 'm'},
-        {"size"         , required_argument, 0, 'z'},
-        {"offset"       , required_argument, 0, 'o'},
-        {"code_start"   , required_argument, 0, 'a'},
-        {"code_end"     , required_argument, 0, 'b'},
-        {"data_start"   , required_argument, 0, 'c'},
-        {"data_end"     , required_argument, 0, 'd'},
-        {"entry"        , required_argument, 0, 'e'},
         {"sign"         , required_argument, 0, 's'},
         {"mac"          , required_argument, 0, 'M'},
         {"key"          , required_argument, 0, 'K'},
@@ -566,24 +527,7 @@ int main(int argc, char *argv[])
             cmd_help();
             break;
         case 'm': {
-            char *binary, *size, *offset, *code_start, *code_end, \
-                 *data_start, *data_end, *entry;
-            binary = optarg;
-            c = getopt_long(argc, argv, "z:", options, &optind);
-            size = optarg;
-            c = getopt_long(argc, argv, "o:", options, &optind);
-            offset = optarg;
-            c = getopt_long(argc, argv, "a:", options, &optind);
-            code_start = optarg;
-            c = getopt_long(argc, argv, "b:", options, &optind);
-            code_end = optarg;
-            c = getopt_long(argc, argv, "c:", options, &optind);
-            data_start = optarg;
-            c = getopt_long(argc, argv, "d:", options, &optind);
-            data_end = optarg;
-            c = getopt_long(argc, argv, "e:", options, &optind);
-            entry = optarg;
-            cmd_measure(binary, size, offset, code_start, code_end, data_start, data_end, entry);
+            cmd_measure(optarg);
             break;
         }
         case 's': {
