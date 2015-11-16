@@ -138,7 +138,7 @@ Authors
 
 - Prerit Jain <pjain43@gatech.edu>
 - Soham Desai <sdesai1@gatech.edu>
-- Seongmin Kim <dallas1004@gmail.com>
+- Seongmin Kim <dallas1004@kaist.ac.kr>
 - Ming-Wei Shih <mingwei.shih@gatech.edu>
 - JaeHyuk Lee <jhl9105@kaist.ac.kr>
 - Changho Choi <zpzigi@kaist.ac.kr>
