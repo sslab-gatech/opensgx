@@ -26,17 +26,17 @@
 void enclave_main()
 {
     char buf[] = "this is the message in a buffer assigned from malloc";
-    char *test = malloc(50);
-    memcpy(test, buf, 50);
+    char *test = sgx_malloc(50);
+    sgx_memcpy(test, buf, 50);
     sgx_puts(test);
 
-    test = realloc(test, 70);
+    test = sgx_realloc(test, 70);
     sgx_print_hex(test);
     sgx_puts(test);
 
-    test = realloc(test, 30);
+    test = sgx_realloc(test, 30);
     sgx_print_hex(test);
     sgx_puts(test);
 
-    free(test);
+    sgx_free(test);
 }

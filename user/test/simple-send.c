@@ -31,7 +31,7 @@ void enclave_main()
     char msg[] = "Are you there? :)";
 
     // Send a message
-    send(ip, port, msg, strlen(msg));
+    sgx_send(ip, port, msg, sgx_strlen(msg));
 
     sgx_exit(NULL);
 }

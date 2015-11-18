@@ -41,6 +41,7 @@ const char *fcode_to_str(fcode_t fcode)
     case FUNC_WRITE       : return "WRITE";
     case FUNC_CLOSE       : return "CLOSE";
     case FUNC_PUTCHAR     : return "PUTCHAR";
+    case FUNC_GMTIME      : return "GMTIME";
     case FUNC_TIME        : return "TIME";
     case FUNC_SOCKET      : return "SOCKET";
     case FUNC_BIND        : return "BIND";
@@ -143,6 +144,16 @@ static
 time_t sgx_time_tramp(void *t)
 {
     return time((time_t *)t);
+}
+
+static
+struct tm *sgx_gmtime_tramp(time_t *timep, struct tm *result)
+{
+    struct tm *temp_tm;
+    temp_tm = gmtime(timep);
+    memcpy(result, temp_tm, sizeof(struct tm));
+    
+    return result;
 }
 
 static
@@ -260,6 +271,9 @@ void sgx_trampoline()
         break;
     case FUNC_PUTCHAR:
         putchar(stub->out_arg1);
+        break;
+    case FUNC_GMTIME:
+        sgx_gmtime_tramp((time_t *)&stub->out_arg4, &stub->in_tm);
         break;
     case FUNC_TIME:
         stub->in_arg3 = sgx_time_tramp(stub->out_data1);

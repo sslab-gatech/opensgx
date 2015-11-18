@@ -1,9 +1,9 @@
 LIBSGX_OBJS = sgx-basics.o sgx-main.o
 
-LIBC_OBJS   = libc/strchr.o libc/inet-pton.o libc/qsort.o libc/memchr.o \
-			  libc/strcpy.o libc/strncpy.o libc/strcmp.o libc/strncmp.o \
-              libc/memset.o libc/strlen.o libc/memcmp.o libc/strcasecmp.o \
-              libc/strncase.o libc/strnlen.o libc/strcat.o libc/strncat.o
+LIBC_OBJS   = libc/sgx_strchr.o libc/sgx_inet-pton.o libc/sgx_qsort.o libc/sgx_memchr.o \
+              libc/sgx_strcpy.o libc/sgx_strncpy.o libc/sgx_strcmp.o libc/sgx_strncmp.o \
+              libc/sgx_memset.o libc/sgx_strlen.o libc/sgx_memcmp.o libc/sgx_strcasecmp.o \
+              libc/sgx_strncase.o libc/sgx_strnlen.o libc/sgx_strcat.o libc/sgx_strncat.o
 
 POLARSSL_OBJS = polarssl/rsa.o polarssl/entropy.o polarssl/ctr_drbg.o \
                 polarssl/bignum.o polarssl/md.o polarssl/oid.o polarssl/asn1parse.o \

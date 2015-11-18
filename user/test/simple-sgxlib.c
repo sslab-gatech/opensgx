@@ -36,13 +36,13 @@ void enclave_main()
     char buf2[] = "hello world\n";
 
     // sgx_memcpy test
-    memcpy(buf1, buf2, strlen(buf1));
+    sgx_memcpy(buf1, buf2, sgx_strlen(buf1));
 
     // sgx_puts & sgx_strlen test
     sgx_puts(buf1);
 
     // sgx_strcmp test
-    if(!(strcmp(buf1, buf2)))
+    if(!(sgx_strcmp(buf1, buf2)))
         sgx_puts(MATCH);
     else
         sgx_puts(UNMATCH);
@@ -54,11 +54,11 @@ void enclave_main()
         sgx_puts(UNMATCH);*/
 
     // sgx_memset test
-    memset(buf1, 'A', 5);
+    sgx_memset(buf1, 'A', 5);
     sgx_puts(buf1);
 
     // sgx_strcmp test
-    if(!(strcmp(buf1, buf2)))
+    if(!(sgx_strcmp(buf1, buf2)))
         sgx_puts(MATCH);
     else
         sgx_puts(UNMATCH);

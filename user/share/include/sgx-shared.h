@@ -20,6 +20,7 @@
 #pragma once
 
 #include <inttypes.h>
+#include <time.h>
 
 #define PAGE_SIZE  4096
 
@@ -78,6 +79,7 @@ typedef enum {
     FUNC_WRITE,
     FUNC_CLOSE,
 
+    FUNC_GMTIME,
     FUNC_TIME,
     FUNC_SOCKET,
     FUNC_BIND,
@@ -110,6 +112,7 @@ typedef struct sgx_stub_info {
     int  in_arg1;
     int  in_arg2;
     uint32_t in_arg3;
+    struct tm in_tm;
 
    // out : from enclave to non-enclave
    fcode_t fcode;
@@ -118,6 +121,7 @@ typedef struct sgx_stub_info {
    int  out_arg1;
    int  out_arg2;
    int  out_arg3;
+   time_t out_arg4;
    char out_data1[SGXLIB_MAX_ARG];
    char out_data2[SGXLIB_MAX_ARG];
    char out_data3[SGXLIB_MAX_ARG];

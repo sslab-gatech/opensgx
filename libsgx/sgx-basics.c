@@ -77,16 +77,16 @@ void sgx_malloc_init() {
      g_total_chunk = 0;
 }
 
-void free(void *ptr) {
+void sgx_free(void *ptr) {
      struct mem_control_block *mcb;
      mcb = (struct mem_control_block *) ((uintptr_t *)ptr - sizeof(struct mem_control_block));
      mcb->is_available = 1;
      unsigned int chunk_size = mcb->size - sizeof(struct mem_control_block);
-     memset(ptr,0,chunk_size);
+     sgx_memset(ptr,0,chunk_size);
      return;
 }
 
-void *malloc(size_t numbytes) {
+void *sgx_malloc(size_t numbytes) {
      //the below mechanism is largely from "Inside memory management from IBM"
      void *current_location;
      struct mem_control_block *current_location_mcb;
@@ -121,7 +121,7 @@ void *malloc(size_t numbytes) {
           unsigned long extra_secinfo_size = sizeof(secinfo_t) + (SECINFO_ALIGN_SIZE - 1);
 
           if ((cur_heap_ptr + extra_secinfo_size + numbytes ) > heap_end) {
-             secinfo_t *secinfo = memalign(SECINFO_ALIGN_SIZE, sizeof(secinfo_t));
+             secinfo_t *secinfo = sgx_memalign(SECINFO_ALIGN_SIZE, sizeof(secinfo_t));
 
              secinfo->flags.r = 1;
              secinfo->flags.w = 1;
@@ -164,21 +164,21 @@ void *malloc(size_t numbytes) {
      return memory_location;
 }
 
-void *realloc(void *ptr, size_t size){
+void *sgx_realloc(void *ptr, size_t size){
     void *new;
     if (ptr == NULL) {
-        return malloc(size);
+        return sgx_malloc(size);
     } else {
         if (size == 0) {
-             free(ptr);
+             sgx_free(ptr);
              return NULL;
         }
-        new = malloc(size);
+        new = sgx_malloc(size);
         if (new != NULL) {
             //if new size > old size, old_size+alpha is written to new. Thus, some of garbage values would be copied
             //if old size > new size, new_size is written to new. Thus, some of old values would be lossed
             //sgx_print_hex(new);
-            memcpy(new, ptr, size);
+            sgx_memcpy(new, ptr, size);
             return new;
         } else {
             return NULL;
@@ -186,9 +186,9 @@ void *realloc(void *ptr, size_t size){
     }
 }
 
-void *memalign(size_t align, size_t size) {
+void *sgx_memalign(size_t align, size_t size) {
 
-    void *mem = malloc(size + (align - 1));
+    void *mem = sgx_malloc(size + (align - 1));
     void *ptr = (void *)(((unsigned long)mem + ((unsigned long)align - 1)) & ~ ((unsigned long)align - 1));
 
     return ptr;
@@ -196,18 +196,18 @@ void *memalign(size_t align, size_t size) {
 
 void sgx_puts(char buf[]) {
 
-    size_t size = strlen(buf);
+    size_t size = sgx_strlen(buf);
     sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
 
     // puts
     stub->fcode = FUNC_PUTS;
-    memcpy(stub->out_data1, buf, size);
+    sgx_memcpy(stub->out_data1, buf, size);
 
     // Enclave exit & jump into user-space trampoline
     sgx_exit(stub->trampoline);
 }
 
-void *memcpy (void *dest, const void *src, size_t size)
+void *sgx_memcpy (void *dest, const void *src, size_t size)
 {
     asm volatile("" ::: "memory");
     asm volatile("movq %0, %%rdi\n\t"
@@ -222,7 +222,7 @@ void *memcpy (void *dest, const void *src, size_t size)
     return dest;
 }
 
-void *memmove(void *dest, const void *src, size_t size)
+void *sgx_memmove(void *dest, const void *src, size_t size)
 {
     asm volatile("" ::: "memory");
     asm volatile("movq %0, %%rdi\n\t"
@@ -237,7 +237,7 @@ void *memmove(void *dest, const void *src, size_t size)
     return dest;
 }
 
-time_t time(time_t *t)
+time_t sgx_time(time_t *t)
 {
     sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
 
@@ -246,13 +246,26 @@ time_t time(time_t *t)
     sgx_exit(stub->trampoline);
 
     if (t != NULL)
-        memcpy(t, stub->out_data1, sizeof(time_t));
+        sgx_memcpy(t, stub->out_data1, sizeof(time_t));
 
     return stub->in_arg3;
 }
 
+struct tm *sgx_gmtime(const time_t *timep)
+{
+    sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
+    struct tm temp_tm;
 
-ssize_t write(int fd, const void *buf, size_t count)
+    stub->fcode = FUNC_GMTIME;
+    stub->out_arg4 = *timep;
+    
+    sgx_exit(stub->trampoline);
+    sgx_memcpy(&temp_tm, &stub->in_tm, sizeof(struct tm));
+
+    return &temp_tm;
+}
+
+ssize_t sgx_write(int fd, const void *buf, size_t count)
 {
     sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
     int tmp_len;
@@ -267,14 +280,14 @@ ssize_t write(int fd, const void *buf, size_t count)
             tmp_len = SGXLIB_MAX_ARG;
 
         stub->out_arg2 = tmp_len;
-        memcpy(stub->out_data1, (uint8_t *)buf + i * SGXLIB_MAX_ARG, tmp_len);
+        sgx_memcpy(stub->out_data1, (uint8_t *)buf + i * SGXLIB_MAX_ARG, tmp_len);
         sgx_exit(stub->trampoline);
     }
 
     return stub->in_arg1;
 }
 
-ssize_t read(int fd, void *buf, size_t count)
+ssize_t sgx_read(int fd, void *buf, size_t count)
 {
     sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
     int tmp_len;
@@ -290,13 +303,13 @@ ssize_t read(int fd, void *buf, size_t count)
 
         stub->out_arg2 = tmp_len;
         sgx_exit(stub->trampoline);
-        memcpy((uint8_t *)buf + i * SGXLIB_MAX_ARG, stub->in_data1, tmp_len);
+        sgx_memcpy((uint8_t *)buf + i * SGXLIB_MAX_ARG, stub->in_data1, tmp_len);
     }
 
     return stub->in_arg1;
 }
 
-int close(int fd)
+int sgx_close(int fd)
 {
     sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
 
@@ -308,7 +321,7 @@ int close(int fd)
     return stub->in_arg1;
 }
 
-int socket(int domain, int type, int protocol)
+int sgx_socket(int domain, int type, int protocol)
 {
     sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
 
@@ -322,13 +335,13 @@ int socket(int domain, int type, int protocol)
     return stub->in_arg1;
 }
 
-int bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
+int sgx_bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
 {
     sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
 
     stub->fcode = FUNC_BIND;
     stub->out_arg1 = sockfd;
-    memcpy(stub->out_data1, addr, addrlen);
+    sgx_memcpy(stub->out_data1, addr, addrlen);
     stub->out_arg2 = addrlen;
 
     sgx_exit(stub->trampoline);
@@ -336,7 +349,7 @@ int bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
     return stub->in_arg1;
 }
 
-int listen(int sockfd, int backlog)
+int sgx_listen(int sockfd, int backlog)
 {
     sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
 
@@ -349,7 +362,7 @@ int listen(int sockfd, int backlog)
     return stub->in_arg1;
 }
 
-int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen)
+int sgx_accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen)
 {
     sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
 
@@ -358,18 +371,18 @@ int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen)
 
     sgx_exit(stub->trampoline);
 
-    memcpy(addr, stub->out_data1, sizeof(struct sockaddr));
-    memcpy(addrlen, stub->out_data2, sizeof(socklen_t));
+    sgx_memcpy(addr, stub->out_data1, sizeof(struct sockaddr));
+    sgx_memcpy(addrlen, stub->out_data2, sizeof(socklen_t));
     return stub->in_arg1;
 }
 
-int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
+int sgx_connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
 {
     sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
 
     stub->fcode = FUNC_CONNECT;
     stub->out_arg1 = sockfd;
-    memcpy(stub->out_data1, addr, addrlen);
+    sgx_memcpy(stub->out_data1, addr, addrlen);
     stub->out_arg2 = addrlen;
 
     sgx_exit(stub->trampoline);
@@ -377,12 +390,12 @@ int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
     return stub->in_arg1;
 }
 
-ssize_t send(int fd, const void *buf, size_t len, int flags)
+ssize_t sgx_send(int fd, const void *buf, size_t len, int flags)
 {
     sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
 
     stub->fcode = FUNC_SEND;
-    memcpy(stub->out_data1, buf, len);
+    sgx_memcpy(stub->out_data1, buf, len);
     stub->out_arg1 = fd;
     stub->out_arg2 = (int)len;
     stub->out_arg3 = flags;
@@ -393,7 +406,7 @@ ssize_t send(int fd, const void *buf, size_t len, int flags)
     return stub->in_arg1;
 }
 
-ssize_t recv(int fd, void *buf, size_t len, int flags)
+ssize_t sgx_recv(int fd, void *buf, size_t len, int flags)
 {
     sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
 
@@ -405,7 +418,7 @@ ssize_t recv(int fd, void *buf, size_t len, int flags)
     // Enclave exit & jump into user-space trampoline
     sgx_exit(stub->trampoline);
 
-    memcpy(buf, stub->in_data1, len);
+    sgx_memcpy(buf, stub->in_data1, len);
 
     return stub->in_arg1;
 }
@@ -417,8 +430,8 @@ int sgx_enclave_read(void *buf, int len)
     if (len <= 0) {
         return -1;
     }
-    memcpy(buf, stub->in_data1, len);
-    memset(stub->in_data1, 0, SGXLIB_MAX_ARG);
+    sgx_memcpy(buf, stub->in_data1, len);
+    sgx_memset(stub->in_data1, 0, SGXLIB_MAX_ARG);
 
     return len;
 }
@@ -430,8 +443,8 @@ int sgx_enclave_write(void *buf, int len)
     if (len <= 0) {
         return -1;
     }
-    memset(stub->out_data1, 0, SGXLIB_MAX_ARG);
-    memcpy(stub->out_data1, buf, len);
+    sgx_memset(stub->out_data1, 0, SGXLIB_MAX_ARG);
+    sgx_memcpy(stub->out_data1, buf, len);
 
     return len;
 }
@@ -605,33 +618,33 @@ void sgx_print_hex(unsigned long addr) {
     sgx_printf("%x\n", (unsigned long)addr);
 }
 
-int tolower(int c)
+int sgx_tolower(int c)
 {
   return c >= 'A' && c <= 'Z' ? c + 32 : c;
 }
 
-int toupper(int c)
+int sgx_toupper(int c)
 {
   return c >= 'a' && c <= 'z' ? c - 32 : c;
 }
 
-int islower(int c)
+int sgx_islower(int c)
 {
   return c >= 'a' && c <= 'z' ?  1 : 0;
 }
 
-int isupper(int c)
+int sgx_isupper(int c)
 {
   return c >= 'A' && c <= 'Z' ? 1 : 0;
 }
 
 
-int isdigit(int c)
+int sgx_isdigit(int c)
 {
     return c >= '0' && c <= '9' ? 1 : 0;
 }
 
-int isspace(int c)
+int sgx_isspace(int c)
 {
     if (c == ' '  || c == '\t' || c == '\n' ||
         c == '\v' || c == '\f' || c == '\r')
@@ -640,7 +653,7 @@ int isspace(int c)
     return 0;
 }
 
-int isalnum(int c)
+int sgx_isalnum(int c)
 {
     if ((c >= 'a' && c <= 'z') ||
         (c >= 'A' && c <= 'Z') ||
@@ -650,7 +663,7 @@ int isalnum(int c)
     return 0;
 }
 
-int isxdigit(int c)
+int sgx_isxdigit(int c)
 {
     if ((c >= '0' && c <= '9') ||
         (c >= 'a' && c <= 'f') ||

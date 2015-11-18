@@ -27,26 +27,26 @@
 
 void enclave_main()
 {
-    int *a = malloc(20);
+    int *a = sgx_malloc(20);
     sgx_print_hex(a);
-    int *b = malloc(4096*6);
+    int *b = sgx_malloc(4096*6);
     sgx_print_hex(b);
-    free(a);
-    free(b);
-    int *c = malloc(40);
+    sgx_free(a);
+    sgx_free(b);
+    int *c = sgx_malloc(40);
     sgx_print_hex(c);
-    int *d = malloc(16);
+    int *d = sgx_malloc(16);
     sgx_print_hex(d);
-    free(c);
-    a = malloc(30);
+    sgx_free(c);
+    a = sgx_malloc(30);
     sgx_print_hex(a);
-    free(a);
-    b = malloc(50);
+    sgx_free(a);
+    b = sgx_malloc(50);
     sgx_print_hex(b);
-    c = malloc(4096);
+    c = sgx_malloc(4096);
     sgx_print_hex(c);
-    d = malloc(40);
+    d = sgx_malloc(40);
     sgx_print_hex(d);
-    int *e = malloc(20);
+    int *e = sgx_malloc(20);
     sgx_print_hex(e);
 }
