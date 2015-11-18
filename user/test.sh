@@ -8,6 +8,7 @@ print_usage() {
 [usage] $0 [option]... [binary]
 -a|--all  : test all cases
 -h|--help : print help
+-i|--icount : count the number of executed instructions
 --perf|--performance-measure : measure SGX emulator performance metrics
 [test]    : run a test case
 EOF
@@ -123,6 +124,10 @@ case "$1" in
       echo "Ex) ./test.sh --perf simple"
     fi
     ;;
+  -i|--icount)
+    make $2
+    $SGX -i $2
+  ;;
   *)
     make $1
     $SGX -t $1
