@@ -4,10 +4,17 @@ OpenSGX: An open platform for Intel SGX
 Environments & Prerequisites
 ----------------------------
 - Tested: Ubuntu 14.04-15.04, Arch
-- Requisite: 
-  - Ubuntu: apt-get build-dep qemu
-  - Fedora: yum-builddep qemu
+- Requisite
+~~~~~~{.sh}
+Ubuntu
+$ apt-get build-dep qemu
+$ apt-get install libelf-dev
 
+Fedora
+$ yum-builddep qemu
+~~~~~~
+
+- Compilation
 ~~~~~{.sh}
 Compile QEMU
 $ cd qemu
