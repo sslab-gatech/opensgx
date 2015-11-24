@@ -54,7 +54,7 @@ void enclave_main()
 
     int a = temp->func1();
     int b = temp->func2();
-    sgx_printf("Result = %d, %d\n", a, b);
+    printf("Result = %d, %d\n", a, b);
 
     sgx_exit(NULL);
 }

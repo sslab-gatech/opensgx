@@ -109,9 +109,9 @@ void dbg_dump_stub_in(sgx_stub_info *stub)
 
 }
 
-void sgx_puts_tramp(char *data)
+int sgx_puts_tramp(char *data)
 {
-    puts(data);
+    return puts(data);
 }
 
 /*
@@ -152,7 +152,7 @@ struct tm *sgx_gmtime_tramp(time_t *timep, struct tm *result)
     struct tm *temp_tm;
     temp_tm = gmtime(timep);
     memcpy(result, temp_tm, sizeof(struct tm));
-    
+
     return result;
 }
 
@@ -243,8 +243,7 @@ void sgx_trampoline()
 
     switch (stub->fcode) {
     case FUNC_PUTS:
-        //sgx_puts(srcData)
-        sgx_puts_tramp(stub->out_data1);
+        stub->in_arg1 = sgx_puts_tramp(stub->out_data1);
         break;
     case FUNC_MALLOC:
         if (stub->mcode == MALLOC_INIT) {

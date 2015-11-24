@@ -28,10 +28,10 @@ void enclave_main()
 
     keyreq.keyname = REPORT_KEY;
 
-    outputdata = sgx_memalign(128, 128);
+    outputdata = memalign(128, 128);
 
     sgx_getkey(&keyreq, outputdata);
-    sgx_puts(outputdata);
+    //puts(outputdata);
 
     sgx_exit(NULL);
 }

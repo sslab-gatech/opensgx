@@ -26,7 +26,7 @@
 void enclave_main()
 {
     char *hello = "hello sgx!\n";
-    sgx_puts(hello);
+    puts(hello);
 
     sgx_exit(NULL);
 }

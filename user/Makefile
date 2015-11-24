@@ -2,10 +2,11 @@ BASE_CFLAGS = -g -Iinclude -Ishare/include -Wall -pedantic -Wno-unused-function 
 
 # SGX LIB
 LIBSGXDIR = ../libsgx
-SGX_CFLAGS = $(BASE_CFLAGS) -I$(LIBSGXDIR)/include -fno-stack-protector -static -fPIC -fvisibility=hidden
-SGX_LDFLAGS = -static -nostdlib -Wl,-T,sgx.lds
-SGX_LIBS = $(LIBSGXDIR)/libsgx.a $(LIBSGXDIR)/libpolarssl-sgx.a
-SGX_LDLIBS = -L$(LIBSGXDIR) -lsgx -lpolarssl-sgx
+SGX_CFLAGS = $(BASE_CFLAGS) -I$(LIBSGXDIR)/include -I$(LIBSGXDIR)/musl-libc/include \
+             -fno-stack-protector -static -fvisibility=hidden
+SGX_LDFLAGS = -static -nostdlib -nostartfiles -Wl,-T,sgx.lds
+SGX_LIBS = $(LIBSGXDIR)/sgx-entry.o $(LIBSGXDIR)/libsgx.a \
+           $(LIBSGXDIR)/libpolarssl-sgx.a $(LIBSGXDIR)/libc-sgx.a
 
 # Host code/tool
 SGX_HOST_RUNTIME = sgx-runtime.o sgx-test-runtime.o
@@ -47,10 +48,10 @@ demo/%.o: demo/%.c
 	$(CC) -c $(SGX_CFLAGS) -o $@ $<
 
 test/%: test/%.o $(SGX_LIBS)
-	$(CC) $(SGX_LDFLAGS) $< -o $@ $(SGX_LDLIBS)
+	$(CC) $(SGX_LDFLAGS) $< -o $@ $(SGX_LIBS)
 
 demo/%.sgx: demo/%.o $(SGX_LIBS)
-	$(CC) $(SGX_LDFLAGS) $< -o $@ $(SGX_LDLIBS)
+	$(CC) $(SGX_LDFLAGS) $< -o $@ $(SGX_LIBS)
 
 non_enclave/%: non_enclave/%.o nonEncLib.o
 	$(CC) $(CFLAGS) $^ -o $@

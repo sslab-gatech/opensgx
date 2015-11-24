@@ -20,11 +20,12 @@
 // hello world
 
 #include <sgx-lib.h>
+#include <stdio.h>
 
 void enclave_main()
 {
     char *hello = "hello sgx!\n";
-    sgx_puts(hello);
+    puts(hello);
     sgx_exit(NULL);
 }
 

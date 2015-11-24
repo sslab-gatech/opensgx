@@ -23,30 +23,32 @@
 // Usage of sgx_malloc is same as glibc malloc() function.
 // See sgx/user/sgxLib.c and sgx/user/sgx-user.c for detail.
 
-#include "test.h"
+#include <sgx-lib.h>
 
 void enclave_main()
 {
-    int *a = sgx_malloc(20);
-    sgx_print_hex(a);
-    int *b = sgx_malloc(4096*6);
-    sgx_print_hex(b);
-    sgx_free(a);
-    sgx_free(b);
-    int *c = sgx_malloc(40);
-    sgx_print_hex(c);
-    int *d = sgx_malloc(16);
-    sgx_print_hex(d);
-    sgx_free(c);
-    a = sgx_malloc(30);
-    sgx_print_hex(a);
-    sgx_free(a);
-    b = sgx_malloc(50);
-    sgx_print_hex(b);
-    c = sgx_malloc(4096);
-    sgx_print_hex(c);
-    d = sgx_malloc(40);
-    sgx_print_hex(d);
-    int *e = sgx_malloc(20);
-    sgx_print_hex(e);
+    int *a = malloc(20);
+    printf("%x\n", a);
+    int *b = malloc(4096*6);
+    printf("%x\n", b);
+    free(a);
+    free(b);
+    int *c = malloc(40);
+    printf("%x\n", c);
+    int *d = malloc(16);
+    printf("%x\n", d);
+    free(c);
+    a = malloc(30);
+    printf("%x\n", a);
+    free(a);
+    b = malloc(50);
+    printf("%x\n", b);
+    c = malloc(4096);
+    printf("%x\n", c);
+    d = malloc(40);
+    printf("%x\n", d);
+    int *e = malloc(20);
+    printf("%x\n", e);
+
+    sgx_exit(NULL);
 }

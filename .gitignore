@@ -1,6 +1,10 @@
 /tmp/
 *~
 *.o
+*.lo
+*.a
+*.so
+*.so.1
 *.Po
 *.Tpo
 *.swp
@@ -8,7 +12,6 @@
 *.swo
 a.out
 user/sgx-runtime
-user/sgx-test-runtime
 test/passMan/app
 test/passMan/libenclave.so
 test/passMan/pmTest
@@ -172,5 +175,13 @@ cscope*
 
 # Exceptions
 
-
+# musl libc
+libsgx/musl-libc/arch/*/bits/alltypes.h
+libsgx/musl-libc/config.mak
+libsgx/musl-libc/include/bits
+libsgx/musl-libc/tools/musl-gcc
+libsgx/musl-libc/tools/musl-clang
+libsgx/musl-libc/tools/ld.musl-clang
+libsgx/musl-libc/lib/musl-gcc.specs
+libsgx/musl-libc/src/internal/version.h
 

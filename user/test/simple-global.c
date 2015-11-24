@@ -27,8 +27,8 @@ void enclave_main()
 {
     global_var = 'a';
 
-    sgx_puts((char *)&global_var);
-    sgx_print_hex((unsigned long)global_var);
+    puts((char *)&global_var);
+    printf("%x\n", (unsigned long)global_var);
 
     sgx_exit(NULL);
 }
