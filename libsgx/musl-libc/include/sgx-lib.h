@@ -29,7 +29,7 @@
 #endif
 
 #define sgx_exit(ptr) {                         \
-    asm volatile("movl %0, %%eax\n\t"           \
+    __asm__ __volatile__("movl %0, %%eax\n\t"           \
                  "movq %1, %%rbx\n\t"           \
                  ".byte 0x0F\n\t"               \
                  ".byte 0x01\n\t"               \

@@ -16,7 +16,6 @@ ALL = libc-sgx.a libsgx.a libpolarssl-sgx.a sgx-entry.o
 all: $(ALL)
 
 libc-sgx.a:
-	cp include/sgx-lib.h musl-libc/include
 	cp ../user/share/include/sgx-shared.h musl-libc/include
 	(cd musl-libc; ./configure)
 	make -C musl-libc
