@@ -28,43 +28,43 @@
 #define NULL 0
 #endif
 
-#define sgx_exit(ptr) {                         \
+#define sgx_exit(ptr) {                                 \
     __asm__ __volatile__("movl %0, %%eax\n\t"           \
-                 "movq %1, %%rbx\n\t"           \
-                 ".byte 0x0F\n\t"               \
-                 ".byte 0x01\n\t"               \
-                 ".byte 0xd7\n\t"               \
-                 :                              \
-                 :"a"((uint32_t)ENCLU_EEXIT),   \
-                  "b"((uint64_t)ptr));          \
+                         "movq %1, %%rbx\n\t"           \
+                         ".byte 0x0F\n\t"               \
+                         ".byte 0x01\n\t"               \
+                         ".byte 0xd7\n\t"               \
+                         :                              \
+                         :"a"((uint32_t)ENCLU_EEXIT),   \
+                          "b"((uint64_t)ptr));          \
 }
 
-#define sgx_report(tgtinfo, rptdata, output) {  \
-    asm volatile("movl %0, %%eax\n\t"           \
-                 "movq %1, %%rbx\n\t"           \
-                 "movq %2, %%rcx\n\t"           \
-                 "movq %3, %%rdx\n\t"           \
-                 ".byte 0x0F\n\t"               \
-                 ".byte 0x01\n\t"               \
-                 ".byte 0xd7\n\t"               \
-                 :                              \
-                 :"a"((uint32_t)ENCLU_EREPORT), \
-                  "b"((uint64_t)tgtinfo),       \
-                  "c"((uint64_t)rptdata),       \
-                  "d"((uint64_t)output));       \
+#define sgx_report(tgtinfo, rptdata, output) {          \
+    __asm__ __volatile__("movl %0, %%eax\n\t"           \
+                         "movq %1, %%rbx\n\t"           \
+                         "movq %2, %%rcx\n\t"           \
+                         "movq %3, %%rdx\n\t"           \
+                         ".byte 0x0F\n\t"               \
+                         ".byte 0x01\n\t"               \
+                         ".byte 0xd7\n\t"               \
+                         :                              \
+                         :"a"((uint32_t)ENCLU_EREPORT), \
+                          "b"((uint64_t)tgtinfo),       \
+                          "c"((uint64_t)rptdata),       \
+                          "d"((uint64_t)output));       \
 }
 
-#define sgx_getkey(keyreq, output) {            \
+#define sgx_getkey(keyreq, output) {                    \
     __asm__ __volatile__("movl %0, %%eax\n\t"           \
-                 "movq %1, %%rbx\n\t"           \
-                 "movq %2, %%rcx\n\t"           \
-                 ".byte 0x0F\n\t"               \
-                 ".byte 0x01\n\t"               \
-                 ".byte 0xd7\n\t"               \
-                 :                              \
-                 :"a"((uint32_t)ENCLU_EGETKEY), \
-                  "b"((uint64_t)keyreq),        \
-                  "c"((uint64_t)output));       \
+                         "movq %1, %%rbx\n\t"           \
+                         "movq %2, %%rcx\n\t"           \
+                         ".byte 0x0F\n\t"               \
+                         ".byte 0x01\n\t"               \
+                         ".byte 0xd7\n\t"               \
+                         :                              \
+                         :"a"((uint32_t)ENCLU_EGETKEY), \
+                          "b"((uint64_t)keyreq),        \
+                          "c"((uint64_t)output));       \
 }
 
 extern int sgx_attest_target(struct sockaddr *quote_addr, socklen_t quote_addrlen, struct sockaddr *challenger_addr, socklen_t challenger_addrlen);
