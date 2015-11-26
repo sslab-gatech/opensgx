@@ -123,7 +123,7 @@ void EMODPR(secinfo_t *secinfo, uint64_t epc_addr)
     // RCX: Destination EPC Addr(In)
     // EAX: Error Code(out)
     out_regs_t out;
-    encls(ENCLS_EMODPR, secinfo, epc_addr, 0x0, &out);
+    encls(ENCLS_EMODPR, (uint64_t)secinfo, epc_addr, 0x0, &out);
 }
 
 int EBLOCK(uint64_t epc_addr)
@@ -143,7 +143,7 @@ int EWB(pageinfo_t *pageinfo_addr, epc_t *epc_addr, uint64_t *VA_slot_addr)
     // RCX: EPC addr(In)
     // RDX: VA slot addr(In)
     out_regs_t out;
-    encls(ENCLS_EWB, pageinfo_addr, epc_addr, VA_slot_addr, &out);
+    encls(ENCLS_EWB, (uint64_t)pageinfo_addr, (uint64_t)epc_addr, (uint64_t)VA_slot_addr, &out);
     return (int)(out.oeax);
 }
 
@@ -151,10 +151,10 @@ void EPA(int keid)
 {
     // RBX: PT_VA (In, Const)
     // RCX: EPC Addr(In, EA)
-    uint64_t epc_addr = alloc_epc_page(keid);
+    uint64_t epc_addr = (uint64_t)alloc_epc_page(keid);
     // Assume that we maintain the one Enclave...
     keid = 0;
-    encls(ENCLS_EPA, PT_VA, epc_addr, NULL, NULL);
+    encls(ENCLS_EPA, PT_VA, epc_addr, 0, NULL);
 }
 
 static

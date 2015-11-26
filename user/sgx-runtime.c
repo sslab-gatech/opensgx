@@ -23,10 +23,12 @@
 #include <sgx-utils.h>
 #include <sgx-crypto.h>
 #include <sgx-loader.h>
+#include <sgx-trampoline.h>
 #include <sys/types.h>
 #include <netdb.h>
 #include <unistd.h>
 #include <sgx-malloc.h>
+#include <err.h>
 
 #define is_aligned(addr, bytes) \
      ((((uintptr_t)(const void *)(addr)) & (bytes - 1)) == 0)
@@ -60,7 +62,7 @@ int main(int argc, char **argv)
         err(1, "Please provide valid binary/configuration files.");
     }
 
-    entry_offset = entry - base_addr;
+    entry_offset = (uint64_t)entry - (uint64_t)base_addr;
     tcs_t *tcs = init_enclave(base_addr, entry_offset, npages, conf);
     if (!tcs)
         err(1, "failed to run enclave");

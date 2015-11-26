@@ -94,7 +94,7 @@ void cmd_measure(char *binary)
         err(1, "Please provide valid a binary file.");
     }
 
-    entry_offset = entry - code;
+    entry_offset = (unsigned long)entry - (unsigned long)code;
     generate_enclavehash(hash, code, npages, entry_offset);
 
     // generate sgx-[binary].conf

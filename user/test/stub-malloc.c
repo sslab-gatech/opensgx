@@ -28,27 +28,27 @@
 void enclave_main()
 {
     int *a = malloc(20);
-    printf("%x\n", a);
+    printf("%lx\n", (uint64_t)a);
     int *b = malloc(4096*6);
-    printf("%x\n", b);
+    printf("%lx\n", (uint64_t)b);
     free(a);
     free(b);
     int *c = malloc(40);
-    printf("%x\n", c);
+    printf("%lx\n", (uint64_t)c);
     int *d = malloc(16);
-    printf("%x\n", d);
+    printf("%lx\n", (uint64_t)d);
     free(c);
     a = malloc(30);
-    printf("%x\n", a);
+    printf("%lx\n", (uint64_t)a);
     free(a);
     b = malloc(50);
-    printf("%x\n", b);
+    printf("%lx\n", (uint64_t)b);
     c = malloc(4096);
-    printf("%x\n", c);
+    printf("%lx\n", (uint64_t)c);
     d = malloc(40);
-    printf("%x\n", d);
+    printf("%lx\n", (uint64_t)d);
     int *e = malloc(20);
-    printf("%x\n", e);
+    printf("%lx\n", (uint64_t)e);
 
     sgx_exit(NULL);
 }

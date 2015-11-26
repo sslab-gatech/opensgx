@@ -31,7 +31,6 @@
 #include <stdarg.h>
 #include <malloc.h>
 
-static keid_t stat;
 static uint64_t _tcs_app;
 
 // (ref. r2:5.2)

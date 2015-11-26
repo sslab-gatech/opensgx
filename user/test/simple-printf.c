@@ -20,8 +20,8 @@ void enclave_main()
     printf("%d = 10\n", i);
     printf("%d = - max int\n", mi);
     printf("%x = %d in hex\n", hex, hex);
-    printf("ptr locates in 0x%x\n", (unsigned long)ptr);
-    printf("%x\n", (unsigned long)ptr);
+    printf("ptr locates in 0x%lx\n", (uint64_t)ptr);
+    printf("%lx\n", (uint64_t)ptr);
     printf("\n");
 
     sgx_exit(NULL);

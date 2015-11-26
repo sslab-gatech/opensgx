@@ -31,6 +31,7 @@ void enclave_main()
         a[i] = 1;
 
     puts("test stack\n");
+    printf("value = %d\n", a[0]);
 
     sgx_exit(NULL);
 }

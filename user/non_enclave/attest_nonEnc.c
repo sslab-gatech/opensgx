@@ -19,7 +19,7 @@
 
 #include <nonEncLib.h>
 
-void main()
+int main(void)
 {
     char ip[] = "127.0.0.1";
     char sendPort[] = "35555";
@@ -35,4 +35,6 @@ void main()
     hexdump(stdout, buf, n_recv);
 
     close_socket();
+
+    return 0;
 }

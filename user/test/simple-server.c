@@ -28,7 +28,6 @@ void enclave_main()
     int port = 5566;
     int srvr_fd;
     int clnt_fd;
-    int n;
     char buf[256];
     struct sockaddr_in addr;
 

@@ -30,8 +30,6 @@
 
 void enclave_main()
 {
-    sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
-
     char buf1[] = "hello world\n";
     char buf2[] = "hello world\n";
 

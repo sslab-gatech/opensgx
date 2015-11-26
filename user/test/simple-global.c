@@ -28,7 +28,7 @@ void enclave_main()
     global_var = 'a';
 
     puts((char *)&global_var);
-    printf("%x\n", (unsigned long)global_var);
+    printf("%lx\n", (uint64_t)global_var);
 
     sgx_exit(NULL);
 }

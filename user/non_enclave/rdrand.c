@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdint.h>
-void main()
+int main(void)
 {
 
     uint64_t ret = 0;
@@ -10,19 +10,19 @@ void main()
     asm("rdrand %ax\n\t");
     asm("movq %%rax, %0\n\t"
         :"=a"(ret));   
-    printf("%x\n",ret);
+    printf("%lx\n", ret);
 
     asm("rdrand %eax\n\t");
     asm("movq %%rax, %0\n\t"
         :"=a"(ret));   
-    printf("%x\n",ret);
+    printf("%lx\n", ret);
  
     asm("rdrand %rax\n\t");
     asm("movq %%rax, %0\n\t"
         :"=a"(ret));   
-    printf("%lx\n",ret);
+    printf("%lx\n", ret);
     
-
+    return 0;
     
 /*  Test case for cx, ecx, rcx
     asm("rdrand %cx\n\t");

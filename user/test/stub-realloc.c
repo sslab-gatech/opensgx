@@ -31,11 +31,11 @@ void enclave_main()
     puts(test);
 
     test = realloc(test, 70);
-    printf("%x\n", test);
+    printf("%lx\n", (uint64_t)test);
     puts(test);
 
     test = realloc(test, 30);
-    printf("%x\n", test);
+    printf("%lx\n", (uint64_t)test);
     puts(test);
 
     free(test);

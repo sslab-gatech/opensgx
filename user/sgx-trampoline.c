@@ -103,7 +103,7 @@ void dbg_dump_stub_in(sgx_stub_info *stub)
     hexdump(stderr, (void *)stub->in_data2, 32);
     fprintf(stderr, "++++++ ret:%x\n",
             stub->ret);
-    fprintf(stderr, "++++++ pending page:%lx\n",
+    fprintf(stderr, "++++++ pending page:%x\n",
             stub->pending_page);
     fprintf(stderr, "\n");
 
