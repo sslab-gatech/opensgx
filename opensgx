@@ -4,6 +4,7 @@ SGXTOOL=$ROOT/user/sgx-tool
 SGX=$ROOT/sgx
 DEVICEKEY=$ROOT/user/conf/device.key
 SGXRUNTIME=$ROOT/user/sgx-runtime
+GDBPORT=-1
 
 key_gen() {
   FILENAME=sign.key
@@ -26,6 +27,10 @@ run_enclave() {
 
 run_enclave_with_icount() {
   $SGX -i $SGXRUNTIME $1 $2
+}
+
+debug_enclave() {
+  $SGX -g $GDBPORT $SGXRUNTIME $@
 }
 
 measure() {
@@ -74,6 +79,11 @@ case "$1" in
   ;;
   -t|--test)
   run_enclave $2
+  ;;
+  -d|--debug)
+  GDBPORT=$2
+  shift; shift
+  debug_enclave $@
   ;;
   *)
   run_enclave $1 $2

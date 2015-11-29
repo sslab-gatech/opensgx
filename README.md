@@ -60,6 +60,54 @@ $ ./opensgx -i user/demo/hello.sgx user/demo/hello.conf
 run the program with counting the number of executed guest instructions
 ~~~~~
 
+Debugging using GDB
+-------
+- Run target in the backgroud with debug option
+~~~~~{.sh}
+$ ./opensgx -d 1234 user/demo/hello.sgx user/demo/hello.conf &
+~~~~~
+- Attach remote gdb on target port
+~~~~~{.sh}
+gdb user/sgx-runtime
+(gdb) target remote localhost:1234
+Remote debugging using localhost:1234
+[New Remote target]
+Reading symbols from /lib64/ld-linux-x86-64.so.2...(no debugging symbols found)...done.
+Loaded symbols for /lib64/ld-linux-x86-64.so.2
+[Switching to Remote target]
+0x0000004000802190 in ?? () from /lib64/ld-linux-x86-64.so.2
+(gdb) b sgx-runtime.c:63
+Breakpoint 1 at 0x401a80: file sgx-runtime.c, line 63.
+(gdb) c
+Continuing.
+
+Breakpoint 1, 0x0000000000401a80 in main ()
+~~~~~
+- Manually add symbols for enclave binary.
+  - Find text section offset
+~~~~~{.sh}
+$ readelf -s user/demo/hello.sgx | grep text
+  [ 2] .text             PROGBITS         0000000050000110  00000110
+~~~~~
+  - Then, add symbol file by specifying offset
+~~~~~{.sh}
+(gdb) add-symbol-file user/demo/hello.sgx 0x0000000050000110
+add symbol table from file "user/demo/hello.sgx" at
+	.text_addr = 0x50000110
+(y or n) y
+Reading symbols from /home/mingwei/gatech/opensgx_test/user/demo/hello.sgx...done.
+~~~~~
+- Set break point on enclave binary and start debugging!
+~~~~~{.sh}
+(gdb) b enclave_main 
+Breakpoint 2 at 0x50000110
+(gdb) c
+Continuing.
+
+Breakpoint 2, 0x0000000050000110 in enclave_main ()
+(gdb)
+~~~~~~
+
 Testing
 -------
 
