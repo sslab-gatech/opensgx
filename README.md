@@ -38,11 +38,12 @@ Run your first OpenSGX program
 
 ~~~~~{.c}
 #include <sgx-lib.h>
+#include <stdio.h>
 
 void enclave_main()
 {
     char *hello = "hello sgx"\n";
-    sgx_puts(hello);
+    puts(hello);
     sgx_exit(NULL);
 }
 ~~~~~
@@ -83,13 +84,12 @@ Continuing.
 
 Breakpoint 1, 0x0000000000401a80 in main ()
 ~~~~~
-- Manually add symbols for enclave binary.
-  - Find text section offset
+- Find text section offset
 ~~~~~{.sh}
 $ readelf -s user/demo/hello.sgx | grep text
   [ 2] .text             PROGBITS         0000000050000110  00000110
 ~~~~~
-  - Then, add symbol file by specifying offset
+- In gdb, add symbol file by specifying text section offset
 ~~~~~{.sh}
 (gdb) add-symbol-file user/demo/hello.sgx 0x0000000050000110
 add symbol table from file "user/demo/hello.sgx" at
@@ -125,7 +125,7 @@ $ ./test.sh --help
  test/fault-enclave-access.c   :  An enclave test case for faulty enclave access.
  test/simple-aes.c             :  An enclave test case for simple encryption/decryption using openssl library.
  test/simple-attest.c          :  test network send
- test/simple.c                 :  The simplest enclave enter/exit.
+test/simple.c                 :  The simplest enclave enter/exit.
  test/simple-func.c            :  The simplest function call inside the enclave.
  test/simple-getkey.c          :  hello world
  test/simple-global.c          :  The simplest enclave which accesses a global variable
@@ -155,14 +155,17 @@ Pointers
     - qemu/target-i386/sgx-perf.h  : Perforamce evaluation.
     - qemu/target-i386/sgx_helper.c: Implement sgx instructions.
 
+- SGX Library
+    - libsgx/sgx-entry.c : Define enclave binary entry point.
+    - libsgx/musl-libc/  : Cusomized libc library (based on musl libc).
+    - libsgx/polarssl/   : Cusomized ssl library (based on polarssl).
+
 - User side
     - user/sgx-kern.c         : Emulates kernel-level functions.
     - user/sgx-user.c         : Emulates user-level functions.
-    - user/sgxLib.c           : Implements user-level API.
     - user/sgx-utils.c        : Implements utils functions.
     - user/sgx-signature.c    : Implements crypto related functions.
     - user/sgx-runtime.c      : sgx runtime.
-    - user/sgx-test-runtime.c : sgx runtime for test cases.
     - user/include/ : Headers.
     - user/conf/    : Configuration files.
     - user/test/    : Test cases.
