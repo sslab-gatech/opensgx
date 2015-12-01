@@ -56,31 +56,31 @@ struct mem_control_block {
 };
 
 void _malloc_init() {
-     sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
-     stub->fcode = FUNC_MALLOC;
-     stub->mcode = MALLOC_INIT;
+    sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
+    stub->fcode = FUNC_MALLOC;
+    stub->mcode = MALLOC_INIT;
 
-	 // Enclave exit & jump into user-space trampoline
-     sgx_exit(stub->trampoline);
+	// Enclave exit & jump into user-space trampoline
+    sgx_exit(stub->trampoline);
 
-     cur_heap_ptr = stub->heap_beg;
-     heap_end = stub->heap_end;
+    cur_heap_ptr = stub->heap_beg;
+    heap_end = stub->heap_end;
 
-     managed_memory_start = (void *)(uintptr_t)stub->heap_beg;
-     has_initialized = 1;
-     g_total_chunk = 0;
+    managed_memory_start = (void *)(uintptr_t)stub->heap_beg;
+    has_initialized = 1;
+    g_total_chunk = 0;
 }
 
 void *malloc(size_t numbytes) {
-     //the below mechanism is largely from "Inside memory management from IBM"
-     void *current_location;
-     struct mem_control_block *current_location_mcb;
-     void *memory_location;
-     sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
+    //the below mechanism is largely from "Inside memory management from IBM"
+    void *current_location;
+    struct mem_control_block *current_location_mcb;
+    void *memory_location;
+    sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
 
-     if (!has_initialized) {
-          _malloc_init();
-     }
+    if (!has_initialized) {
+        _malloc_init();
+    }
      numbytes = numbytes + sizeof(struct mem_control_block);
      memory_location = 0;
 

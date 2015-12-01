@@ -31,7 +31,10 @@ void enclave_main()
     outputdata = memalign(128, 128);
 
     sgx_getkey(&keyreq, outputdata);
-    //puts(outputdata);
+    printf("%x\n", (uint64_t) &keyreq);
+    printf("%x\n", (uint64_t) outputdata);
+
+    puts(outputdata);
 
     sgx_exit(NULL);
 }

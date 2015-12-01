@@ -1995,10 +1995,11 @@ void sgx_eexit(CPUX86State *env)
 
     // FIXME: Currently not used
     retAddr = env->regs[R_EBX];
-    if(retAddr != 0)
+    if(retAddr != 0) {
         sgx_dbg(trace, "EEXIT will return to provided addr: %lx", retAddr);
-    else
+    } else {
         sgx_dbg(trace, "EEXIT will return saved EXIT_EIP: %lx", env->cregs.CR_EXIT_EIP);
+    }
     addr = (void *)env->regs[R_EBX];
     tmp_mode64 = (env->efer & MSR_EFER_LMA) && (env->segs[R_CS].flags & DESC_L_MASK);
 
@@ -2163,6 +2164,7 @@ void sgx_egetkey(CPUX86State *env)
     keyrequest_t *keyrequest = (keyrequest_t *)env->regs[R_EBX];
     uint64_t *outputdata = (uint64_t *)env->regs[R_ECX];
 
+
     // check for parameters
     sgx_egetkey_param_check(env);
 
@@ -2199,7 +2201,6 @@ void sgx_egetkey(CPUX86State *env)
     sgx_dbg(trace, "tmp_currentsecs->attributes %x", tmp_currentsecs->attributes);
     keydep_t keydep;
     memset(&keydep, 0, sizeof(keydep_t));
-
 
     switch (keyrequest->keyname) {
         case SEAL_KEY: {

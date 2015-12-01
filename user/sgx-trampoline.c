@@ -35,7 +35,7 @@ const char *fcode_to_str(fcode_t fcode)
 {
     switch (fcode) {
     case FUNC_PUTS        : return "PUTS";
-	case FUNC_MALLOC      : return "MALLOC";
+    case FUNC_MALLOC      : return "MALLOC";
     case FUNC_FREE        : return "FREE";
     case FUNC_READ        : return "READ";
     case FUNC_WRITE       : return "WRITE";
@@ -236,7 +236,7 @@ void sgx_trampoline()
     sgx_msg(user, "Trampoline Entered");
     sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
     clear_abi_in_fields(stub);
-
+    //printf("Trampoline Entered fcode: %d mcode: %d\n", stub->fcode, stub->mcode);
 
     sgx_dbg(user, "Function code: %s", fcode_to_str(stub->fcode));
     //dbg_dump_stub_out(stub);
@@ -310,7 +310,7 @@ void sgx_trampoline()
 /*
     case FUNC_SYSCALL:
         sgx_syscall();
-	break;
+    break;
 */
     default:
         sgx_msg(warn, "Incorrect function code");

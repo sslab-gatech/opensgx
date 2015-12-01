@@ -42,5 +42,3 @@ toobig:
 	errno = ENOMEM;
 	return 0;
 }
-
-weak_alias(__simple_malloc, malloc);
