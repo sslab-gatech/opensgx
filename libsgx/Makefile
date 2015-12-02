@@ -10,7 +10,12 @@ BASE_CFLAGS = -g -Iinclude -Imusl-libc/include -I../user/share/include \
               -Wall -pedantic -Wno-unused-function -std=gnu11
 ENC_CFLAGS = -fno-stack-protector -static -fvisibility=hidden
 CFLAGS = $(BASE_CFLAGS) $(ENC_CFLAGS)
-TOP=$(PWD)
+TOP = $(notdir $(basename $(PWD)))
+ifeq ($(TOP),libsgx)
+	TOP = $(PWD)
+else
+	TOP = $(PWD)/libsgx
+endif
 
 ALL = libc-sgx.a libsgx.a libpolarssl-sgx.a sgx-entry.o
 
@@ -23,7 +28,7 @@ libc-sgx.a:
 	cp musl-libc/lib/libc.a ./libc-sgx.a
 
 libpolarssl-sgx.a: mbedtls-config-libsgx.h
-	CFLAGS="-g $(ENC_CFLAGS) -Imusl-libc/include -I$(TOP) -DPOLARSSL_CONFIG_FILE='<mbedtls-config-libsgx.h>'" make -C mbedtls SHARED=1 clean lib
+	CFLAGS="-g $(ENC_CFLAGS) -I$(TOP)/musl-libc/include -I$(TOP) -DPOLARSSL_CONFIG_FILE='<mbedtls-config-libsgx.h>'" make -C mbedtls SHARED=1 clean lib
 	rm -rf include/polarssl
 	mkdir -p include
 	cp -r mbedtls/include/polarssl include/
