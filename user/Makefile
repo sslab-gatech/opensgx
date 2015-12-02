@@ -8,6 +8,12 @@ SGX_LDFLAGS = -static -nostdlib -nostartfiles -Wl,-T,sgx.lds
 SGX_LIBS = $(LIBSGXDIR)/sgx-entry.o $(LIBSGXDIR)/libsgx.a \
            $(LIBSGXDIR)/libpolarssl-sgx.a $(LIBSGXDIR)/libc-sgx.a
 
+# OpenSSL Cases
+OPENSSL_CFLAGS = $(SGX_CFLAGS) -I$(LIBSGXDIR)/openssl/include
+OPENSSL_LIBS = $(LIBSGXDIR)/sgx-entry.o $(LIBSGXDIR)/libssl.a \
+               $(LIBSGXDIR)/libcrypto.a $(LIBSGXDIR)/libsgx.a \
+               $(LIBSGXDIR)/libc-sgx.a
+
 # Host code/tool
 SGX_HOST_RUNTIME = sgx-runtime.o sgx-test-runtime.o
 SGX_HOST_OBJS = sgx-user.o sgx-kern.o sgx-kern-epc.o sgx-utils.o sgx-trampoline.o \
@@ -24,6 +30,7 @@ CFLAGS := $(BASE_CFLAGS) -fno-stack-protector -fvisibility=hidden
 
 HDRS := $(wildcard include/sgx*.h)
 BINS := $(patsubst %.c,%,$(wildcard test/*.c)) \
+        $(patsubst %.c,%,$(wildcard test/openssl/*.c)) \
         $(patsubst %.c,%,$(wildcard non_enclave/*.c))
 ALL  := sgx-tool sgx-runtime $(BINS) $(POLARSSL_LIB)
 
@@ -41,11 +48,17 @@ polarssl/%.o: polarssl/%.c
 sgx-tool: sgx-tool.o $(SGX_HOST_OBJS) $(POLARSSL_LIB)
 	$(CC) $^ $(CFLAGS) -o $@ $(LDLIBS)
 
+test/openssl/%.o: test/openssl/%.c
+	$(CC) -c $(OPENSSL_CFLAGS) -o $@ $<
+
 test/%.o: test/%.c
 	$(CC) -c $(SGX_CFLAGS) -o $@ $<
 
 demo/%.o: demo/%.c
 	$(CC) -c $(SGX_CFLAGS) -o $@ $<
+
+test/openssl/%: test/openssl/%.o $(OPENSSL_LIBS)
+	$(CC) $(SGX_LDFLAGS) $< -o $@ $(OPENSSL_LIBS)
 
 test/%: test/%.o $(SGX_LIBS)
 	$(CC) $(SGX_LDFLAGS) $< -o $@ $(SGX_LIBS)
