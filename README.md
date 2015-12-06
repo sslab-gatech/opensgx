@@ -86,7 +86,7 @@ Breakpoint 1, 0x0000000000401a80 in main ()
 ~~~~~
 - Find text section offset
 ~~~~~{.sh}
-$ readelf -s user/demo/hello.sgx | grep text
+$ readelf -S user/demo/hello.sgx | grep text
   [ 2] .text             PROGBITS         0000000050000110  00000110
 ~~~~~
 - In gdb, add symbol file by specifying text section offset
