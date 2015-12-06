@@ -109,6 +109,7 @@ typedef struct sgx_stub_info {
     int  ret;
     char in_data1[SGXLIB_MAX_ARG];
     char in_data2[SGXLIB_MAX_ARG];
+    char in_shm[SGXLIB_MAX_ARG];
     int  in_arg1;
     int  in_arg2;
     uint32_t in_arg3;
@@ -125,6 +126,7 @@ typedef struct sgx_stub_info {
    char out_data1[SGXLIB_MAX_ARG];
    char out_data2[SGXLIB_MAX_ARG];
    char out_data3[SGXLIB_MAX_ARG];
+   char out_shm[SGXLIB_MAX_ARG];
 } sgx_stub_info;
 
 

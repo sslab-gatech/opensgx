@@ -56,22 +56,6 @@ void _enclu(enclu_cmd_t leaf, uint64_t rbx, uint64_t rcx, uint64_t rdx,
     }
 }
 
-/*
-void *sgx_memcpy (void *dest, const void *src, size_t size)
-{
-    asm volatile("" ::: "memory");
-    asm volatile("movq %0, %%rdi\n\t"
-                 "movq %1, %%rsi\n\t"
-                 "movl %2, %%ecx\n\t"
-                 "rep movsb \n\t"
-                 :
-                 :"a"((uint64_t)dest),
-                  "b"((uint64_t)src),
-                  "c"((uint32_t)size));
-
-    return dest;
-}*/
-
 int sgx_enclave_read(void *buf, int len)
 {
     sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
@@ -79,8 +63,9 @@ int sgx_enclave_read(void *buf, int len)
     if (len <= 0) {
         return -1;
     }
-    memcpy(buf, stub->in_data1, len);
-    memset(stub->in_data1, 0, SGXLIB_MAX_ARG);
+
+    memcpy(buf, stub->in_shm, len);
+    memset(stub->in_shm, 0, SGXLIB_MAX_ARG);
 
     return len;
 }
@@ -92,8 +77,8 @@ int sgx_enclave_write(void *buf, int len)
     if (len <= 0) {
         return -1;
     }
-    memset(stub->out_data1, 0, SGXLIB_MAX_ARG);
-    memcpy(stub->out_data1, buf, len);
+    memset(stub->out_shm, 0, SGXLIB_MAX_ARG);
+    memcpy(stub->out_shm, buf, len);
 
     return len;
 }

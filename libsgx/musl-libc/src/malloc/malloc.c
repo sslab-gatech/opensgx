@@ -96,9 +96,7 @@ void *malloc(size_t numbytes) {
                     break;
                }
           }
-          current_location =
-	          (struct mem_control_block *)((uintptr_t *)current_location +
-                                                      current_location_mcb->size);
+          current_location = (unsigned long)current_location + current_location_mcb->size;
           total_chunk--;
      }
      if (!memory_location) {
@@ -143,19 +141,21 @@ void *malloc(size_t numbytes) {
           current_location_mcb->size = numbytes;
           g_total_chunk++; //g_total_chunk is added only when a new chunk is allocted (excluding the case of a using previously used chunk)
      }
-     memory_location =
-         (struct mem_control_block *)((uintptr_t *)memory_location +
-                                                 sizeof(struct mem_control_block));
+     memory_location = (unsigned long)memory_location + sizeof(struct mem_control_block);
      return memory_location;
 }
 
 void free(void *ptr) {
-     struct mem_control_block *mcb;
-     mcb = (struct mem_control_block *) ((uintptr_t *)ptr - sizeof(struct mem_control_block));
-     mcb->is_available = 1;
-     unsigned int chunk_size = mcb->size - sizeof(struct mem_control_block);
-     memset(ptr,0,chunk_size);
-     return;
+    sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
+
+    if (ptr < stub->heap_beg || ptr > stub->heap_end)
+        return;
+
+    struct mem_control_block *mcb;
+    mcb = (unsigned long)ptr - sizeof(struct mem_control_block);
+    mcb->is_available = 1;
+    memset(ptr, 0, mcb->size);
+    return;
 }
 
 void *realloc(void *ptr, size_t size){

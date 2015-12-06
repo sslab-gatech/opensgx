@@ -353,8 +353,8 @@ int sgx_host_read(void *buf, int len)
     if (len <= 0) {
         return -1;
     }
-    memcpy(buf, stub->out_data1, len);
-    memset(stub->out_data1, 0, SGXLIB_MAX_ARG);
+    memcpy(buf, stub->out_shm, len);
+    memset(stub->out_shm, 0, SGXLIB_MAX_ARG);
 
     return len;
 }
@@ -366,8 +366,8 @@ int sgx_host_write(void *buf, int len)
     if (len <= 0) {
         return -1;
     }
-    memset(stub->in_data1, 0, SGXLIB_MAX_ARG);
-    memcpy(stub->in_data1, buf, len);
+    memset(stub->in_shm, 0, SGXLIB_MAX_ARG);
+    memcpy(stub->in_shm, buf, len);
 
     return len;
 }
