@@ -314,6 +314,7 @@ typedef struct {
     uint16_t     isvsvn;
     uint8_t      reserved4[60];
     uint8_t      reportData[64];
+    uint8_t      keyid[32];
     uint8_t      mac[16];
 } report_t;
 
