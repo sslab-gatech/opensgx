@@ -209,7 +209,7 @@ NOTE. All authors at Gatech and KAIST equally contributed to the project
 
 Publications
 -------
-- Paper on OpenSGX
+- Paper on OpenSGX: please use the citation below as the canonical reference to OpenSGX
 ```
 OpenSGX: An Open Platform for SGX Research
 Prerit Jain, Soham Desai, Seongmin Kim, Ming-Wei Shih, JaeHyuk Lee, Changho Choi, Youjung Shin, Taesoo Kim, Brent Byunghoon Kang, Dongsu Han
