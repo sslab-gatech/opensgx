@@ -3647,10 +3647,10 @@ bool verify_signature(sigstruct_t *sig, uint8_t *signature, uint8_t *modulus,
 }
 
 static
-bool is_debuggable_enclave_hash(uint8_t hash[32])
+bool is_debuggable_enclave_hash(const uint8_t* hash)
 {
     int i;
-    for (i = 0; i < sizeof(hash); i ++)
+    for (i = 0; i < 32; i ++)
         if (hash[i] != 0)
             return false;
     return true;
