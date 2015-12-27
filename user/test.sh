@@ -26,7 +26,7 @@ run_test() {
 
   mkdir -p log
   BASE=log/$(basename $FILE)
-  $SGX -t $1 >$BASE.stdout 2>$BASE.stderr
+  $SGX -t $@ >$BASE.stdout 2>$BASE.stderr
   EXIT=$?
   EXPECT=0
 
@@ -48,7 +48,7 @@ run_test() {
 perf_test() {
   mkdir -p log
   BASE=log/$(basename $1)
-  $SGX $1 >$BASE.stdout 2>$BASE.stderr
+  $SGX $@ >$BASE.stdout 2>$BASE.stderr
   echo "$1"
   echo "-----------------------"
   awk '/count/ {print}' $BASE.stdout
@@ -126,10 +126,11 @@ case "$1" in
     ;;
   -i|--icount)
     make $2
-    $SGX -i $2
+    shift
+    $SGX -i $@
   ;;
   *)
     make $1
-    $SGX -t $1
+    $SGX -t $@
     ;;
 esac

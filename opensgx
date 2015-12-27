@@ -22,11 +22,11 @@ compile_code() {
 }
 
 run_enclave() {
-  $SGX $SGXRUNTIME $1 $2
+  $SGX $SGXRUNTIME $@
 }
 
 run_enclave_with_icount() {
-  $SGX -i $SGXRUNTIME $1 $2
+  $SGX -i $SGXRUNTIME $@
 }
 
 debug_enclave() {
@@ -75,10 +75,12 @@ case "$1" in
   esac
   ;;
   -i|--icount)
-  run_enclave_with_icount $2 $3
+  shift
+  run_enclave_with_icount $@
   ;;
   -t|--test)
-  run_enclave $2
+  shift
+  run_enclave $@
   ;;
   -d|--debug)
   GDBPORT=$2
@@ -86,6 +88,6 @@ case "$1" in
   debug_enclave $@
   ;;
   *)
-  run_enclave $1 $2
+  run_enclave $@
   ;;
 esac

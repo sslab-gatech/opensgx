@@ -29,6 +29,8 @@
 #include <unistd.h>
 #include <sgx-malloc.h>
 #include <err.h>
+#include <string.h>
+#include <fcntl.h>
 
 #define is_aligned(addr, bytes) \
      ((((uintptr_t)(const void *)(addr)) & (bytes - 1)) == 0)
@@ -43,15 +45,25 @@ int main(int argc, char **argv)
     unsigned long entry_offset;
     int toff;
 
+    int enc_argc;
+
     if (argc < 1) {
         err(1, "Please specifiy binary to load\n");
     }
     binary = argv[1];
 
+// handling for enclave argc and argv
     if (argc > 1) {
-        conf = argv[2];
+        if ( (strstr(argv[1], ".sgx") != NULL) && (strstr(argv[2], ".conf") != NULL) ) {
+            conf = argv[2];
+            enc_argc = argc - 2;
+        } else {
+            conf = NULL;
+            enc_argc = argc - 1;
+        }
     } else {
         conf = NULL;
+        enc_argc = 0;
     }
 
     if(!sgx_init())
@@ -63,6 +75,7 @@ int main(int argc, char **argv)
     }
 
     entry_offset = (uint64_t)entry - (uint64_t)base_addr;
+
     tcs_t *tcs = init_enclave(base_addr, entry_offset, npages, conf);
     if (!tcs)
         err(1, "failed to run enclave");
