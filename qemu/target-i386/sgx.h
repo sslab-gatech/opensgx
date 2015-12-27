@@ -131,32 +131,32 @@ typedef enum {
 } enclu_cmd_t;
 
 // from 5.1.3
-#define ERR_SGX_NOERROR             (0x00)
-#define ERR_SGX_INVALID_SIG_STRUCT  (0x01)        // EINIT
-#define ERR_SGX_INVALID_ATTRIBUTE   (0x02)        // EINIT, EGETKEY
-#define ERR_SGX_BLSTATE             (0x03)        // EBLOCK
-#define ERR_SGX_BLKSTATE            (0x03)        // EBLOCK
-#define ERR_SGX_INVALID_MEASUREMENT (0x04)        // EINIT
-#define ERR_SGX_NOTBLOCKABLE        (0x05)        // EBLOCK
-#define ERR_SGX_PG_INVLD            (0x06)        // EBLOCK
-#define ERR_SGX_LOCKFAIL            (0x07)        // EBLOCK
-#define ERR_SGX_INVALID_SIGNATURE   (0x08)        // EINIT
-#define ERR_SGX_MAC_COMPARE_FAIL    (0x09)        // ELDB, ELDU
-#define ERR_SGX_PAGE_NOT_BLOCKED    (0x10)        // EWB
-#define ERR_SGX_NOT_TRACKED         (0x11)        // EWB
-#define ERR_SGX_VA_SLOT_OCCUPIED    (0x12)        // EWB
-#define ERR_SGX_CHILD_PRESENT       (0x13)        // EWB, EREMOVE
-#define ERR_SGX_ENCLAVE_ACT         (0x14)        // EREMOVE
-#define ERR_SGX_ENTRYEPOCH_LOCKED   (0x15)        // EBLOCK
-#define ERR_SGX_INVALID_EINIT_TOKEN (0x16)        // EINIT
-#define ERR_SGX_PREV_TRK_INCMPL     (0x17)        // ETRACK
-#define ERR_SGX_PG_IS_SECS          (0x18)        // EBLOCK
-#define ERR_SGX_PAGE_ATTRIBUTES_MISMATCH (0x19)   // EACCEPT, EACCEPTCOPY
-#define ERR_SGX_PAGE_NOT_MODIFIABLE (0x20)        // EMODPR, EMODT
-#define ERR_SGX_INVALID_CPUSVN      (0x32)        // EINIT, EGETKEY
-#define ERR_SGX_INVALID_ISVSVN      (0x64)        // EGETKEY
-#define ERR_SGX_UNMASKED_EVENT      (0x128)       // EINIT
-#define ERR_SGX_INVALID_KEYNAME     (0x256)       // EGETKEY
+#define ERR_SGX_NOERROR             (0)
+#define ERR_SGX_INVALID_SIG_STRUCT  (1)        // EINIT
+#define ERR_SGX_INVALID_ATTRIBUTE   (2)        // EINIT, EGETKEY
+#define ERR_SGX_BLSTATE             (3)        // EBLOCK
+#define ERR_SGX_BLKSTATE            (3)        // EBLOCK
+#define ERR_SGX_INVALID_MEASUREMENT (4)        // EINIT
+#define ERR_SGX_NOTBLOCKABLE        (5)        // EBLOCK
+#define ERR_SGX_PG_INVLD            (6)        // EBLOCK
+#define ERR_SGX_LOCKFAIL            (7)        // EBLOCK
+#define ERR_SGX_INVALID_SIGNATURE   (8)        // EINIT
+#define ERR_SGX_MAC_COMPARE_FAIL    (9)        // ELDB, ELDU
+#define ERR_SGX_PAGE_NOT_BLOCKED    (10)        // EWB
+#define ERR_SGX_NOT_TRACKED         (11)        // EWB
+#define ERR_SGX_VA_SLOT_OCCUPIED    (12)        // EWB
+#define ERR_SGX_CHILD_PRESENT       (13)        // EWB, EREMOVE
+#define ERR_SGX_ENCLAVE_ACT         (14)        // EREMOVE
+#define ERR_SGX_ENTRYEPOCH_LOCKED   (15)        // EBLOCK
+#define ERR_SGX_INVALID_EINIT_TOKEN (16)        // EINIT
+#define ERR_SGX_PREV_TRK_INCMPL     (17)        // ETRACK
+#define ERR_SGX_PG_IS_SECS          (18)        // EBLOCK
+#define ERR_SGX_PAGE_ATTRIBUTES_MISMATCH (19)   // EACCEPT, EACCEPTCOPY
+#define ERR_SGX_PAGE_NOT_MODIFIABLE (20)        // EMODPR, EMODT
+#define ERR_SGX_INVALID_CPUSVN      (32)        // EINIT, EGETKEY
+#define ERR_SGX_INVALID_ISVSVN      (64)        // EGETKEY
+#define ERR_SGX_UNMASKED_EVENT      (128)       // EINIT
+#define ERR_SGX_INVALID_KEYNAME     (256)       // EGETKEY
 
 //====--------------------------------------------------------------
 /// SGX ENCLS related Structures
