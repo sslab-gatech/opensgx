@@ -4794,9 +4794,11 @@ static void encls_qemu_init(CPUX86State *env)
 
     // Load device key pair
     if (file_exist(KEY_PATH1))
-        load_rsa_keys(KEY_PATH1, process_pub_key, process_priv_key, DEVICE_KEY_LENGTH_BITS);
+        assert( load_rsa_keys(KEY_PATH1, process_pub_key, process_priv_key, 
+                                                    DEVICE_KEY_LENGTH_BITS) != NULL );
     else
-        load_rsa_keys(KEY_PATH2, process_pub_key, process_priv_key, DEVICE_KEY_LENGTH_BITS);
+        assert( load_rsa_keys(KEY_PATH2, process_pub_key, process_priv_key, 
+                                                    DEVICE_KEY_LENGTH_BITS) != NULL );
 
     // sanity check
     sanity_check();

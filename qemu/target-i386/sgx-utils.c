@@ -50,8 +50,10 @@ void load_rsa_key_from_str(uint8_t *key, char *bytes, size_t size)
 rsa_context *load_rsa_keys(const char *conf, uint8_t *pubkey, uint8_t *seckey, int bits)
 {
     FILE *fp = fopen(conf, "r");
-    if (!fp)
+    if (!fp) {
         sgx_msg(err, "Failed to open file");
+        return NULL;
+    }
 
     char *line = NULL;
     size_t len = 0;
