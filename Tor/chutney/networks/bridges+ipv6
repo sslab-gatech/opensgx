@@ -1,0 +1,15 @@
+Authority = Node(tag="a", authority=1, relay=1, torrc="authority.tmpl")
+Relay = Node(tag="r", relay=1, torrc="relay.tmpl")
+Client = Node(tag="c", torrc="client.tmpl")
+
+BridgeAuthority = Node(tag="ba", authority=1, bridgeauthority=1,
+                       relay=1, torrc="bridgeauthority.tmpl")
+Bridge = Node(tag="br", bridge=1, relay=1, torrc="bridge.tmpl")
+BridgeIPv6 = Node(tag="br", bridge=1, relay=1, ipv6_addr="[::1]", torrc="bridge-v6.tmpl")
+BridgeClient = Node(tag="bc", torrc="bridgeclient.tmpl")
+
+NODES = Authority.getN(3) + BridgeAuthority.getN(1) + Relay.getN(8) + \
+    Bridge.getN(1) + BridgeIPv6.getN(1) + \
+    Client.getN(2) + BridgeClient.getN(1)
+
+ConfigureNodes(NODES)

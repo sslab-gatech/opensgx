@@ -1,0 +1,15 @@
+${include:common.i}
+SocksPort 0
+OrPort $orport
+Address $ip
+DirPort $dirport
+
+#NOTE: Setting TestingServerConsensusDownloadSchedule doesn't
+#      help -- dl_stats.schedule is not DL_SCHED_CONSENSUS
+#      at boostrap time.
+# Try to download after:
+# the minimum initial consensus time to start with,
+# a few eager fetches,
+# then half the minimum testing consensus interval
+TestingServerDownloadSchedule 0, 5
+TestingServerConsensusDownloadSchedule 0, 5

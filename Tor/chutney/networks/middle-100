@@ -1,0 +1,8 @@
+Authority = Node(tag="a", authority=1, relay=1, torrc="authority.tmpl")
+Middle = Node(tag="m", relay=1, torrc="relay-non-exit.tmpl")
+Relay = Node(tag="r", relay=1, torrc="relay.tmpl")
+Client = Node(tag="c", torrc="client.tmpl")
+
+NODES = Authority.getN(5) + Middle.getN(25) + Relay.getN(10) + Client.getN(60)
+
+ConfigureNodes(NODES)

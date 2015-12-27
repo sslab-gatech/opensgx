@@ -1,0 +1,8 @@
+${include:common.i}
+SocksPort 0
+Address $ip
+
+HiddenServiceDir ${dir}/hidden_service
+# SSH is usually a popular service that is running. This is really just to make
+# a quick way to test the HS with torsocks and have an app at the other end.
+HiddenServicePort 6000 127.0.0.1:22

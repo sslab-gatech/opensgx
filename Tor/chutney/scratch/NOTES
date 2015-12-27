@@ -1,0 +1,91 @@
+Nick's goals:
+
+  go from "cautiously optimistic on the approach" to "workable" or
+  "unworkable".
+
+  come up with "my favorite tests" and verify that they're
+  implementable by me
+
+  The main criterion:
+
+    * "can a general person who is not familiar with the system write
+      a useful test?"
+
+    * "can a person with zero knowledge of the system run the
+      resulting tests?"
+
+
+Portability notes:
+
+   supported Debian & Fedora releases
+   XP & later
+   10.5 & later
+
+   all other unixes: support on demand
+
+   marginal:
+
+      Win2k
+      OS X 10.4
+
+Tests X Networks:
+  functional tests:
+    does the network bootstrap?
+    can I reach foo.com?
+    can I reach a hidden service?
+    can I reach the client's DNS "resolver"?
+    can I use the server's DNS client?
+    no crashes are observed under any test inputs?
+    map address functionality works?
+    do all of socks 4, 4a, 5 work?
+
+  (w/ two versions of tor?)
+  (w/ tor running on three platforms?)
+
+  "run the fast machine stuff"
+  "pick up after a test failed"
+  "run a test by name"
+  "run tests in parallel"
+
+  bridge-related stuff:
+     run a network with bridges on it
+     make sure that clients can use bridges
+     make sure that bridges announce themselves to a bridge authority
+
+  testable invariants & surprises:
+     all circuits get built "correctly"
+
+     almost always, keep some clean circuits connected to useful
+     exit nodes
+
+  tricky stuff:
+     unusually configured clients
+       (i.e. options for specifying what nodes tor will use for
+       building paths)
+     stream isolation design
+     load tests
+       (short, medium, and long-term)
+     configuration transitions
+     familialy related nodes should not be used in the same circuit
+     demonstrate that, for all inputs, no crashes occur
+
+  assertions made in the man page & specs:
+     bandwidth limiting works
+     bandwidth accounting works
+     clients respect advertised exit policies
+     advertised exit policies are enforced
+
+Information flows:
+
+   what networks are statically feasible for the given tests?
+
+   are there ever flows from the tests to the networks?
+      even if there are: aren't they just "requirements"
+
+   query the network and its nodes for config data
+
+Implementation questions:
+
+   Twisted?
+   something Erlang-ish?
+   (neither of us is thrilled with expect...)

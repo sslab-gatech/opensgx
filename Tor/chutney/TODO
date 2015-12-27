@@ -1,0 +1,31 @@
+
+- Have ability to override default parameter values.
+   Search order for configuration values:
+    - command line
+    - network configuration file
+    - dotfile
+    - defaults
+
+- Get smarter about naming and numbering nodes if their number changes
+
+- Get smarter about when we need to kill the network and when we need to
+  restart nodes
+
+- Avoid regenerating so many authority keys: it's okay to recycle for
+  testing.
+
+- Right now we assume that we're acting like a fooctl startup/shutdown script
+  series.  Instead we could run in a managed mode.
+
+- Pipe stdout to a file, not to nowhere with "quiet"
+
+- Log stuff.
+
+- Have launcher check for configuration
+
+- Resolve XXXX comments
+
+- Document everything
+
+- Start writing passive "tests" like "did it bootstrap?" or "any
+  warnings in the logs?", etc

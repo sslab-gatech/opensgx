@@ -1,0 +1,38 @@
+1. compile & install Tor
+
+cd tor-0.2.5.10
+./configure
+make
+make install
+
+2. compile and execute enclave_process
+
+cd enclave_Tor
+gcc -Wall enclave_process.c -o enclave_process -lcrypto -lssl -lpthread -L./ libor-crypto.a libor.a -lm
+./enclave_process
+
+3. Configurating Chutney
+
+cd chutney
+./chutney configure networks/basic
+
+
+===========================================
+
+[Remaining works]
+
+1. Modifying chutney
+ - Currently, it uses identity_key, signing_key, certificate by reading a file written by tor-gencert
+ - Through our modification, we save them as a data structure, not file.
+ - communicate with enclave_process
+
+2. Find and modify tor code
+ - After configuration is done, we will start tor using chutney
+  -> ./chutney start networks/basic
+ - While executing, if several functions requires such data structures, we have to change them communcating with
+   enclave_process.
+
+3. Exit nodes
+ - Summarize the attack scenario
+ - Saving keys while relay creation (while configuration)
+ - Find operations which requires secret onion key, secret_id_key or so on..

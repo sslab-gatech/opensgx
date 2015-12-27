@@ -1,0 +1,4 @@
+#!/bin/sh
+
+export PYTHONPATH="`dirname $0`/lib:${PYTHONPATH}"
+${PYTHON:=python2} -m chutney.TorNet "$@"

@@ -1,0 +1,40 @@
+${include:relay-non-exit.tmpl}
+
+AuthoritativeDirectory 1
+V3AuthoritativeDirectory 1
+ContactInfo auth${nodenum}@test.test
+ExitPolicy reject *:*
+
+# Speed up the consensus cycle as fast as it will go
+# Voting Interval can be:
+#   10, 12, 15, 18, 20, 24, 25, 30, 36, 40, 45, 50, 60, ...
+# Testing Initial Voting Interval can be:
+#    5,  6,  8,  9, or any of the possible values for Voting Interval,
+# as they both need to evenly divide 30 minutes.
+# If clock desynchronisation is an issue, use an interval of at least:
+#   18 * drift in seconds, to allow for a clock slop factor
+TestingV3AuthInitialVotingInterval 300
+V3AuthVotingInterval 300
+# VoteDelay + DistDelay must be less than VotingInterval
+TestingV3AuthInitialVoteDelay 2
+V3AuthVoteDelay 2
+TestingV3AuthInitialDistDelay 2
+V3AuthDistDelay 2
+# This is autoconfigured by chutney, so you probably don't want to use it
+#TestingV3AuthVotingStartOffset 0
+
+# Work around situations where the Exit and Guard flags aren't being set
+# These flags are set eventually, but it takes ~30 minutes
+# We could be more precise here, but it's easiest just to vote everything
+# Clients are sensible enough to filter out Exits without any exit ports,
+# and Guards without ORPorts
+# If your tor doesn't recognise TestingDirAuthVoteExit, update your chutney
+# to a version that includes the issue-13161-check-torrc-options features
+
+# These are all set in common.i in the Comprehensive/Rapid sections
+# Work around Exit requirements
+#TestingDirAuthVoteExit *
+# Work around bandwidth thresholds for exits
+#TestingMinExitFlagThreshold 0
+# Work around Guard uptime requirements
+#TestingDirAuthVoteGuard *

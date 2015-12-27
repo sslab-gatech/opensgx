@@ -1,0 +1,31 @@
+This is chutney.  It doesn't do much so far.  It isn't ready for prime-time.
+
+If it breaks, you get to keep all the pieces.
+
+It is supposed to be a good tool for:
+    - Configuring a testing tor network
+    - Launching and monitoring a testing tor network
+    - Running tests on a testing tor network
+
+Right now it only sorta does the first two.
+
+You will need, at the moment:
+  Tor installed somewhere in your path.
+  Python 2.5 or later
+
+Stuff to try:
+  ./chutney configure networks/basic
+  ./chutney start networks/basic
+  ./chutney status networks/basic
+  ./chutney hup networks/basic
+  ./chutney stop networks/basic
+
+The configuration files:
+  networks/basic holds the configuration for the network you're configuring
+  above.  It refers to some torrc template files in torrc_templates/.
+
+The working files:
+  chutney sticks its working files, including all data directories, log
+  files, etc, in ./net/.  Each tor instance gets a subdirectory of net/nodes.
+
+
