@@ -77,6 +77,6 @@ non_enclave/%: non_enclave/%.o nonEncLib.o
 	$(CC) $(CFLAGS) $^ -o $@
 
 clean:
-	rm -f polarssl/*.o lib/*.o *.o $(ALL) test/*.o sgx-runtime.o
+	rm -f polarssl/*.o lib/*.o *.o $(ALL) test/*.o sgx-runtime.o demo/*.conf demo/*.sgx
 
 .PHONY: polarsslobjs all clean
