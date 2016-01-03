@@ -2,11 +2,10 @@
 
 #include "test.h"
 
-void enclave_main(int *temp)
+void enclave_main(int argc, char **argv)
 {
-    printf("%d\n", *temp);
-
-    *temp += 1;
-
-    printf("%d\n", *temp);
+    printf("argc = %d\n", argc);
+    puts(argv[0]);
+    puts(argv[1]);
+    puts(argv[2]);
 }

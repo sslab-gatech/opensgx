@@ -38,7 +38,7 @@
 
 int a_val = 0;
 
-ENCCALL1(enclave1_call, int *)
+ENCCALL2(enclave2_call, int, char **)
 
 int main(int argc, char **argv)
 {
@@ -50,7 +50,7 @@ int main(int argc, char **argv)
     unsigned long entry_offset;
     int toff;
 
-    int enc_argc;
+//    int enc_argc;
 
     if (argc < 1) {
         err(1, "Please specifiy binary to load\n");
@@ -61,14 +61,14 @@ int main(int argc, char **argv)
     if (argc > 2) {
         if ( (strstr(argv[1], ".sgx") != NULL) && (strstr(argv[2], ".conf") != NULL) ) {
             conf = argv[2];
-            enc_argc = argc - 1;
+//            enc_argc = argc - 1;
         } else {
             conf = NULL;
-            enc_argc = argc - 1;
+//            enc_argc = argc - 1;
         }
     } else {
         conf = NULL;
-        enc_argc = argc - 1;
+//        enc_argc = argc - 1;
     }
 
     if(!sgx_init())
@@ -88,18 +88,17 @@ int main(int argc, char **argv)
     void (*aep)() = exception_handler;
 
     int test = 0;
-
-    if (enc_argc == 1)
+    if (argc == 2)
         sgx_enter(tcs, aep);
-    else if (enc_argc == 2) {
+    else if (argc == 3) {
         if ((strstr(argv[1], ".sgx") != NULL) && (strstr(argv[2], ".conf") != NULL))
             sgx_enter(tcs, aep);
         else {
-            enclave1_call(tcs, aep, &enc_argc);
+            enclave2_call(tcs, aep, argc, argv);
         }
     }
     else
-        sgx_enter(tcs, aep);
+        enclave2_call(tcs, aep, argc, argv);
 
     return 0;
 }
