@@ -10,6 +10,8 @@ BASE_CFLAGS = -g -Iinclude -Imusl-libc/include -I../user/share/include \
               -Wall -pedantic -Wno-unused-function -std=gnu11
 ENC_CFLAGS = -fno-stack-protector -static -fvisibility=hidden
 CFLAGS = $(BASE_CFLAGS) $(ENC_CFLAGS)
+ASFLAGS = -D__ASSEMBLY__ -Iinclude -Wall -fno-stack-protector -static -fPIC
+
 TOP = $(notdir $(basename $(PWD)))
 ifeq ($(TOP),libsgx)
 	TOP = $(PWD)

@@ -17,6 +17,7 @@
  *  along with OpenSGX.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
 #include <string.h>
 #include <sgx-kern.h>
 #include <sgx-user.h>
@@ -34,6 +35,10 @@
 
 #define is_aligned(addr, bytes) \
      ((((uintptr_t)(const void *)(addr)) & (bytes - 1)) == 0)
+
+int a_val = 0;
+
+ENCCALL1(enclave1_call, int *)
 
 int main(int argc, char **argv)
 {
@@ -53,17 +58,17 @@ int main(int argc, char **argv)
     binary = argv[1];
 
 // handling for enclave argc and argv
-    if (argc > 1) {
+    if (argc > 2) {
         if ( (strstr(argv[1], ".sgx") != NULL) && (strstr(argv[2], ".conf") != NULL) ) {
             conf = argv[2];
-            enc_argc = argc - 2;
+            enc_argc = argc - 1;
         } else {
             conf = NULL;
             enc_argc = argc - 1;
         }
     } else {
         conf = NULL;
-        enc_argc = 0;
+        enc_argc = argc - 1;
     }
 
     if(!sgx_init())
@@ -81,7 +86,20 @@ int main(int argc, char **argv)
         err(1, "failed to run enclave");
 
     void (*aep)() = exception_handler;
-    sgx_enter(tcs, aep);
+
+    int test = 0;
+
+    if (enc_argc == 1)
+        sgx_enter(tcs, aep);
+    else if (enc_argc == 2) {
+        if ((strstr(argv[1], ".sgx") != NULL) && (strstr(argv[2], ".conf") != NULL))
+            sgx_enter(tcs, aep);
+        else {
+            enclave1_call(tcs, aep, &enc_argc);
+        }
+    }
+    else
+        sgx_enter(tcs, aep);
 
     return 0;
 }

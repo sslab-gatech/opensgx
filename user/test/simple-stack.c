@@ -30,7 +30,7 @@ void enclave_main()
     for(int i=0;i<30000;i++)
         a[i] = 1;
 
-    puts("test stack\n");
+    puts("test stack");
     printf("value = %d\n", a[0]);
 
     sgx_exit(NULL);

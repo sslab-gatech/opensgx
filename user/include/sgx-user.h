@@ -36,3 +36,41 @@ extern void sgx_resume(tcs_t *tcs, void (*aep)());
 extern int sgx_host_read(void *buf, int len);
 extern int sgx_host_write(void *buf, int len);
 
+/* Macros to define user-side enclave calls with different argument
+ * numbers */
+#define ENCCALL1(name, type1)                                   \
+void name(tcs_t *tcs, void (*aep)(), type1 arg1) {              \
+        register type1 rdi asm("rdi") __attribute((unused));    \
+        rdi = arg1;                                             \
+        asm volatile(                                           \
+                ".byte 0x0F\n\t"                                    \
+                ".byte 0x01\n\t"                                    \
+                ".byte 0xd7\n\t"                                    \
+        : "=c"(aep)                 \
+                : "a"((uint32_t)ENCLU_EENTER),          \
+          "b"(tcs),                 \
+          "c"(aep),                 \
+          "r"(rdi)                  \
+                : "memory", "r11", "cc"             \
+        );                                                      \
+}
+
+#define ENCCALL2(name, type1, type2)                            \
+void name(tcs_t *tcs, void (*aep)(), type1 arg1, type2 arg2) {  \
+        register type1 rdi asm("rdi") __attribute((unused));                          \
+        register type2 rsi asm("rsi") __attribute((unused));                          \
+        rdi = arg1;                                             \
+        rsi = arg2;                                             \
+        asm volatile(                                           \
+                ".byte 0x0F\n\t"                                    \
+                ".byte 0x01\n\t"                                    \
+                ".byte 0xd7\n\t"                                    \
+        : "=c"(aep)                 \
+                : "a"((uint32_t)ENCLU_EENTER),          \
+          "b"(tcs),                 \
+          "c"(aep),                 \
+          "r"(rdi),                 \
+          "r"(rsi)                  \
+                : "memory", "r11", "cc"             \
+        );                                                      \
+}

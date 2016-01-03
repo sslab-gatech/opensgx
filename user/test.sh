@@ -68,6 +68,10 @@ case "$1" in
   -a|--all)
     for f in test/*.c; do
       OUT=${f%%.c}
+      if [[ "$OUT" == "test/simple-arg" ]]; then
+      printf "%-30s: please test it with one additional argument vector\n" "$OUT"
+      continue
+      fi
       if [[ "$OUT" == "test/simple-recv" ]]; then
       printf "%-30s: please test it with simple_send together\n" "$OUT"
       continue
