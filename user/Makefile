@@ -31,6 +31,7 @@ CFLAGS := $(BASE_CFLAGS) -fno-stack-protector -fvisibility=hidden
 HDRS := $(wildcard include/sgx*.h)
 BINS := $(patsubst %.c,%,$(wildcard test/*.c)) \
         $(patsubst %.c,%,$(wildcard test/openssl/*.c)) \
+        $(patsubst %.c,%,$(wildcard test/tor/sgx-*.c)) \
         $(patsubst %.c,%,$(wildcard non_enclave/*.c))
 ALL  := sgx-tool sgx-runtime $(BINS) $(POLARSSL_LIB)
 
@@ -51,6 +52,9 @@ sgx-tool: sgx-tool.o $(SGX_HOST_OBJS) $(POLARSSL_LIB)
 test/openssl/%.o: test/openssl/%.c
 	$(CC) -c $(OPENSSL_CFLAGS) -o $@ $<
 
+test/tor/%.o: test/tor/%.c
+	$(CC) -c $(OPENSSL_CFLAGS) -o $@ $<
+
 test/%.o: test/%.c
 	$(CC) -c $(SGX_CFLAGS) -o $@ $<
 
@@ -58,6 +62,9 @@ demo/%.o: demo/%.c
 	$(CC) -c $(SGX_CFLAGS) -o $@ $<
 
 test/openssl/%: test/openssl/%.o $(OPENSSL_LIBS)
+	$(CC) $(SGX_LDFLAGS) $< -o $@ $(OPENSSL_LIBS)
+
+test/tor/%: test/tor/%.o $(OPENSSL_LIBS)
 	$(CC) $(SGX_LDFLAGS) $< -o $@ $(OPENSSL_LIBS)
 
 test/%: test/%.o $(SGX_LIBS)
