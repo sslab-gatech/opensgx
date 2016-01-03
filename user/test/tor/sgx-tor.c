@@ -79,7 +79,6 @@ int pipe_open(char *unique_id, int is_write, int flag_dir)
     }
 
     return fd;
-
 }
 
 // From strlcpy.c
@@ -95,7 +94,7 @@ size_t strlcpy(char *dst, const char *src, size_t siz)
         register size_t n = siz;
 
         if (n == 0)
-                return(strlen(s));
+                return( strlen(s));
         while (*s != '\0') {
                 if (n != 1) {
                         *d++ = *s;
@@ -131,7 +130,7 @@ strlcat(char *dst, const char *src, size_t siz)
         n = siz - dlen;
 
         if (n == 0)
-                return(dlen + strlen(s));
+                return(dlen +  strlen(s));
         while (*s != '\0') {
                 if (n != 1) {
                         *d++ = *s;
@@ -239,7 +238,7 @@ struct tm *tor_gmtime_r(const time_t *timep, struct tm *result)
         struct tm *r;
         //  assert(result);
 
-        r = gmtime(timep);
+        r =  gmtime(timep);
         if (r)
                 memcpy(result, r, sizeof(struct tm));
 
@@ -258,6 +257,8 @@ void format_iso_time(char *buf, time_t t)
         struct tm tm_ori;
         tor_gmtime_r(&t, &tm_ori);
         strftime(buf, ISO_TIME_LEN+1, "%Y-%m-%d %H:%M:%S", &tm_ori);
+
+        //   strftime(buf, ISO_TIME_LEN+1, "%Y-%m-%d %H:%M:%S", tor_gmtime_r(&t, &tm_ori));
 }
 
 // From crypto.h
@@ -754,11 +755,6 @@ char address[INET_NTOA_BUF_LEN+32];
 int addr_success;
 int months_lifetime;
 
-char *vote_sig = NULL;
-char *consensus_sig = NULL;
-char *consensus_sig2 = NULL;
-int consensus_sig_count = 0;
-
 /* For exit node */
 int exit_node_num;
 crypto_pk_t *secret_id_key = NULL;
@@ -1056,6 +1052,7 @@ static int generate_certificate()
         char id_digest[DIGEST_LEN];
         char fingerprint[FINGERPRINT_LEN+1];
         char *ident = key_to_string(identity_key);
+
         char *signing = key_to_string(signing_key);
 
         size_t signed_len;
@@ -1125,124 +1122,7 @@ static int generate_certificate()
         return 0;
 }
 
-int directory_configure(int fd_te, int fd_et)
-{
-        /* routine for directory authority */
-        //	addr_success = 0;
-        //	months_lifetime = 0;
-
-        int buf_len;
-        char *tmp_buf;
-
-        puts("Directory authority initialization.\n");
-
-        // identity key process
-        read(fd_te, &buf_len, sizeof(int));
-        tmp_buf = (char *) malloc(buf_len+1);
-        read(fd_te, tmp_buf, buf_len+1);
-
-        if(! strncmp(tmp_buf, "CR_IDENTITY_KEY", buf_len)) {
-                puts("Creating identity key.\n");
-
-                if(create_identity_key()) {
-                        puts("creating identity_key fail");
-                        buf_len =  strlen("CR_IDENTITY_KEY_ERROR");
-                        write(fd_et, &buf_len, sizeof(int));
-                        write(fd_et, "CR_IDENTITY_KEY_ERROR", buf_len+1);
-                        return 0;			
-                }
-
-                buf_len =  strlen("CR_IDENTITY_KEY_DONE");
-                write(fd_et, &buf_len, sizeof(int));
-                write(fd_et, "CR_IDENTITY_KEY_DONE", buf_len+1);
-        }
-        else if(! strncmp(tmp_buf, "LD_IDENTITY_KEY", buf_len)) {
-                puts("Load identity key.\n");
-
-                if(load_identity_key()) {
-                        puts("loading identity_key fail");
-                        buf_len =  strlen("LD_IDENTITY_KEY_ERROR");
-                        write(fd_et, &buf_len, sizeof(int));
-                        write(fd_et, "LD_IDENTITY_KEY_ERROR", buf_len+1);
-                        return 0;			
-                }
-
-                buf_len =  strlen("LD_IDENTITY_KEY_DONE");
-                write(fd_et, &buf_len, sizeof(int));
-                write(fd_et, "LD_IDENTITY_KEY_DONE", buf_len+1);
-        }
-
-        free(tmp_buf);
-
-        // signing key process
-        read(fd_te, &buf_len, sizeof(int));
-        tmp_buf = (char *) malloc(buf_len+1);
-        read(fd_te, tmp_buf, buf_len+1);
-
-        if(! strncmp(tmp_buf, "CR_SIGNING_KEY", buf_len)) {
-                //		printf("Creating signing key of %d.\n", authority_num);
-                puts("Creating signing key.\n");
-
-                if(create_signing_key()) {
-                        buf_len =  strlen("CR_SIGNING_KEY_ERROR");
-                        write(fd_et, &buf_len, sizeof(int));
-                        write(fd_et, "CR_IDENTITY_KEY_ERROR", buf_len+1);
-                        return 0; 			
-                }
-
-                buf_len =  strlen("CR_SIGNING_KEY_DONE");
-                write(fd_et, &buf_len, sizeof(int));
-                write(fd_et, "CR_SIGNING_KEY_DONE", buf_len+1);
-        }
-        else if(! strncmp(tmp_buf, "LD_SIGNING_KEY", buf_len)) {
-                //		printf("Load signing key of %d.\n", authority_num);
-                puts("Load signing key.\n");
-
-                if(load_signing_key()) {
-                        buf_len =  strlen("LD_SIGNING_KEY_ERROR");
-                        write(fd_et, &buf_len, sizeof(int));
-                        write(fd_et, "LD_SIGNING_KEY_ERROR", buf_len+1);
-                        return 0;			
-                }
-
-                buf_len =  strlen("LD_SIGNING_KEY_DONE");
-                write(fd_et, &buf_len, sizeof(int));
-                write(fd_et, "LD_SIGNING_KEY_DONE", buf_len+1);
-        }
-
-        free(tmp_buf);
-
-        // recv data related to certificate
-        //	printf("Receiving global variables for certificate.\n");
-        puts("Receiving global variables for certificate.\n");
-        read(fd_te, &buf_len, sizeof(int));
-        read(fd_te, address, buf_len+1);
-        addr_success = 1;
-        int temp_var;
-        read(fd_te, &temp_var, sizeof(int));
-        months_lifetime = temp_var;
-
-        //	printf("Creating certificate of %d.\n", authority_num);
-        puts("Creating certificate.\n");
-        if(generate_certificate()) {
-                buf_len =  strlen("CR_CERTIFICATE_ERROR");
-                write(fd_et, &buf_len, sizeof(int));
-                write(fd_et, "CR_CERTIFICATE_ERROR", buf_len+1);
-                return 0;			
-        }
-
-        buf_len =  strlen("CR_CERTIFICATE_DONE");
-        write(fd_et, &buf_len, sizeof(int));
-        write(fd_et, "CR_CERTIFICATE_DONE", buf_len+1);
-
-        for(int i=0;i<8;i++)
-                write(fd_et, certificate+i*512, 512);
-        puts("Send successfully!\n");
-
-        return 1;
-}
-
-int directory_request(int fd_et, int fd_te)
+int exit_node_handling(int fd_te, int fd_et, int flags)
 {
         int buf_len;
         char *tmp_buf = NULL;
@@ -1252,222 +1132,818 @@ int directory_request(int fd_et, int fd_te)
                 tmp_buf = (char *) malloc(buf_len+1);
                 read(fd_te, tmp_buf, buf_len+1);
 
-                // CERTIFICATE VERIFICATION. 
-                if(! strncmp(tmp_buf, "CERTIFICATE_VERIFY", buf_len)) {
-                        printf("Certificate verification for directory authority %d\n", 
-                                        authority_num);
-                        size_t len;
-                        char *tmp_signing_key_str = NULL;
-                        read(fd_te, &len, sizeof(size_t));
-                        tmp_signing_key_str = (char *) malloc(len+1);
-                        read(fd_te, tmp_signing_key_str, len+1);
-
-                        //			char *tmp_ori_str = key_to_string_priv(&signing_key_set);
-                        char *tmp_ori_str = key_to_string_priv(signing_key);
-
-                        if(! memcmp(tmp_signing_key_str, tmp_ori_str, len)) {
-                                printf("Verification Failed!\n");
-                                buf_len =  strlen("CERTFICATE_VERIFY_ERROR");
+                // Creation or loading check for identity key
+                if(! strncmp(tmp_buf, "EXIT_NODE_ID_KEY_INIT", buf_len)) {
+                        puts("\nInitializeing exit node secrets.\n");
+                        if(secret_id_key == NULL) {
+                                buf_len =  strlen("CREATION");
                                 write(fd_et, &buf_len, sizeof(int));
-                                write(fd_et, "CERIFICATE_VERIFY_ERROR", buf_len+1);
-                                return 0;
+                                write(fd_et, "CREATION", buf_len+1);
+                        } else {
+                                buf_len =  strlen("LOADING");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "LOADING", buf_len+1);
                         }
-
-                        buf_len =  strlen("CERTFICATE_VERIFY_DONE");
-                        write(fd_et, &buf_len, sizeof(int));
-                        write(fd_et, "CERIFICATE_VERIFY_DONE", buf_len+1);
-
-                        free(tmp_signing_key_str);
-                        free(tmp_ori_str);
 
                         free(tmp_buf);
                         continue;
                 }
 
-                // Voting
-                if(! strncmp(tmp_buf, "VOTING_START", buf_len)) {
-                        printf("Voting of %d is started!\n", authority_num);
+                // IDENITY_KEY CREATION
+                if(! strncmp(tmp_buf, "EXIT_NODE_ID_KEY_CR", buf_len)) {
+                        printf("Exit Node %d secret_id_key creation.\n", exit_node_num);
 
-                        // DIGEST COMPUTING
-                        //            char *tmp_ori_str = key_to_string_priv(&signing_key_set);
-                        char *tmp_ori_str = key_to_string_priv(signing_key);
-                        crypto_pk_t *tmp_signing_key = crypto_pk_new();
-                        crypto_pk_read_private_key_from_string(tmp_signing_key, 
-                                        tmp_ori_str, -1);
-                        char signing_key_digest[DIGEST_LEN];
-
-                        if(crypto_pk_get_digest(tmp_signing_key, signing_key_digest) < 0) {
-                                puts("Error computing signing key digest\n");
-                                buf_len =  strlen("GET_DIGEST_ERROR");
+                        if(!(secret_id_key = crypto_pk_new())) {
+                                buf_len =  strlen("EXIT_NODE_ID_KEY_CR_ERROR");
                                 write(fd_et, &buf_len, sizeof(int));
-                                write(fd_et, "GET_DIGEST_ERROR", buf_len+1);
+                                write(fd_et, "EXIT_NODE_ID_KEY_CR_ERROR", buf_len+1);
+                                free(tmp_buf);
                                 return 0;
                         }
 
-                        buf_len =  strlen("GET_DIGEST_DONE");
-                        write(fd_et, &buf_len, sizeof(int));
-                        write(fd_et, "GET_DIGEST_DONE", buf_len+1);
+                        if(crypto_pk_generate_key(secret_id_key)) {
+                                buf_len =  strlen("EXIT_NODE_ID_KEY_CR_ERROR");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "EXIT_NODE_ID_KEY_CR_ERROR", buf_len+1);
+                                free(tmp_buf);
+                                return 0;
+                        }
 
-                        // Fingerprint
+                        if(crypto_pk_check_key(secret_id_key) <= 0) {
+                                buf_len =  strlen("EXIT_NODE_ID_KEY_CR_ERROR");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "EXIT_NODE_ID_KEY_CR_ERROR", buf_len+1);
+                                free(tmp_buf);
+                                return 0;
+                        }
+
+                        buf_len =  strlen("EXIT_NODE_ID_KEY_CR_DONE");
+                        write(fd_et, &buf_len, sizeof(int));
+                        write(fd_et, "EXIT_NODE_ID_KEY_CR_DONE", buf_len+1);
+
+                        char server_identitykey_digest[DIGEST_LEN];
+                        crypto_pk_get_digest(secret_id_key, server_identitykey_digest);
+                        write(fd_et, server_identitykey_digest, DIGEST_LEN);
+
+                        free(tmp_buf);
+                        continue;
+                }
+
+                // IDENTITY_KEY LOADING
+                if(! strncmp(tmp_buf, "EXIT_NODE_ID_KEY_LD", buf_len)) {
+                        printf("Exit Node %d secret_id_key loading.\n", exit_node_num);
+
+                        char server_identitykey_digest[DIGEST_LEN];
+                        crypto_pk_get_digest(secret_id_key, server_identitykey_digest);
+                        write(fd_et, server_identitykey_digest, DIGEST_LEN);
+
+                        free(tmp_buf);
+                        continue;
+                }
+
+                // CLIENT_KEY INIT
+                if(! strncmp(tmp_buf, "EXIT_NODE_CLIENT_KEY_INIT", buf_len)) {
+                        printf("Exit Node %d client_key initialization.\n", exit_node_num);
+
+                        crypto_pk_free(client_id_key);
+                        client_id_key = crypto_pk_dup_key(secret_id_key);
+
+                        free(tmp_buf);
+                        continue;
+                }
+
+                // IDENTITY KEY NULL CHECK
+                if(! strncmp(tmp_buf, "EXIT_NODE_IDENTITY_KEY_NULL", buf_len)) {
+                        printf("Check server_identity of %d is null.\n", exit_node_num);
+
+                        if(secret_id_key == NULL) {
+                                puts("Error: secret_id_key is null\n");
+                                buf_len =  strlen("EXIT_NODE_IDENTITY_KEY_NULL_ERROR");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "EXIT_NODE_IDENTITY_KEY_NULL_ERROR", buf_len+1);
+                                free(tmp_buf);
+                                return 0;
+                        }
+
+                        buf_len =  strlen("EXIT_NODE_IDENTITY_KEY_NULL_DONE");
+                        write(fd_et, &buf_len, sizeof(int));
+                        write(fd_et, "EXIT_NODE_IDENTITY_KEY_NULL_DONE", buf_len+1);
+
+                        free(tmp_buf);
+
+                        continue;
+                }
+
+                // EXIT_NODE_TLS_CERTIFICATE CREATION
+                if(! strncmp(tmp_buf, "EXIT_NODE_TLS_CERTIFICATE", buf_len)) {
+                        printf("Exit Node %d certificate creation.\n", exit_node_num);
+                        //			assert(secret_id_key);
+
+                        X509 *x509 = NULL;
+
+                        unsigned char serial_tmp[SERIAL_NUMBER_SIZE];
+                        BIGNUM *serial_number = NULL;
+                        X509_NAME *name = NULL, *name_issuer = NULL;
+                        char *cname = NULL;
+                        char *cname_sign = NULL;
+                        int cname_len, cname_sign_len;
+                        time_t start_time, end_time;
+
+                        read(fd_te, serial_tmp, sizeof(serial_tmp)+1);
+                        read(fd_te, &start_time, sizeof(time_t));
+                        read(fd_te, &end_time, sizeof(time_t));
+                        read(fd_te, &cname_len, sizeof(int));
+                        read(fd_te, &cname_sign_len, sizeof(int));
+
+                        cname = (char *) malloc(cname_len+1);
+                        cname_sign = (char *) malloc(cname_sign_len+1);
+
+                        read(fd_te, cname, cname_len+1);
+                        read(fd_te, cname_sign, cname_sign_len+1);
+
+                        // Recv rsa as a string
+                        char *rsa_str;
+                        size_t rsa_len;
+                        read(fd_te, &rsa_len, sizeof(size_t));
+                        rsa_str = (char *) malloc(rsa_len+1);
+                        read(fd_te, rsa_str, rsa_len+1);
+                        crypto_pk_t *rsa = crypto_pk_new();
+                        crypto_pk_read_public_key_from_string(rsa, rsa_str, rsa_len);
+
+                        EVP_PKEY *sign_pkey = NULL;
+                        if(!(sign_pkey = crypto_pk_get_evp_pkey_(secret_id_key, 1))) {
+                                puts("TLS Certificate creation error\n");
+                                buf_len =  strlen("EXIT_NODE_TLS_CERTIFICATE_ERROR");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_ERROR", buf_len+1);
+                                free(tmp_buf);
+                                return 0;
+                        }
+
+                        EVP_PKEY *pkey = NULL;
+                        if(!(pkey = crypto_pk_get_evp_pkey_(rsa, 0))) {
+                                puts("TLS Certificate creation error\n");
+                                buf_len =  strlen("EXIT_NODE_TLS_CERTIFICATE_ERROR");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_ERROR", buf_len+1);
+                                free(tmp_buf);
+                                return 0;
+                        }
+
+                        if (!(x509 = X509_new())) {
+                                puts("TLS Certificate creation error\n");
+                                buf_len =  strlen("EXIT_NODE_TLS_CERTIFICATE_ERROR");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_ERROR", buf_len+1);
+                                free(tmp_buf);
+                                return 0;
+                        }
+
+                        if (!(X509_set_version(x509, 2))) {
+                                puts("TLS Certificate creation error\n");
+                                buf_len =  strlen("EXIT_NODE_TLS_CERTIFICATE_ERROR");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_ERROR", buf_len+1);
+                                free(tmp_buf);
+                                return 0;
+                        }
+
+                        if (!(serial_number = BN_bin2bn(serial_tmp, sizeof(serial_tmp), NULL))) {
+                                puts("TLS Certificate creation error\n");
+                                buf_len =  strlen("EXIT_NODE_TLS_CERTIFICATE_ERROR");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_ERROR", buf_len+1);
+                                free(tmp_buf);
+                                return 0;
+                        }
+
+                        if (!(BN_to_ASN1_INTEGER(serial_number, X509_get_serialNumber(x509)))) {
+                                puts("TLS Certificate creation error\n");
+                                buf_len =  strlen("EXIT_NODE_TLS_CERTIFICATE_ERROR");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_ERROR", buf_len+1);
+                                free(tmp_buf);
+                                return 0;
+                        }
+
+                        if (!(name = tor_x509_name_new(cname))) {
+                                puts("TLS Certificate creation error\n");
+                                buf_len =  strlen("EXIT_NODE_TLS_CERTIFICATE_ERROR");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_ERROR", buf_len+1);
+                                free(tmp_buf);
+                                return 0;
+                        }
+
+                        if (!(X509_set_subject_name(x509, name))) {
+                                puts("TLS Certificate creation error\n");
+                                buf_len =  strlen("EXIT_NODE_TLS_CERTIFICATE_ERROR");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_ERROR", buf_len+1);
+                                free(tmp_buf);
+                                return 0;
+                        }
+
+                        if (!(name_issuer = tor_x509_name_new(cname_sign))) {
+                                puts("TLS Certificate creation error\n");
+                                buf_len =  strlen("EXIT_NODE_TLS_CERTIFICATE_ERROR");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_ERROR", buf_len+1);
+                                free(tmp_buf);
+                                return 0;
+                        }
+
+                        if (!(X509_set_issuer_name(x509, name_issuer))) {
+                                puts("TLS Certificate creation error\n");
+                                buf_len =  strlen("EXIT_NODE_TLS_CERTIFICATE_ERROR");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_ERROR", buf_len+1);
+                                free(tmp_buf);
+                                return 0;
+                        }
+
+                        if (!X509_time_adj(X509_get_notBefore(x509),0,&start_time)) {
+                                puts("TLS Certificate creation error\n");
+                                buf_len =  strlen("EXIT_NODE_TLS_CERTIFICATE_ERROR");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_ERROR", buf_len+1);
+                                free(tmp_buf);
+                                return 0;
+                        }
+
+                        if (!X509_time_adj(X509_get_notAfter(x509),0,&end_time)) {
+                                puts("TLS Certificate creation error\n");
+                                buf_len =  strlen("EXIT_NODE_TLS_CERTIFICATE_ERROR");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_ERROR", buf_len+1);
+                                free(tmp_buf);
+                                return 0;
+                        }
+
+                        if(!X509_set_pubkey(x509, pkey)) {
+                                puts("TLS Certificate creation error\n");
+                                buf_len =  strlen("EXIT_NODE_TLS_CERTIFICATE_ERROR");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_ERROR", buf_len+1);
+                                free(tmp_buf);
+                                return 0;
+                        }
+
+                        if(!X509_sign(x509, sign_pkey, EVP_sha1())) {
+                                puts("TLS Certificate creation error\n");
+                                buf_len =  strlen("EXIT_NODE_TLS_CERTIFICATE_ERROR");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_ERROR", buf_len+1);
+                                free(tmp_buf);
+                                return 0;
+                        }
+
+                        BIO *bio = NULL;
+                        BUF_MEM *bio_pointer = NULL;
+                        char *bio_buffer = NULL;
+                        int bio_length;
+
+                        if(!(bio = BIO_new(BIO_s_mem()))) {
+                                puts("TLS Certificate creation error\n");
+                                buf_len =  strlen("EXIT_NODE_TLS_CERTIFICATE_ERROR");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_ERROR", buf_len+1);
+                                free(tmp_buf);
+                                return 0;
+                        }
+
+                        if(!PEM_write_bio_X509(bio, x509)) {
+                                puts("TLS Certificate creation error\n");
+                                buf_len =  strlen("EXIT_NODE_TLS_CERTIFICATE_ERROR");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_ERROR", buf_len+1);
+                                free(tmp_buf);
+                                return 0;
+                        }
+
+                        buf_len =  strlen("EXIT_NODE_TLS_CERTIFICATE_DONE");
+                        write(fd_et, &buf_len, sizeof(int));
+                        write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_DONE", buf_len+1);
+
+                        BIO_get_mem_ptr(bio, &bio_pointer);
+                        bio_length = bio_pointer->length;
+                        bio_buffer = (char *) malloc(bio_length+1);
+                        BIO_read(bio, bio_buffer, bio_length+1);
+
+                        write(fd_et, &bio_length, sizeof(int));
+                        write(fd_et, bio_buffer, 512);
+                        write(fd_et, bio_buffer+512, bio_length+1-512);
+
+                        free(sign_pkey);
+                        free(pkey);
+                        free(cname);
+                        free(cname_sign);
+                        free(serial_number);
+                        free(name);
+                        free(name_issuer);
+                        free(x509);
+                        free(bio);
+                        free(bio_buffer);
+                        free(bio_pointer);
+                        free(tmp_buf);
+                        continue;
+                }
+
+                // EXIT_NODE_TLS_CERTIFICATE CREATION
+                if(! strncmp(tmp_buf, "EXIT_NODE_TLS_CERTIFICATE_SELF", buf_len)) {
+                        printf("Exit Node %d certificate self creation.\n", exit_node_num);
+                        //			assert(secret_id_key);
+
+                        X509 *x509 = NULL;
+
+                        unsigned char serial_tmp[SERIAL_NUMBER_SIZE];
+                        BIGNUM *serial_number = NULL;
+                        X509_NAME *name = NULL, *name_issuer = NULL;
+                        char *cname = NULL;
+                        char *cname_sign = NULL;
+                        int cname_len, cname_sign_len;
+                        time_t start_time, end_time;
+
+                        read(fd_te, serial_tmp, sizeof(serial_tmp)+1);
+                        read(fd_te, &start_time, sizeof(time_t));
+                        read(fd_te, &end_time, sizeof(time_t));
+                        read(fd_te, &cname_len, sizeof(int));
+                        read(fd_te, &cname_sign_len, sizeof(int));
+
+                        cname = (char *) malloc(cname_len+1);
+                        cname_sign = (char *) malloc(cname_sign_len+1);
+
+                        read(fd_te, cname, cname_len+1);
+                        read(fd_te, cname_sign, cname_sign_len+1);
+
+                        EVP_PKEY *sign_pkey = NULL;
+                        EVP_PKEY *pkey = NULL;
+
+                        if(!(sign_pkey = crypto_pk_get_evp_pkey_(secret_id_key, 1))) {
+                                puts("TLS Certificate creation self error\n");
+                                buf_len =  strlen("EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR", buf_len+1);
+                                free(tmp_buf);
+                                return 0;
+                        }
+
+                        if(!(pkey = crypto_pk_get_evp_pkey_(secret_id_key, 0))) {
+                                puts("TLS Certificate creation self error\n");
+                                buf_len =  strlen("EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR", buf_len+1);
+                                free(tmp_buf);
+                                return 0;
+                        }
+
+                        if (!(x509 = X509_new())) {
+                                puts("TLS Certificate creation self error\n");
+                                buf_len =  strlen("EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR", buf_len+1);
+                                free(tmp_buf);
+                                return 0;
+                        }
+
+                        if (!(X509_set_version(x509, 2))) {
+                                puts("TLS Certificate creation self error\n");
+                                buf_len =  strlen("EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR", buf_len+1);
+                                free(tmp_buf);
+                                return 0;
+                        }
+
+                        if (!(serial_number = BN_bin2bn(serial_tmp, sizeof(serial_tmp), NULL))) {
+                                puts("TLS Certificate creation self error\n");
+                                buf_len =  strlen("EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR", buf_len+1);
+                                free(tmp_buf);
+                                return 0;
+                        }
+
+                        if (!(BN_to_ASN1_INTEGER(serial_number, X509_get_serialNumber(x509)))) {
+                                puts("TLS Certificate creation self error\n");
+                                buf_len =  strlen("EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR", buf_len+1);
+                                free(tmp_buf);
+                                return 0;
+                        }
+
+                        if (!(name = tor_x509_name_new(cname))) {
+                                puts("TLS Certificate creation self error\n");
+                                buf_len =  strlen("EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR", buf_len+1);
+                                free(tmp_buf);
+                                return 0;
+                        }
+
+                        if (!(X509_set_subject_name(x509, name))) {
+                                puts("TLS Certificate creation self error\n");
+                                buf_len =  strlen("EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR", buf_len+1);
+                                free(tmp_buf);
+                                return 0;
+                        }
+
+                        if (!(name_issuer = tor_x509_name_new(cname_sign))) {
+                                puts("TLS Certificate creation self error\n");
+                                buf_len =  strlen("EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR", buf_len+1);
+                                free(tmp_buf);
+                                return 0;
+                        }
+
+                        if (!(X509_set_issuer_name(x509, name_issuer))) {
+                                puts("TLS Certificate creation self error\n");
+                                buf_len =  strlen("EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR", buf_len+1);
+                                free(tmp_buf);
+                                return 0;
+                        }
+
+                        if (!X509_time_adj(X509_get_notBefore(x509),0,&start_time)) {
+                                puts("TLS Certificate creation self error\n");
+                                buf_len =  strlen("EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR", buf_len+1);
+                                free(tmp_buf);
+                                return 0;
+                        }
+
+                        if (!X509_time_adj(X509_get_notAfter(x509),0,&end_time)) {
+                                puts("TLS Certificate creation self error\n");
+                                buf_len =  strlen("EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR", buf_len+1);
+                                free(tmp_buf);
+                                return 0;
+                        }
+
+                        if(!X509_set_pubkey(x509, pkey)) {
+                                puts("TLS Certificate creation self error\n");
+                                buf_len =  strlen("EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR", buf_len+1);
+                                free(tmp_buf);
+                                return 0;
+                        }
+
+                        if(!X509_sign(x509, sign_pkey, EVP_sha1())) {
+                                puts("TLS Certificate creation self error\n");
+                                buf_len =  strlen("EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_SELF_ERROR", buf_len+1);
+                                free(tmp_buf);
+                                return 0;
+                        }
+
+                        BIO *bio = NULL;
+                        BUF_MEM *bio_pointer = NULL;
+                        char *bio_buffer = NULL;
+                        int bio_length;
+
+                        if(!(bio = BIO_new(BIO_s_mem()))) {
+                                puts("TLS Certificate creation error\n");
+                                buf_len =  strlen("EXIT_NODE_TLS_CERTIFICATE_ERROR");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_ERROR", buf_len+1);
+                                free(tmp_buf);
+                                return 0;
+                        }
+
+                        if(!PEM_write_bio_X509(bio, x509)) {
+                                puts("TLS Certificate creation error\n");
+                                buf_len =  strlen("EXIT_NODE_TLS_CERTIFICATE_ERROR");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_ERROR", buf_len+1);
+                                free(tmp_buf);
+                                return 0;
+                        }
+
+                        buf_len =  strlen("EXIT_NODE_TLS_CERTIFICATE_DONE");
+                        write(fd_et, &buf_len, sizeof(int));
+                        write(fd_et, "EXIT_NODE_TLS_CERTIFICATE_DONE", buf_len+1);
+
+                        BIO_get_mem_ptr(bio, &bio_pointer);
+                        bio_length = bio_pointer->length;
+                        bio_buffer = (char *) malloc(bio_length+1);
+                        BIO_read(bio, bio_buffer, bio_length+1);
+
+                        write(fd_et, &bio_length, sizeof(int));
+                        write(fd_et, bio_buffer, 512);
+                        write(fd_et, bio_buffer+512, bio_length+1-512);
+
+                        free(sign_pkey);
+                        free(pkey);
+                        free(cname);
+                        free(cname_sign);
+                        free(serial_number);
+                        free(name);
+                        free(name_issuer);
+                        free(x509);
+                        free(bio);
+                        free(bio_buffer);
+                        free(bio_pointer);
+                        free(tmp_buf);
+                        continue;
+                }
+
+                // GET EXIT_NODE_FINGERPRINT
+                if(! strncmp(tmp_buf, "EXIT_NODE_FINGERPRINT", buf_len)) {
+                        printf("Giving Exit Node %d fingerprint.\n", exit_node_num);
+
                         char fingerprint[FINGERPRINT_LEN+1];
 
-                        if(crypto_pk_get_fingerprint(tmp_signing_key, fingerprint, 0) < 0) {
-                                puts("Error getting fingerprint for signing key\n");
-                                buf_len =  strlen("GET_FINGERPRINT_ERROR");
+                        if(crypto_pk_get_fingerprint(secret_id_key, fingerprint, 0) < 0) {
+                                puts("Error computing fingerprint for secret_id_key\n");
+                                buf_len =  strlen("EXIT_NODE_FINGERPRINT_ERROR");
                                 write(fd_et, &buf_len, sizeof(int));
-                                write(fd_et, "GET_FINGERPRINT_ERROR", buf_len+1);
+                                write(fd_et, "EXIT_NODE_FINGERPRINT_ERROR", buf_len+1);
+                                free(tmp_buf);
                                 return 0;
                         }
 
-                        buf_len =  strlen("GET_FINGERPRINT_DONE");
+                        buf_len =  strlen("EXIT_NODE_FINGERPRINT_DONE");
                         write(fd_et, &buf_len, sizeof(int));
-                        write(fd_et, "GET_FINGERPRINT_DONE", buf_len+1);
+                        write(fd_et, "EXIT_NODE_FINGERPRINT_DONE", buf_len+1);
+                        write(fd_et, fingerprint, FINGERPRINT_LEN+1);
+
+                        free(tmp_buf);
+                        continue;
+                }
+
+                // GET EXIT_NODE_FINGERPRINT_HASH
+                if(! strncmp(tmp_buf, "EXIT_NODE_FINGERPRINT_HASH", buf_len)) {
+                        printf("Giving Exit Node %d hash fingerprint.\n", exit_node_num);
+
+                        char fingerprint[FINGERPRINT_LEN+1];
+
+                        if(crypto_pk_get_hashed_fingerprint(secret_id_key, fingerprint) < 0) {
+                                puts("Error computing hashed fingerprint for secret_id_key\n");
+                                buf_len =  strlen("EXIT_NODE_FINGERPRINT_HASH_ERROR");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "EXIT_NODE_FINGERPRINT_HASH_ERROR", buf_len+1);
+                                free(tmp_buf);
+                                return 0;
+                        }
+
+                        buf_len =  strlen("EXIT_NODE_FINGERPRINT_HASH_DONE");
+                        write(fd_et, &buf_len, sizeof(int));
+                        write(fd_et, "EXIT_NODE_FINGERPRINT_HASH_DONE", buf_len+1);
 
                         write(fd_et, fingerprint, FINGERPRINT_LEN+1);
 
-                        // Vote signing
-                        char *sig = NULL;
+                        free(tmp_buf);
+                        continue;
+                }
+
+                // GET EXIT_NODE_FINGERPRINT
+                if(! strncmp(tmp_buf, "EXIT_NODE_FINGERPRINT_MAIN", buf_len)) {
+                        printf("Giving Exit Node %d fingerprint for main.\n", exit_node_num);
+
+                        char fingerprint[FINGERPRINT_LEN+1];
+
+                        if(crypto_pk_get_fingerprint(secret_id_key, fingerprint, 1) < 0) {
+                                puts("Error computing fingerprint for secret_id_key\n");
+                                buf_len =  strlen("EXIT_NODE_FINGERPRINT_MAIN_ERROR");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "EXIT_NODE_FINGERPRINT_MAIN_ERROR", buf_len+1);
+                                free(tmp_buf);
+                                return 0;
+                        }
+
+                        buf_len =  strlen("EXIT_NODE_FINGERPRINT_MAIN_DONE");
+                        write(fd_et, &buf_len, sizeof(int));
+                        write(fd_et, "EXIT_NODE_FINGERPRINT_MAIN_DONE", buf_len+1);
+                        write(fd_et, fingerprint, FINGERPRINT_LEN+1);
+
+                        free(tmp_buf);
+                        // For finishing up configuration
+                        if(flags == 0)
+                                break;
+                        else
+                                continue;
+                }
+
+                if(! strncmp(tmp_buf, "EXIT_NODE_CLIENT_ID_KEY_SET", buf_len)) {
+                        printf("\nCheck Exit Node %d client key exists.\n", exit_node_num);
+
+                        if(client_id_key == NULL) {
+                                puts("Loading key is needed for tor process\n");
+                                buf_len =  strlen("EXIT_NODE_CLIENT_ID_KEY_SET_NO");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "EXIT_NODE_CLIENT_ID_KEY_SET_NO", buf_len+1);
+                                free(tmp_buf);
+                                continue;
+                        }
+
+                        buf_len =  strlen("EXIT_NODE_CLIENT_ID_KEY_SET_YES");
+                        write(fd_et, &buf_len, sizeof(int));
+                        write(fd_et, "EXIT_NODE_CLIENT_ID_KEY_SET_YES", buf_len+1);
+
+                        free(tmp_buf);
+                        continue;
+                }
+
+                if(! strncmp(tmp_buf, "EXIT_NODE_DIGEST", buf_len)) {
+                        printf("Giving Exit Node %d digest.\n", exit_node_num);
+
+                        char digest[DIGEST_LEN];
+                        if(crypto_pk_get_digest(secret_id_key, digest) < 0) {
+                                puts("Error getting digest for secret_id_key\n");
+                                buf_len =  strlen("EXIT_NODE_DIGEST_ERROR");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "EXIT_NODE_DIGEST_ERROR", buf_len+1);
+                                return 0;
+                        }
+
+                        buf_len =  strlen("EXIT_NODE_DIGEST_DONE");
+                        write(fd_et, &buf_len, sizeof(int));
+                        write(fd_et, "EXIT_NODE_DIGEST_DONE", buf_len+1);
+                        write(fd_et, digest, DIGEST_LEN);
+
+                        free(tmp_buf);
+                        continue;
+                }
+
+                if(! strncmp(tmp_buf, "EXIT_NODE_APPEND_DIROBJ", buf_len)) {
+                        printf("Giving Exit Node %d append dirobj.\n", exit_node_num);
+
+                        char sig[DIROBJ_MAX_SIG_LEN+1];
+                        memset(sig, 0, sizeof(sig));
+
+                        char digest[DIGEST_LEN];
+                        read(fd_te, digest, DIGEST_LEN);
+
+                        if(router_append_dirobj_signature(sig, sizeof(sig), digest, DIGEST_LEN,
+                                                secret_id_key) < 0) {
+                                puts("Error append dirobj for secret_id_key\n");
+                                buf_len =  strlen("EXIT_NODE_APPEND_DIROBJ_ERROR");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "EXIT_NODE_APPEND_DIROBJ_ERROR", buf_len+1);
+                                return 0;
+                        }
+
+                        buf_len =  strlen("EXIT_NODE_APPEND_DIROBJ_DONE");
+                        write(fd_et, &buf_len, sizeof(int));
+                        write(fd_et, "EXIT_NODE_APPEND_DIROBJ_DONE", buf_len+1);
+
+                        write(fd_et, sig, DIROBJ_MAX_SIG_LEN+1);
+
+                        free(tmp_buf);
+                        continue;
+                }
+
+                if(! strncmp(tmp_buf, "EXIT_NODE_PUBKEY_STR", buf_len)) {
+                        printf("Giving Exit Node %d publickey string.\n", exit_node_num);
+
+                        char *identity_pkey;
+                        size_t identity_pkeylen;
+
+                        if(crypto_pk_write_public_key_to_string(secret_id_key,
+                                                &identity_pkey, &identity_pkeylen) < 0) {
+                                puts("write identity_pkey to string failed!\n");
+                                buf_len =  strlen("EXIT_NODE_PUBKEY_STR_ERROR");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "EXIT_NODE_PUBKEY_STR_ERROR", buf_len+1);
+                                return 0;
+                        }
+
+                        buf_len =  strlen("EXIT_NODE_PUBKEY_STR_DONE");
+                        write(fd_et, &buf_len, sizeof(int));
+                        write(fd_et, "EXIT_NODE_PUBKEY_STR_DONE", buf_len+1);
+
+                        write(fd_et, &identity_pkeylen, sizeof(size_t));
+                        write(fd_et, identity_pkey, identity_pkeylen+1);
+
+                        free(identity_pkey);
+                        free(tmp_buf);
+                        continue;
+                }
+
+                if(! strncmp(tmp_buf, "EXIT_NODE_GET_DIROBJ", buf_len)) {
+                        printf("Giving Exit Node %d get dirobj.\n", exit_node_num);
+
+                        char *sig;
                         char digest[DIGEST_LEN];
 
                         read(fd_te, digest, DIGEST_LEN);
 
-                        sig = router_get_dirobj_signature(digest, DIGEST_LEN, 
-                                        tmp_signing_key);
+                        if (!(sig = router_get_dirobj_signature(digest, DIGEST_LEN, 
+                                                        secret_id_key))) {
+                                puts("Couldn't sign router descriptor\n");
 
-                        if(!sig) {
-                                puts("Unable to sign networkstatus vote!\n");
-                                buf_len =  strlen("VOTE_SIGN_ERROR");
+                                buf_len =  strlen("EXIT_NODE_GET_DIROBJ_ERROR");
                                 write(fd_et, &buf_len, sizeof(int));
-                                write(fd_et, "VOTE_SIGN_ERROR", buf_len+1);
+                                write(fd_et, "EXIT_NODE_GET_DIROBJ_ERROR", buf_len+1);
                                 return 0;
                         }
 
-                        buf_len =  strlen("VOTE_SIGN_DONE");
+                        buf_len =  strlen("EXIT_NODE_GET_DIROBJ_DONE");
                         write(fd_et, &buf_len, sizeof(int));
-                        write(fd_et, "VOTE_SIGN_DONE", buf_len+1);
-
-                        vote_sig =  malloc(strlen(sig)+1);
-                        memcpy(vote_sig, sig, strlen(sig)+1);
-
-                        free(sig);
-                        free(tmp_signing_key);
-                        free(tmp_ori_str);
-                        free(tmp_buf);
-                        continue;
-                }
-
-                // Concensus 
-                if(! strncmp(tmp_buf, "CONSENSUS_START", buf_len)) {
-                        printf("Computing consensus of %d is started!\n", authority_num);
-
-                        // fingerprint
-                        //            char *tmp_ori_str = key_to_string_priv(&signing_key_set);
-                        char *tmp_ori_str = key_to_string_priv(signing_key);
-                        crypto_pk_t *tmp_signing_key = crypto_pk_new();
-                        crypto_pk_read_private_key_from_string(tmp_signing_key, tmp_ori_str, -1);
-
-                        char fingerprint[HEX_DIGEST_LEN+1];
-
-                        if(crypto_pk_get_fingerprint(tmp_signing_key, fingerprint, 0) < 0) {
-                                puts("Error getting fingerprint for signing key\n");
-                                buf_len =  strlen("GET_FINGERPRINT_ERROR");
-                                write(fd_et, &buf_len, sizeof(int));
-                                write(fd_et, "GET_FINGERPRINT_ERROR", buf_len+1);
-                                return 0;
-                        }
-
-                        puts("Consensus - Getting fingerprint finished!\n");
-                        buf_len =  strlen("GET_FINGERPRINT_DONE");
-                        write(fd_et, &buf_len, sizeof(int));
-                        write(fd_et, "GET_FINGERPRINT_DONE", buf_len+1);
-                        write(fd_et, fingerprint, HEX_DIGEST_LEN+1);
-
-                        // Consensus signing
-                        char *sig = NULL;
-                        char digest[DIGEST256_LEN];
-                        int digest_len;
-
-                        read(fd_te, &digest_len, sizeof(int));
-                        read(fd_te, digest, digest_len);
-
-                        sig = router_get_dirobj_signature(digest, 
-                                        digest_len, tmp_signing_key);
-
-                        if(!sig) {
-                                puts("Couldn't sign consensus networkstatus\n");
-                                buf_len =  strlen("CONSENSUS_SIGN_ERROR");
-                                write(fd_et, &buf_len, sizeof(int));
-                                write(fd_et, "CONSENSUS_SIGN_ERROR", buf_len+1);
-                                return 0;
-                        }
-
-                        puts("Consensus signing finished!\n");
-                        buf_len =  strlen("CONSENSUS_SIGN_DONE");
-                        write(fd_et, &buf_len, sizeof(int));
-                        write(fd_et, "CONSENSUS_SIGN_DONE", buf_len+1);
+                        write(fd_et, "EXIT_NODE_GET_DIROBJ_DONE", buf_len+1);
 
                         int sig_len =  strlen(sig);
                         write(fd_et, &sig_len, sizeof(int));
                         write(fd_et, sig, sig_len+1);
 
-                        if(consensus_sig_count == 0) {
-                                if(consensus_sig != NULL)
-                                        free(consensus_sig2);
-                                consensus_sig2 =  malloc(strlen(sig)+1);
-                                memcpy(consensus_sig2, sig, strlen(sig)+1);
-                                consensus_sig_count++;
-                        }
-                        else {
-                                if(consensus_sig != NULL)
-                                        free(consensus_sig);
-                                consensus_sig =  malloc(strlen(sig)+1);
-                                memcpy(consensus_sig, sig, strlen(sig)+1);
-                                consensus_sig_count = 0;
-                        }
-
                         free(sig);
-                        free(tmp_ori_str);
-                        free(tmp_signing_key);
                         free(tmp_buf);
-
                         continue;
                 }
 
-                // Concensus sig verify
-                if(! strncmp(tmp_buf, "CONSENSUS_SIG_VERIFY", buf_len)) {
-                        puts("Consensus verification\n");
-
-                        int sig_len;
-                        char signature[1536];
-
-                        read(fd_te, &sig_len, sizeof(int));
-
-                        int i;
-                        for(i=0;i<3;i++)
-                                read(fd_te, signature+i*512, 512);
-
-                        char *tmp_str1 =  memchr(signature+280, '-', 500);
-                        printf("%s\n", tmp_str1);
-
-                        char *tmp_str2 =  memchr(signature+800, '-', 500);
-                        printf("%s\n", tmp_str2);
-
-                        if( strncmp(tmp_str1, consensus_sig, strlen(consensus_sig))) {
-                                buf_len =  strlen("CONSENSUS_SIG_VERIFY_ERROR");
+                // Creation or loading check for onion key
+                if(! strncmp(tmp_buf, "EXIT_NODE_ONION_KEY_INIT", buf_len)) {
+                        puts("Initializeing exit node onion key.\n");
+                        if(onionkey == NULL) {
+                                buf_len =  strlen("CREATION");
                                 write(fd_et, &buf_len, sizeof(int));
-                                write(fd_et, "CONSENSUS_SIG_VERIFY_ERROR", buf_len+1);
+                                write(fd_et, "CREATION", buf_len+1);
+                        } else {
+                                buf_len =  strlen("LOADING");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "LOADING", buf_len+1);
                         }
 
-                        if( strncmp(tmp_str2, consensus_sig2, strlen(consensus_sig2))) {
-                                buf_len =  strlen("CONSENSUS_SIG_VERIFY_ERROR");
+                        free(tmp_buf);
+                        continue;
+                }
+
+                // ONION_KEY CREATION
+                if(! strncmp(tmp_buf, "EXIT_NODE_ONION_KEY_CR", buf_len)) {
+                        printf("Exit Node %d onion_key creation.\n", exit_node_num);
+
+                        if(!(onionkey = crypto_pk_new())) {
+                                buf_len =  strlen("EXIT_NODE_ONION_KEY_CR_ERROR");
                                 write(fd_et, &buf_len, sizeof(int));
-                                write(fd_et, "CONSENSUS_SIG_VERIFY_ERROR", buf_len+1);
+                                write(fd_et, "EXIT_NODE_ONION_KEY_CR_ERROR", buf_len+1);
+                                free(tmp_buf);
+                                return 0;
                         }
 
-                        buf_len =  strlen("CONSENSUS_SIG_VERIFY_DONE");
+                        if(crypto_pk_generate_key(onionkey)) {
+                                buf_len =  strlen("EXIT_NODE_ONION_KEY_CR_ERROR");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "EXIT_NODE_ONION_KEY_CR_ERROR", buf_len+1);
+                                free(tmp_buf);
+                                return 0;
+                        }
+
+                        if(crypto_pk_check_key(onionkey) <= 0) {
+                                buf_len =  strlen("EXIT_NODE_ONION_KEY_CR_ERROR");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "EXIT_NODE_ONION_KEY_CR_ERROR", buf_len+1);
+                                free(tmp_buf);
+                                return 0;
+                        }
+
+                        buf_len =  strlen("EXIT_NODE_ONION_KEY_CR_DONE");
                         write(fd_et, &buf_len, sizeof(int));
-                        write(fd_et, "CONSENSUS_SIG_VERIFY_DONE", buf_len+1);
+                        write(fd_et, "EXIT_NODE_ONION_KEY_CR_DONE", buf_len+1);
 
+                        free(tmp_buf);
+                        continue;
+                }
+
+                // IDENTITY_KEY LOADING
+                if(! strncmp(tmp_buf, "EXIT_NODE_ONION_KEY_LD", buf_len)) {
+                        printf("Exit Node %d onionkey loading.\n", exit_node_num);
+
+                        free(tmp_buf);
+                        continue;
+                }
+
+                if(! strncmp(tmp_buf, "EXIT_NODE_ONION_PUBKEY_STR", buf_len)) {
+                        printf("Giving Exit Node %d onion publickey string.\n", exit_node_num);
+
+                        char *onion_pkey;
+                        size_t onion_pkeylen;
+
+                        if(crypto_pk_write_public_key_to_string(onionkey,
+                                                &onion_pkey, &onion_pkeylen) < 0) {
+                                puts("write onion_pkey to string failed!\n");
+                                buf_len =  strlen("EXIT_NODE_ONION_PUBKEY_STR_ERROR");
+                                write(fd_et, &buf_len, sizeof(int));
+                                write(fd_et, "EXIT_NODE_ONION_PUBKEY_STR_ERROR", buf_len+1);
+                                return 0;
+                        }
+
+                        buf_len =  strlen("EXIT_NODE_ONION_PUBKEY_STR_DONE");
+                        write(fd_et, &buf_len, sizeof(int));
+                        write(fd_et, "EXIT_NODE_ONION_PUBKEY_STR_DONE", buf_len+1);
+
+                        write(fd_et, &onion_pkeylen, sizeof(size_t));
+                        write(fd_et, onion_pkey, onion_pkeylen+1);
+
+                        free(onion_pkey);
                         free(tmp_buf);
                         continue;
                 }
@@ -1478,91 +1954,102 @@ int directory_request(int fd_et, int fd_te)
 
 /* main operation. communicate with tor-gencert & tor process */
 //int main(int argc, char *argv[])
-void enclave_main()
+void enclave_main(int argc, char **argv)
 {
-        int fd_et = -1;
-        int fd_te = -1;
+    int fd_et = -1;
+    int fd_te = -1;
 
-        char key_enc_to_tor[NAME_BUF_SIZE];
-        char key_tor_to_enc[NAME_BUF_SIZE];
+    char key_enc_to_tor[NAME_BUF_SIZE];
+    char key_tor_to_enc[NAME_BUF_SIZE];
 
-        strcpy(key_enc_to_tor, "1111");
-        strcpy(key_tor_to_enc, "2222");
-        authority_num = 1;
-        /*
-           if(argc != 3) {
-           printf("Usage: ./enclave_process [KEY_ENCLAVE_TO_TOR] [KEY_TOR_TO_ENCLAVE]\n");
-           exit(1);
-           }
+    if(argc != 4) {
+        printf("Usage: ./test.sh sgx-tor [KEY_ENCLAVE_TO_TOR] [KEY_TOR_TO_ENCLAVE]\n");
+        sgx_exit(NULL);
+    }
+    
+    strcpy(key_enc_to_tor, argv[2]);
+    strcpy(key_tor_to_enc, argv[3]);
 
-           key_enc_to_tor = atoi(argv[1]);
-           key_tor_to_enc = atoi(argv[2]);
+    if(strcmp(key_enc_to_tor, "1111") == 0)
+            authority_num = 1;
+    else if(strcmp(key_enc_to_tor, "3333") == 0)
+            authority_num = 2;
+    else if(strcmp(key_enc_to_tor, "5555") == 0)
+            authority_num = 3;
+    else if(strcmp(key_enc_to_tor, "7777") == 0)
+            exit_node_num = 3;				// Set exit node as test003r
 
-           if(key_enc_to_tor == 1111)	
-           authority_num = 1;
-           else if(key_enc_to_tor == 3333)	
-           authority_num = 2;
-           else if(key_enc_to_tor == 5555)
-           authority_num = 3;
-           else if(key_enc_to_tor == 7777)
-           exit_node_num = 3;				// Set exit node as test003r
-         */
-        // ------------------ initialization for pipe --------------- //
-        if(pipe_init(0) < 0) {
-                puts("Error in pipe_init");
-                sgx_exit(NULL);
-        }
+    if(pipe_init(0) < 0) {
+            puts("Error in pipe_init");
+            sgx_exit(NULL);
+    }
 
-        if((fd_et = pipe_open(key_enc_to_tor, RB_MODE_WR, 0)) < 0) {
-                puts("Error in pipe_open");
-                sgx_exit(NULL);
-        }
+    if((fd_et = pipe_open(key_enc_to_tor, RB_MODE_WR, 0)) < 0) {
+            puts("Error in pipe_open");
+            sgx_exit(NULL);
+    }
 
-        if((fd_te = pipe_open(key_tor_to_enc, RB_MODE_RD, 0)) < 0) {
-                puts("Error in pipe_open");
-                sgx_exit(NULL);
-        }
+    if((fd_te = pipe_open(key_tor_to_enc, RB_MODE_RD, 0)) < 0) {
+            puts("Error in pipe_open");
+            sgx_exit(NULL);
+    }
 
-        // ------------------- chutney configure ------------------- //
+    // ------------------- chutney configure ------------------- //
 
-        int retval = 0;
+    int retval = 0;
 
-        retval = directory_configure(fd_te, fd_et);
+    retval = exit_node_handling(fd_te, fd_et, 0);	
 
-        if(retval == 0) {
-                puts("Error occurred. Quit program\n");
-                sgx_exit(NULL);
-        }
+    if(retval == 0) {
+            puts("Error occurred. Quit program\n");
+            sgx_exit(NULL);
+    }
 
-        close(fd_et);
-        close(fd_te);
+    close(fd_et);
+    close(fd_te);
 
-        // ------------------- chutney start ------------------- //
+    // ------------------- chutney start ------------------- //
+
+    if(strcmp(key_enc_to_tor, "1111") == 0) {
         strcpy(key_enc_to_tor, "1212");
         strcpy(key_tor_to_enc, "2121");
+    }
+    else if(strcmp(key_enc_to_tor, "3333") == 0) {
+        strcpy(key_enc_to_tor, "3434");
+        strcpy(key_tor_to_enc, "4343");
+    }
+    else if(strcmp(key_enc_to_tor, "5555") == 0) {
+        strcpy(key_enc_to_tor, "5656");
+        strcpy(key_tor_to_enc, "6565");
+    }
+    else if(strcmp(key_enc_to_tor, "7777") == 0) {
+        strcpy(key_enc_to_tor, "7878");
+        strcpy(key_tor_to_enc, "8787");
+    }
 
-        if(pipe_init(1) < 0) {
-                perror("Error in pipe_init");
-                exit(1);
-        }
+    if(pipe_init(1) < 0) {
+            perror("Error in pipe_init");
+            exit(1);
+    }
 
-        if((fd_et = pipe_open(key_enc_to_tor, RB_MODE_WR, 1)) < 0) {
-                perror("Error in pipe_open");
-                exit(1);
-        }
+    if((fd_et = pipe_open(key_enc_to_tor, RB_MODE_WR, 1)) < 0) {
+            perror("Error in pipe_open");
+            exit(1);
+    }
 
-        if((fd_te = pipe_open(key_tor_to_enc, RB_MODE_RD, 1)) < 0) {
-                perror("Error in pipe_open");
-                exit(1);
-        }
+    if((fd_te = pipe_open(key_tor_to_enc, RB_MODE_RD, 1)) < 0) {
+            perror("Error in pipe_open");
+            exit(1);
+    }
 
-        retval = directory_request(fd_et, fd_te);
+    client_id_key = NULL;		// for key loading
+    retval = exit_node_handling(fd_te, fd_et, 1);
 
-        if(retval == 0) 
-                printf("Error occurred. Quit program\n");
+    if(retval == 0) 
+            printf("Error occurred, Quit program\n");
 
-        close(fd_et);
-        close(fd_te);
+    close(fd_et);
+    close(fd_te);
 
-        sgx_exit(NULL);
+    sgx_exit(NULL);
 }
