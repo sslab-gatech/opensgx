@@ -33,7 +33,7 @@
 
 // Enclave configuration
 #define STACK_PAGE_FRAMES_PER_THREAD 250
-#define HEAP_PAGE_FRAMES             100
+#define HEAP_PAGE_FRAMES             300
 
 // EINITTOKEN MAC size
 #define MAC_SIZE               16

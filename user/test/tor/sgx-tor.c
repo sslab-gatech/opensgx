@@ -70,7 +70,7 @@ int pipe_open(char *unique_id, int is_write, int flag_dir)
 	else
 		flag |= O_RDONLY;
 
-	int fd = open(name_buf, 40, flag);
+	int fd = open(name_buf, flag);
 
     if(fd == -1)
     {
@@ -755,6 +755,11 @@ char address[INET_NTOA_BUF_LEN+32];
 int addr_success;
 int months_lifetime;
 
+char *vote_sig = NULL;
+char *consensus_sig = NULL;
+char *consensus_sig2 = NULL;
+int consensus_sig_count = 0;
+
 /* For exit node */
 int exit_node_num;
 crypto_pk_t *secret_id_key = NULL;
@@ -1120,6 +1125,353 @@ static int generate_certificate()
         puts(certificate);
 
         return 0;
+}
+
+int directory_configure(int fd_te, int fd_et)
+{
+    /* routine for directory authority */
+//  addr_success = 0;
+//  months_lifetime = 0;
+
+    int buf_len;
+    char *tmp_buf;
+
+    puts("Directory authority initialization.\n");
+
+    // identity key process
+    read(fd_te, &buf_len, sizeof(int));
+    tmp_buf = (char *)malloc(buf_len+1);
+    read(fd_te, tmp_buf, buf_len+1);
+
+    if(!strncmp(tmp_buf, "CR_IDENTITY_KEY", buf_len)) {
+        puts("Creating identity key.\n");
+
+        if(create_identity_key()) {
+            puts("creating identity_key fail");
+            buf_len = strlen("CR_IDENTITY_KEY_ERROR");
+            write(fd_et, &buf_len, sizeof(int));
+            write(fd_et, "CR_IDENTITY_KEY_ERROR", buf_len+1);
+            return 0;
+        }
+
+        buf_len = strlen("CR_IDENTITY_KEY_DONE");
+        write(fd_et, &buf_len, sizeof(int));
+        write(fd_et, "CR_IDENTITY_KEY_DONE", buf_len+1);
+    }
+    else if(!strncmp(tmp_buf, "LD_IDENTITY_KEY", buf_len)) {
+        puts("Load identity key.\n");
+        if(load_identity_key()) {
+            puts("loading identity_key fail");
+            buf_len = strlen("LD_IDENTITY_KEY_ERROR");
+            write(fd_et, &buf_len, sizeof(int));
+            write(fd_et, "LD_IDENTITY_KEY_ERROR", buf_len+1);
+            return 0;
+        }
+
+        buf_len = strlen("LD_IDENTITY_KEY_DONE");
+        write(fd_et, &buf_len, sizeof(int));
+        write(fd_et, "LD_IDENTITY_KEY_DONE", buf_len+1);
+    }
+
+    free(tmp_buf);
+
+    // signing key process
+    read(fd_te, &buf_len, sizeof(int));
+    tmp_buf = (char *)malloc(buf_len+1);
+    read(fd_te, tmp_buf, buf_len+1);
+
+    if(!strncmp(tmp_buf, "CR_SIGNING_KEY", buf_len)) {
+//      printf("Creating signing key of %d.\n", authority_num);
+        puts("Creating signing key.\n");
+        if(create_signing_key()) {
+            buf_len = strlen("CR_SIGNING_KEY_ERROR");
+            write(fd_et, &buf_len, sizeof(int));
+            write(fd_et, "CR_IDENTITY_KEY_ERROR", buf_len+1);
+            return 0;
+        }
+
+        buf_len = strlen("CR_SIGNING_KEY_DONE");
+        write(fd_et, &buf_len, sizeof(int));
+        write(fd_et, "CR_SIGNING_KEY_DONE", buf_len+1);
+    }
+    else if(!strncmp(tmp_buf, "LD_SIGNING_KEY", buf_len)) {
+//      printf("Load signing key of %d.\n", authority_num);
+        puts("Load signing key.\n");
+
+        if(load_signing_key()) {
+            buf_len = strlen("LD_SIGNING_KEY_ERROR");
+            write(fd_et, &buf_len, sizeof(int));
+            write(fd_et, "LD_SIGNING_KEY_ERROR", buf_len+1);
+            return 0;
+        }
+
+        buf_len = strlen("LD_SIGNING_KEY_DONE");
+        write(fd_et, &buf_len, sizeof(int));
+        write(fd_et, "LD_SIGNING_KEY_DONE", buf_len+1);
+    }
+
+    free(tmp_buf);
+    // recv data related to certificate
+//  printf("Receiving global variables for certificate.\n");
+    puts("Receiving global variables for certificate.\n");
+    read(fd_te, &buf_len, sizeof(int));
+    read(fd_te, address, buf_len+1);
+    addr_success = 1;
+    int temp_var;
+    read(fd_te, &temp_var, sizeof(int));
+    months_lifetime = temp_var;
+
+//  printf("Creating certificate of %d.\n", authority_num);
+    puts("Creating certificate.\n");
+    if(generate_certificate()) {
+        buf_len = strlen("CR_CERTIFICATE_ERROR");
+        write(fd_et, &buf_len, sizeof(int));
+        write(fd_et, "CR_CERTIFICATE_ERROR", buf_len+1);
+        return 0;
+    }
+
+    buf_len = strlen("CR_CERTIFICATE_DONE");
+    write(fd_et, &buf_len, sizeof(int));
+    write(fd_et, "CR_CERTIFICATE_DONE", buf_len+1);
+
+//    sgx_printf("cert len = %d\n", strlen(certificate));
+
+    for(int i=0;i<8;i++)
+        write(fd_et, certificate+i*512, 512);
+    puts("Send successfully!\n");
+
+    return 1;
+}
+
+int directory_request(int fd_et, int fd_te)
+{
+    int buf_len;
+    char *tmp_buf = NULL;
+
+    while(1) {
+        read(fd_te, &buf_len, sizeof(int));
+        tmp_buf = (char *)malloc(buf_len+1);
+        read(fd_te, tmp_buf, buf_len+1);
+
+        // CERTIFICATE VERIFICATION. 
+        if(!strncmp(tmp_buf, "CERTIFICATE_VERIFY", buf_len)) {
+            printf("Certificate verification for directory authority %d\n",
+                    authority_num);
+            size_t len;
+            char *tmp_signing_key_str = NULL;
+            read(fd_te, &len, sizeof(size_t));
+            tmp_signing_key_str = (char *)malloc(len+1);
+            read(fd_te, tmp_signing_key_str, len+1);
+
+//          char *tmp_ori_str = key_to_string_priv(&signing_key_set);
+            char *tmp_ori_str = key_to_string_priv(signing_key);
+
+            if(!memcmp(tmp_signing_key_str, tmp_ori_str, len)) {
+                printf("Verification Failed!\n");
+                buf_len = strlen("CERTFICATE_VERIFY_ERROR");
+                write(fd_et, &buf_len, sizeof(int));
+                write(fd_et, "CERIFICATE_VERIFY_ERROR", buf_len+1);
+                return 0;
+            }
+            buf_len = strlen("CERTFICATE_VERIFY_DONE");
+            write(fd_et, &buf_len, sizeof(int));
+            write(fd_et, "CERIFICATE_VERIFY_DONE", buf_len+1);
+
+            free(tmp_signing_key_str);
+            free(tmp_ori_str);
+
+            free(tmp_buf);
+            continue;
+        }
+
+        // Voting
+        if(!strncmp(tmp_buf, "VOTING_START", buf_len)) {
+            printf("Voting of %d is started!\n", authority_num);
+
+            // DIGEST COMPUTING
+//            char *tmp_ori_str = key_to_string_priv(&signing_key_set);
+            char *tmp_ori_str = key_to_string_priv(signing_key);
+            crypto_pk_t *tmp_signing_key = crypto_pk_new();
+            crypto_pk_read_private_key_from_string(tmp_signing_key,
+                                                    tmp_ori_str, -1);
+            char signing_key_digest[DIGEST_LEN];
+
+            if(crypto_pk_get_digest(tmp_signing_key, signing_key_digest) < 0) {
+                puts("Error computing signing key digest\n");
+                buf_len = strlen("GET_DIGEST_ERROR");
+                write(fd_et, &buf_len, sizeof(int));
+                write(fd_et, "GET_DIGEST_ERROR", buf_len+1);
+                return 0;
+            }
+
+            buf_len = strlen("GET_DIGEST_DONE");
+            write(fd_et, &buf_len, sizeof(int));
+            write(fd_et, "GET_DIGEST_DONE", buf_len+1);
+
+            // Fingerprint
+            char fingerprint[FINGERPRINT_LEN+1];
+
+            if(crypto_pk_get_fingerprint(tmp_signing_key, fingerprint, 0) < 0) {
+                puts("Error getting fingerprint for signing key\n");
+                buf_len = strlen("GET_FINGERPRINT_ERROR");
+                write(fd_et, &buf_len, sizeof(int));
+                write(fd_et, "GET_FINGERPRINT_ERROR", buf_len+1);
+                return 0;
+            }
+
+            buf_len = strlen("GET_FINGERPRINT_DONE");
+            write(fd_et, &buf_len, sizeof(int));
+            write(fd_et, "GET_FINGERPRINT_DONE", buf_len+1);
+
+            write(fd_et, fingerprint, FINGERPRINT_LEN+1);
+
+            // Vote signing
+            char *sig = NULL;
+            char digest[DIGEST_LEN];
+
+            read(fd_te, digest, DIGEST_LEN);
+            sig = router_get_dirobj_signature(digest, DIGEST_LEN,
+                                                tmp_signing_key);
+
+            if(!sig) {
+                puts("Unable to sign networkstatus vote!\n");
+                buf_len = strlen("VOTE_SIGN_ERROR");
+                write(fd_et, &buf_len, sizeof(int));
+                write(fd_et, "VOTE_SIGN_ERROR", buf_len+1);
+                return 0;
+            }
+
+            buf_len = strlen("VOTE_SIGN_DONE");
+            write(fd_et, &buf_len, sizeof(int));
+            write(fd_et, "VOTE_SIGN_DONE", buf_len+1);
+
+            vote_sig = malloc(strlen(sig)+1);
+            memcpy(vote_sig, sig, strlen(sig)+1);
+
+            free(sig);
+            free(tmp_signing_key);
+            free(tmp_ori_str);
+            free(tmp_buf);
+            continue;
+        }
+
+        // Concensus 
+        if(!strncmp(tmp_buf, "CONSENSUS_START", buf_len)) {
+            printf("Computing consensus of %d is started!\n", authority_num);
+
+            // fingerprint
+//            char *tmp_ori_str = key_to_string_priv(&signing_key_set);
+            char *tmp_ori_str = key_to_string_priv(signing_key);
+            crypto_pk_t *tmp_signing_key = crypto_pk_new();
+            crypto_pk_read_private_key_from_string(tmp_signing_key, tmp_ori_str, -1);
+
+            char fingerprint[HEX_DIGEST_LEN+1];
+            if(crypto_pk_get_fingerprint(tmp_signing_key, fingerprint, 0) < 0) {
+                puts("Error getting fingerprint for signing key\n");
+                buf_len = strlen("GET_FINGERPRINT_ERROR");
+                write(fd_et, &buf_len, sizeof(int));
+                write(fd_et, "GET_FINGERPRINT_ERROR", buf_len+1);
+                return 0;
+            }
+
+            puts("Consensus - Getting fingerprint finished!\n");
+            buf_len = strlen("GET_FINGERPRINT_DONE");
+            write(fd_et, &buf_len, sizeof(int));
+            write(fd_et, "GET_FINGERPRINT_DONE", buf_len+1);
+            write(fd_et, fingerprint, HEX_DIGEST_LEN+1);
+
+            // Consensus signing
+            char *sig = NULL;
+            char digest[DIGEST256_LEN];
+            int digest_len;
+
+            read(fd_te, &digest_len, sizeof(int));
+            read(fd_te, digest, digest_len);
+
+            sig = router_get_dirobj_signature(digest,
+                                            digest_len, tmp_signing_key);
+
+            if(!sig) {
+                puts("Couldn't sign consensus networkstatus\n");
+                buf_len = strlen("CONSENSUS_SIGN_ERROR");
+                write(fd_et, &buf_len, sizeof(int));
+                write(fd_et, "CONSENSUS_SIGN_ERROR", buf_len+1);
+                return 0;
+            }
+
+            puts("Consensus signing finished!\n");
+            buf_len = strlen("CONSENSUS_SIGN_DONE");
+            write(fd_et, &buf_len, sizeof(int));
+            write(fd_et, "CONSENSUS_SIGN_DONE", buf_len+1);
+
+            int sig_len = strlen(sig);
+            write(fd_et, &sig_len, sizeof(int));
+            write(fd_et, sig, sig_len+1);
+
+            if(consensus_sig_count == 0) {
+                if(consensus_sig != NULL)
+                    free(consensus_sig2);
+                consensus_sig2 = malloc(strlen(sig)+1);
+                memcpy(consensus_sig2, sig, strlen(sig)+1);
+                consensus_sig_count++;
+            }
+            else {
+                if(consensus_sig != NULL)
+                    free(consensus_sig);
+                consensus_sig = malloc(strlen(sig)+1);
+                memcpy(consensus_sig, sig, strlen(sig)+1);
+                consensus_sig_count = 0;
+            }
+
+            free(sig);
+            free(tmp_ori_str);
+            free(tmp_signing_key);
+            free(tmp_buf);
+
+            continue;
+        }
+
+        // Concensus sig verify
+        if(!strncmp(tmp_buf, "CONSENSUS_SIG_VERIFY", buf_len)) {
+            puts("Consensus verification\n");
+
+            int sig_len;
+            char signature[1536];
+
+            read(fd_te, &sig_len, sizeof(int));
+
+            int i;
+            for(i=0;i<3;i++)
+                read(fd_te, signature+i*512, 512);
+
+            char *tmp_str1 = memchr(signature+280, '-', 500);
+            printf("%s\n", tmp_str1);
+
+            char *tmp_str2 = memchr(signature+800, '-', 500);
+            printf("%s\n", tmp_str2);
+
+            if(strncmp(tmp_str1, consensus_sig, strlen(consensus_sig))) {
+                buf_len = strlen("CONSENSUS_SIG_VERIFY_ERROR");
+                write(fd_et, &buf_len, sizeof(int));
+                write(fd_et, "CONSENSUS_SIG_VERIFY_ERROR", buf_len+1);
+            }
+
+            if(strncmp(tmp_str2, consensus_sig2, strlen(consensus_sig2))) {
+                buf_len = strlen("CONSENSUS_SIG_VERIFY_ERROR");
+                write(fd_et, &buf_len, sizeof(int));
+                write(fd_et, "CONSENSUS_SIG_VERIFY_ERROR", buf_len+1);
+            }
+
+            buf_len = strlen("CONSENSUS_SIG_VERIFY_DONE");
+            write(fd_et, &buf_len, sizeof(int));
+            write(fd_et, "CONSENSUS_SIG_VERIFY_DONE", buf_len+1);
+
+            free(tmp_buf);
+            continue;
+        }
+    }
+
+    return 1;
 }
 
 int exit_node_handling(int fd_te, int fd_et, int flags)
@@ -1998,7 +2350,14 @@ void enclave_main(int argc, char **argv)
 
     int retval = 0;
 
-    retval = exit_node_handling(fd_te, fd_et, 0);	
+    puts(key_enc_to_tor);
+    puts(key_tor_to_enc);
+    printf("%d %d\n", authority_num, exit_node_num);
+
+    if(exit_node_num == 3)
+        retval = exit_node_handling(fd_te, fd_et, 0);	
+    else
+        retval = directory_configure(fd_te, fd_et);
 
     if(retval == 0) {
             puts("Error occurred. Quit program\n");
@@ -2043,7 +2402,11 @@ void enclave_main(int argc, char **argv)
     }
 
     client_id_key = NULL;		// for key loading
-    retval = exit_node_handling(fd_te, fd_et, 1);
+
+    if(exit_node_num == 3)
+        retval = exit_node_handling(fd_te, fd_et, 0);	
+    else
+        retval = directory_request(fd_et, fd_te);
 
     if(retval == 0) 
             printf("Error occurred, Quit program\n");

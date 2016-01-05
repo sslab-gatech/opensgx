@@ -48,7 +48,7 @@
 #define DSLIMIT                  (4294967295)     // 2^32-1 -> 2^32 => overflow
 #define NO_OF_TCS_FLAGS          (64)
 #define STACK_PAGE_FRAMES_PER_THREAD (250)
-#define HEAP_PAGE_FRAMES         (100)              // Need to decide how many initial Heap pages are required
+#define HEAP_PAGE_FRAMES         (300)              // Need to decide how many initial Heap pages are required
 
 /// custom format
 #define PRIfptr "0x%016"PRIxPTR
