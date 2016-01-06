@@ -49,12 +49,12 @@ int main(int argc, char **argv)
      if (argc < 1) {
          err(1, "Please specifiy binary to load\n");
      }
-    binary1 = argv[3];
-    binary2 = argv[5];
+    binary1 = argv[1];
+    binary2 = argv[3];
  
      if (argc > 1) {
-        conf1 = argv[4];
-        conf2 = argv[6];
+        conf1 = argv[2];
+        conf2 = argv[4];
      } else {
         conf1 = NULL;
         conf2 = NULL;
