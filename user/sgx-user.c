@@ -245,6 +245,7 @@ void print_eid_stat(keid_t stat) {
      printf("mode switch count : %d\n",stat.qstat.mode_switch);
      printf("tlb flush count\t: %d\n",stat.qstat.tlbflush_n);
      printf("--------------------------------------------\n");
+     printf("TCS address\t: %lx\n", stat.tcs);
      printf("Pre-allocated EPC SSA region\t: 0x%lx\n",stat.prealloc_ssa);
      printf("Pre-allocated EPC Heap region\t: 0x%lx\n",stat.prealloc_heap);
      printf("Later-Augmented EPC Heap region\t: 0x%lx\n",stat.augged_heap);

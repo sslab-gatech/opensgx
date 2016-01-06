@@ -72,7 +72,7 @@ int main(int argc, char **argv)
     if (base_addr2 == NULL) {
         err(1, "Please provide valid binary/configuration files.");
     }
- 
+
     entry_offset1 = (uint64_t)entry1 - (uint64_t)base_addr1;
     tcs_t *tcs = init_enclave(base_addr1, entry_offset1, npages1, conf1);
     if (!tcs)
@@ -91,6 +91,6 @@ int main(int argc, char **argv)
     printf("%lx %lx\n", entry_offset1, entry_offset2);
  
     sgx_enter(tcs, aep);
- 
+
     return 0;
 }

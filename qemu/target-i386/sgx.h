@@ -23,7 +23,7 @@
 #define PAGE_SIZE                (4096)
 #define EPC_SIZE                 (PAGE_SIZE)      // from 1.5
 //#define NUM_EPC                (100)            // XXX. where?
-#define NUM_EPC                  (1500)           // XXX. where?
+#define NUM_EPC                  (2000)           // XXX. where?
 #define ENCLAVE_SIZE             (16)             // XXX : Set temporarily
 #define MEASUREMENT_SIZE         (256)
 #define MIN_ALLOC                (2)
