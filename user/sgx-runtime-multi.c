@@ -17,7 +17,7 @@
  *  along with OpenSGX.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
+/* This is used for testing multiple enclaves */
 #include <string.h>
 #include <sgx-kern.h>
 #include <sgx-user.h>
