@@ -28,7 +28,7 @@
 #define CPU_SVN                  1
 #define PAGE_SIZE                4096
 #define MEASUREMENT_SIZE         256
-#define NUM_EPC                  1500
+#define NUM_EPC                  2000
 #define MIN_ALLOC                2
 
 // Enclave configuration
