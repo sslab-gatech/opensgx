@@ -190,7 +190,7 @@ void measure_page_add(void *measurement, void *page, secinfo_t *secinfo,
     for (i = 0; i < PAGE_SIZE/MEASUREMENT_SIZE; i++) {
         uint64_t chunk_offset = i * MEASUREMENT_SIZE;
         measure_chunk_page(measurement, &cast_page[chunk_offset],
-		                   page_offset + chunk_offset);
+                           page_offset + chunk_offset);
     }
 }
 

@@ -85,7 +85,7 @@ void exception_handler(void)
     uint64_t aep = 0x00;
     uint64_t rdx = 0x00;
 
-	asm("movl %0, %%eax\n\t"
+    asm("movl %0, %%eax\n\t"
         "movq %1, %%rbx\n\t"
         "movq %2, %%rcx\n\t"
         "movq %3, %%rdx\n\t"

@@ -38,7 +38,7 @@ void reverse(unsigned char *in, size_t bytes)
         in[i]   = in[end];
         in[end] = temp;
         end--;
-	}
+    }
 }
 
 unsigned char *swap_endian(unsigned char *in, size_t bytes)

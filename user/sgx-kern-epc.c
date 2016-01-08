@@ -120,7 +120,7 @@ const char *epc_bitmap_to_str(epc_type_t type)
         default:
         {
             sgx_dbg(err, "unknown epc page type (%d)", type);
-	        assert(false);
+            assert(false);
         }
     }
 }

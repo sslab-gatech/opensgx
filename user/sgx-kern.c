@@ -530,7 +530,7 @@ int sys_create_enclave(void *base, unsigned int code_pages,
         err(1, "failed to add pages");
     kenclaves[eid].prealloc_ssa = ssa_npages * PAGE_SIZE;
 
-	// allocate stack pages
+    // allocate stack pages
     sgx_dbg(info, "add stack pages: %p (%d pages)",
             empty_page, stack_npages);
     if (!add_empty_pages_to_epc(eid, stack_npages, secs, REG_PAGE, PT_REG, MT_STACK))
@@ -595,7 +595,7 @@ int sys_stat_enclave(int keid, keid_t *stat)
     kenclaves[keid].kout_n++;
     memcpy(stat, &(kenclaves[keid]), sizeof(keid_t));
 
-	return 0;
+    return 0;
 }
 
 unsigned long sys_add_epc(int keid) {

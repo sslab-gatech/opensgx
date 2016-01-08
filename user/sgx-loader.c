@@ -89,10 +89,10 @@ void *load_elf_enclave(char *filename, size_t *npages, void **entry, int *offset
 
     *npages = 0;
 
-	/* Read an elf binary, mapping it into our memory for loading as
-	 * an enclave - it's a straight binary that cannot require relocation */
+    /* Read an elf binary, mapping it into our memory for loading as
+     * an enclave - it's a straight binary that cannot require relocation */
 
-	/* ELF sanity checks */
+    /* ELF sanity checks */
     if (elf_version(EV_CURRENT) == EV_NONE ) {
         fprintf(stderr, "ELF library initialization failed: %s\n",
                 elf_errmsg(-1));
@@ -153,8 +153,8 @@ void *load_elf_enclave(char *filename, size_t *npages, void **entry, int *offset
          * its run. */
         p = mmap(0, mend-start, pflags, MAP_PRIVATE|MAP_ANONYMOUS,
                  -1, 0);
-		if (p != (void *) start) {
-			*entry = (void *)(ehdr.e_entry + (unsigned long)p - start);
+        if (p != (void *) start) {
+            *entry = (void *)(ehdr.e_entry + (unsigned long)p - start);
         }
         /* Now remap the file into the part of the mapping we just
          * made that should come from the file */

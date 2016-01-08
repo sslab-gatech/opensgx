@@ -242,7 +242,7 @@ void cmd_sign(char *conf, char *key)
     memset(sigstruct->q2, 0, 384);
 
     // Load rsa keys from file
-	ctx = load_rsa_keys(key, pubkey, seckey, KEY_LENGTH_BITS);
+    ctx = load_rsa_keys(key, pubkey, seckey, KEY_LENGTH_BITS);
 #if 0
     {
         char *pubkey_str = fmt_bytes(pubkey, KEY_LENGTH);
