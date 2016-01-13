@@ -71,14 +71,8 @@ test/tor/%: test/tor/%.o $(OPENSSL_LIBS)
 test/%: test/%.o $(SGX_LIBS)
 	$(CC) $(SGX_LDFLAGS) $< -o $@ $(SGX_LIBS)
 
-#demo/%.sgx: demo/%.o $(SGX_LIBS)
-#	$(CC) $(SGX_LDFLAGS) $< -o $@ $(SGX_LIBS)
-
-demo/hello.sgx: demo/hello.o $(SGX_LIBS)
+demo/%.sgx: demo/%.o $(SGX_LIBS)
 	$(CC) $(SGX_LDFLAGS) $< -o $@ $(SGX_LIBS)
-
-demo/hello2.sgx: demo/hello2.o $(SGX_LIBS)
-	$(CC) $(SGX_LDFLAGS2) $< -o $@ $(SGX_LIBS)
 
 non_enclave/%: non_enclave/%.o nonEncLib.o
 	$(CC) $(CFLAGS) $^ -o $@
