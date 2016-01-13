@@ -10,7 +10,7 @@
 /* System support */
 #define POLARSSL_HAVE_LONGLONG
 #define POLARSSL_HAVE_ASM
-#define POLARSSL_NO_PLATFORM_ENTROPY
+//#define POLARSSL_NO_PLATFORM_ENTROPY
 
 /* Networking support */
 #define POLARSSL_HAVE_IPV6 /* Now mandatory for NET_C */

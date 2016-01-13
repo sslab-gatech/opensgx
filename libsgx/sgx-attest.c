@@ -17,8 +17,12 @@
 
 #include <sgx-lib.h>
 #include <sgx-shared.h>
+#include <stdio.h>
+#include <arpa/inet.h>
+#include <unistd.h>
 
 #include <polarssl/aes_cmac128.h>
+#include <polarssl/sha1.h>
 #include <polarssl/sha256.h>
 #include <polarssl/rsa.h>
 #include <polarssl/ctr_drbg.h>
@@ -27,382 +31,171 @@
 #define EXPONENT 3
 #define KEY_SIZE 128
 
-int
-sgx_attest_target(struct sockaddr *quote_addr, socklen_t quote_addrlen,
-	struct sockaddr *challenger_addr, socklen_t challenger_addrlen)
+int sgx_make_server(int port) 
 {
-    char *reportdata;
-    targetinfo_t targetinfo;
-    keyrequest_t keyreq;
-    unsigned char *outputdata;
-    unsigned char *outputdata_key;
-    uint8_t *reportkey;
-
-    report_t report_ori;
-    report_t report_mac;
-    report_t report_target;
-    report_t quote;
-
-    int wait = 0;
-    int sock;
-    socklen_t len;
     int server_fd, client_fd;
-    struct sockaddr_in client_addr;
-
-    char *write_buf;
-    char *read_buf;
-
-    char *rsa_N;
-    char *rsa_E; 
-
-    unsigned char *mac;
-    unsigned char *remac;
-    aes_cmac128_context *ctx;
-
-    reportdata 		= memalign(128, 64);
-    write_buf 		= malloc(2048);
-    read_buf 		= malloc(2048);
-    outputdata 		= memalign(512, 512);
-    outputdata_key 	= memalign(128, 128);
-    reportkey 		= malloc(16);
-    mac             = malloc(16);
-    remac           = malloc(16);
-    ctx             = malloc(sizeof(aes_cmac128_context));
-    rsa_N           = malloc(sizeof(mpi));
-    rsa_E           = malloc(sizeof(mpi));
-
-    //server socket for challenger
-    if((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
-    {
-	    puts("Enclave Application: Cannot open stream socket\n");
-    	sgx_exit(NULL);
+    struct sockaddr_in server_addr, client_addr;
+    socklen_t addr_len;
+    
+    server_fd = socket(PF_INET, SOCK_STREAM, 0);
+    if (server_fd == -1) {
+        puts("socket error");
+        return -1;
     }
 
-    if(bind(server_fd, (struct sockaddr *)challenger_addr, challenger_addrlen) < 0)
-    {
-	    puts("Enclave Application: Cannot bind local address.\n");
-    	sgx_exit(NULL);
+    //Make reusable socket
+    int enable = 1;
+    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0) {
+        puts("setsockopt error");
+        close(server_fd);
+        return -1;
+    }
+    
+    memset(&server_addr, 0, sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(port);
+    server_addr.sin_addr.s_addr = INADDR_ANY;
+    if (bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) != 0) {
+        puts("bind error");
+        close(server_fd);
+        return -1;
+    }
+    
+    if (listen(server_fd, 10) != 0) {
+        puts("listen error");
+        close(server_fd);
+        return -1;
+    }
+    
+    addr_len = sizeof(client_addr);
+    client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &addr_len);
+    if (client_fd < 0) {
+        puts("accept error");
+        close(server_fd);
+        return -1;
     }
 
-    if(listen(server_fd, 5) < 0)
-    {
-	    puts("Enclave Application: Cannot listening connect.\n");
-    	sgx_exit(NULL);
+    close(server_fd);
+    return client_fd;
+}
+
+int sgx_connect_server(const char *target_ip, int target_port)
+{
+    struct sockaddr_in target_addr;
+    int target_fd;
+
+    //Make connection with Quoting enclave
+    target_addr.sin_family = AF_INET;
+    target_addr.sin_port = htons(target_port);
+    if(inet_pton(AF_INET, target_ip, &target_addr.sin_addr) <= 0) {
+        puts("inet_pton error");
+        return -1;
+    }
+        
+    //socket for connecting intra enclave B
+    target_fd = socket(PF_INET, SOCK_STREAM, 0);
+    if (target_fd == -1) {
+        puts("socket errorr\n");
+        return -1;
     }
 
-    len = sizeof(client_addr);
-
-    puts("Enclave application is waiting for challenger...\n");
-    client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &len);
-    if(client_fd < 0)
+    if(connect(target_fd, (struct sockaddr *)&target_addr, sizeof(target_addr)) < 0)
     {
-	    puts("Enclave Application: Accept failed.\n");
-	    sgx_exit(NULL);
+        puts("connect error\n");
+        return -1;
     }
 
-    read(client_fd, read_buf, 512); 
+    return target_fd;
+}
 
-    //start remote attestation
-    if(strcmp(read_buf, "START_REMOTE") == 0)
-    {
-    	//with quoting enclave
-    	if((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-    	{
-    	    puts("Cannot create socket.\n");
-    	    sgx_exit(NULL);
-    	}
-
-        if(connect(sock, (struct sockaddr *)quote_addr, quote_addrlen) < 0)
-        {
-                puts("Cannot connect.\n");
-                sgx_exit(NULL);
-        }   
-
-        strcpy(write_buf, "start");
-        write(sock, write_buf, 512); //1
-
-        //receive report
-        read(sock, read_buf, 512); //2
-
-        memcpy(&report_target, read_buf, 512);
-
-        memcpy(&targetinfo.miscselect, &report_target.miscselect, 4);
-        memcpy(&targetinfo.attributes, &report_target.attributes, 16);
-        memcpy(&targetinfo.measurement, &report_target.mrenclave, 32);
-        memset(reportdata, 0, sizeof(reportdata));
-        sgx_report(&targetinfo, reportdata, outputdata);
-
-        while(wait < 100000000) wait++;
-        wait = 0;
-
-        write(sock, outputdata, 512); //3
-        memset(read_buf, 0, 2048);
-
-        read(sock, read_buf, 512); //4
-        memcpy(&report_ori, read_buf, 512);
-        memcpy(&report_mac, read_buf, 512);
-
-        //egetkey
-        keyreq.keyname = REPORT_KEY;
-        memcpy(&keyreq.keyid, &report_ori.keyid, 16);
-        memcpy(&keyreq.miscmask, &report_ori.miscselect, 4);
-        sgx_getkey(&keyreq, outputdata_key);
-
-        //report key
-        memcpy(reportkey, outputdata_key, 16);
-
-        aes_cmac128_starts(ctx, reportkey);
-        aes_cmac128_update(ctx, (uint8_t *)&report_mac, 416);
-        aes_cmac128_final(ctx, report_mac.mac);
-
-        memcpy(mac, &report_ori.mac, 16);
-        memcpy(remac, &report_mac.mac, 16);
-
-        if(memcmp(mac, remac, 16) != 0)
-        {
-            puts("Error Mac!\n");
+int sgx_read_sock(int fd, void *buf, int len)
+{
+    int n = 0;
+    while((n = read(fd, buf, len)) <= 0) {
+        if (n == -1) {
+            puts("read error");
+            return -1;
         }
-
-        //get public key and quote
-        read(sock, rsa_N, sizeof(mpi)); 
-        read(sock, rsa_E, sizeof(mpi)); 
-        read(sock, &quote, sizeof(report_t));
-
-        //send to challenger
-        write(client_fd, rsa_N, sizeof(mpi));
-        write(client_fd, rsa_E, sizeof(mpi));
-        write(client_fd, &quote, sizeof(report_t));
     }
+    return n;
 }
 
-int
-sgx_intra_for_quoting(struct sockaddr *server_addr, socklen_t addrlen)
+int sgx_write_sock(int fd, void *buf, int len)
 {
-    char *reportdata;
-    targetinfo_t targetinfo;
-    keyrequest_t keyreq;
-    unsigned char *outputdata;
-    unsigned char *outputdata_key;
-    char *read_buf;
-    uint8_t *reportkey;
-
-    report_t report_ori;
-    report_t report_mac;
-    report_t report_target;
-    report_t quote;
-
-    unsigned char *mac;
-    unsigned char *remac;
-    aes_cmac128_context *ctx;
-    rsa_context *rsa;
-    ctr_drbg_context *ctr_drbg;
-    entropy_context *entropy;
-
-    char *rsa_N;
-    char *rsa_E;
-    char *hash;
-    char *sign;
-    const char *pers = "rsa_genkey";
-
-    int ret;
-    int wait = 0;
-    socklen_t len;
-    int server_fd, client_fd;
-    struct sockaddr_in client_addr;
-
-    reportdata 		= memalign(128, 64);
-    outputdata 		= memalign(512, 512);
-    read_buf 		= malloc(2048);
-    outputdata_key 	= memalign(128, 128);
-    reportkey 		= malloc(16);
-    mac 		= malloc(16);
-    remac 		= malloc(16);
-    ctx			= malloc(sizeof(aes_cmac128_context));
-    rsa			= malloc(sizeof(rsa_context));
-    ctr_drbg	= malloc(sizeof(ctr_drbg_context));
-    rsa_N		= malloc(sizeof(mpi));
-    rsa_E		= malloc(sizeof(mpi));
-    hash		= malloc(32);
-    sign		= malloc(32);
-    entropy		= malloc(sizeof(entropy_context));
-
-    if((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
-    {
-	    puts("Quoting enclave: Cannot open stream socket\n");
-    	sgx_exit(NULL);
-    }
-
-    if(bind(server_fd, (struct sockaddr *)server_addr, addrlen) < 0)
-    {
-	    puts("Quoting enclave : Cannot bind local address.\n");
-    	sgx_exit(NULL);
-    }
-
-    if(listen(server_fd, 5) < 0)
-    {
-	    puts("Quoting enclave : Cannot listening connect.\n");
-    	sgx_exit(NULL);
-    }
-
-    //Quoting enclave waits for connection request.
-    len = sizeof(client_addr);
-	puts("Quoting enclave is waiting for connection request...\n");
-	client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &len);
-	if(client_fd < 0)
-	{
-	    puts("Quoting enclave : Accept failed.\n");
-	    sgx_exit(NULL);
-	}
-
-	read(client_fd, read_buf, 512); //1
-
-	//start intra attestation
-	if(strcmp(read_buf, "start") == 0)
-	{
-	    memset(outputdata, 0, 512);
-	    sgx_report(&targetinfo, reportdata, outputdata);
-
-	    //send report	
-	    write(client_fd, outputdata, 512); //2
-
-	    //receive report
-	    read(client_fd, read_buf, 512); //3
-
-	    memcpy(&report_ori, read_buf, 512);
-	    memcpy(&report_mac, read_buf, 512);
-
-	    //egetkey
-	    keyreq.keyname = REPORT_KEY;
-	    memcpy(&keyreq.keyid, &report_ori.keyid, 16);
-	    memcpy(&keyreq.miscmask, &report_ori.miscselect, 4);
-	    sgx_getkey(&keyreq, outputdata_key);
-
-	    //report key
-	    memcpy(reportkey, outputdata_key, 16);
-
-	    aes_cmac128_starts(ctx, reportkey);
-	    aes_cmac128_update(ctx, (uint8_t *)&report_mac, 416);
-	    aes_cmac128_final(ctx, report_mac.mac);
-
-	    memcpy(mac, &report_ori.mac, 16);
-	    memcpy(remac, &report_mac.mac, 16);
-
-	    if(memcmp(mac, remac, 16) != 0)
-	    {
-		    puts("Error Mac!\n");
-	    }
-
-	    //get target info from received data
-	    memcpy(&report_target, read_buf, sizeof(report_t));
-	    memcpy(&targetinfo.miscselect, &report_target.miscselect, 4);
-	    memcpy(&targetinfo.attributes, &report_target.attributes, 16);
-	    memcpy(&targetinfo.measurement, &report_target.mrenclave, 32);
-
-	    memset(reportdata, 0, sizeof(reportdata));
-
-	    sgx_report(&targetinfo, reportdata, outputdata);
-	    while(wait < 100000000) wait++;
-	    wait = 0;     
-	    write(client_fd, outputdata, 512);
-
-	    sha256(&report_ori, 416, hash, 0);
-	    entropy_init(entropy);
-
-	    //rsa
-	    if((ret = ctr_drbg_init(ctr_drbg, entropy_func, entropy, 
-			    (const unsigned char *)pers, strlen(pers))) != 0)
-	    {
-		    printf("Failed! ctr_drbg_init returned %d\n", ret);
-	    }
-	    rsa_init(rsa, RSA_PKCS_V15, 0);
-
-	    if((ret = rsa_gen_key(rsa, ctr_drbg_random, ctr_drbg, KEY_SIZE, EXPONENT)) != 0)
-	    {
-		    printf("Failed! rsa_gen_key returned %d\n", ret);
-	    }
-	    mpi_write_binary(&rsa->N, rsa_N, sizeof(mpi));
-	    mpi_write_binary(&rsa->E, rsa_E, sizeof(mpi));
-
-	    if((ret = rsa_pkcs1_sign(rsa, NULL, NULL, RSA_PRIVATE, POLARSSL_MD_NONE, 
-			    16, hash, sign)) != 0)
-	    {
-		    printf("Sign error! ret = %d\n", ret);
-	    }
-
-	    //send quote
-	    memcpy(&report_mac.mac, sign, 16);
-	    memcpy(&quote, &report_mac, sizeof(report_t));
-
-	    write(client_fd, rsa_N, sizeof(mpi));
-	    write(client_fd, rsa_E, sizeof(mpi));
-	    write(client_fd, &quote, sizeof(report_t));
-
-	}
+    return write(fd, buf, len);
 }
 
-int 
-sgx_remote(const struct sockaddr *target_addr, socklen_t addrlen)
+int sgx_get_report(int fd, report_t *report)
 {
-    int ret;
-    int sock;
-    char *write_buf;
-    char *read_buf;
-
-    rsa_context *rsa;
-
-    report_t quote;
-
-    char *rsa_N;
-    char *rsa_E;
-    char *hash;
-    char *sign;
-    const char *pers = "rsa_genkey";
-
-    write_buf = malloc(2048);
-    read_buf  = malloc(2048);
-    rsa       = malloc(sizeof(rsa_context));
-    rsa_N     = malloc(sizeof(mpi));
-    rsa_E     = malloc(sizeof(mpi));
-    hash      = malloc(32);
-    sign      = malloc(32);
-
-    rsa_init(rsa, RSA_PKCS_V15, 0);
-
-    if((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-    {
-	    puts("Cannot create socket.\n");
-    	sgx_exit(NULL);
+    if(sgx_read_sock(fd, report, sizeof(report_t)) < 0) {
+        return -1;
     }
 
-    if(connect(sock, (struct sockaddr *)target_addr, addrlen) < 0)
-    {
-	    puts("Cannot connect.\n");
-    	sgx_exit(NULL)
-    }
-
-    strcpy(write_buf, "START_REMOTE");
-    write(sock, write_buf, 512); //1
-
-    read(sock, rsa_N, sizeof(mpi));
-    read(sock, rsa_E, sizeof(mpi));
-    read(sock, &quote, sizeof(report_t));
-
-    mpi_read_binary(&rsa->N, rsa_N, sizeof(mpi));
-    mpi_read_binary(&rsa->E, rsa_E, sizeof(mpi));
-
-    rsa->len = (mpi_msb(&rsa->N)+7)>>3;
-
-    sha256(&quote, 416, hash, 0);
-    memcpy(sign, &quote.mac, 16);
-
-    if((ret = rsa_pkcs1_verify(rsa, NULL, NULL, RSA_PUBLIC,
-		    POLARSSL_MD_NONE, 16, hash, sign)) != 0)
-    {
-	    puts("Failed to verify!\n");
-    }
-    else
-    {
-	    puts("Success!\n");
-    }
+    return 1;
 }
 
+int sgx_match_mac(unsigned char *report_key, report_t *report)
+{
+    unsigned char mac[MAC_SIZE];
+    aes_cmac128_context ctx;
+
+    //Compute MAC
+    aes_cmac128_starts(&ctx, report_key);
+    aes_cmac128_update(&ctx, (uint8_t *)report, 416);
+    aes_cmac128_final(&ctx, mac);
+    
+    //Compare mac and report->mac
+    if(memcmp(mac, report->mac, MAC_SIZE) != 0)
+    {
+        return -1;
+    }
+    return 1;
+}
+
+int sgx_make_quote(const char* pers, report_t *report, 
+        unsigned char *rsa_N, unsigned char *rsa_E)
+{
+    entropy_context entropy;
+    ctr_drbg_context ctr_drbg;
+    rsa_context rsa;
+    unsigned char hash[32], sign[32];
+    int ret;
+
+    sha256((unsigned char *)report, sizeof(report_t), hash, 0);
+
+    entropy_init(&entropy);
+
+    if((ret = ctr_drbg_init(&ctr_drbg, entropy_func, &entropy, 
+            (const unsigned char *)pers, strlen(pers))) != 0)
+    {
+        printf("Failed! ctr_drbg_init returned %d\n", ret);
+        return -1;
+    }
+
+    rsa_init(&rsa, RSA_PKCS_V15, 0);
+    
+    puts("Generating RSA key ...");
+
+    if((ret = rsa_gen_key(&rsa, ctr_drbg_random, &ctr_drbg, KEY_SIZE, EXPONENT)) != 0)
+    {
+        printf("Failed! rsa_gen_key returned %d\n", ret);   
+        return -1;
+    }   
+    
+    mpi_write_binary(&rsa.N, rsa_N, sizeof(mpi));
+    mpi_write_binary(&rsa.E, rsa_E, sizeof(mpi));
+
+    puts("Signing RSA ...");
+
+    if((ret = rsa_pkcs1_sign(&rsa, NULL, NULL, RSA_PRIVATE, POLARSSL_MD_NONE, 
+                    0, hash, sign)) != 0)
+    {
+        printf("Sign error! ret = %d\n", ret);      
+        return -1;
+    }
+    
+    memcpy(&report->mac, sign, 16);
+    puts("Making QUOTE done!");
+    
+    return 1;
+}

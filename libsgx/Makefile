@@ -1,4 +1,4 @@
-LIBSGX_OBJS = sgx-basics.o sgx-attest.o
+LIBSGX_OBJS = sgx-basics.o sgx-attest.o sgx-intra-attest.o sgx-remote-attest.o
 
 POLARSSL_OBJS = polarssl/rsa.o polarssl/entropy.o polarssl/ctr_drbg.o \
                 polarssl/bignum.o polarssl/md.o polarssl/oid.o polarssl/asn1parse.o \
