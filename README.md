@@ -152,13 +152,13 @@ Pointers
     - qemu/target-i386/sgx.h       : Define sgx and related data structures.
     - qemu/target-i386/sgx-dbg.h   : Define debugging function.
     - qemu/target-i386/sgx-utils.h : Define utils functions.
-    - qemu/target-i386/sgx-perf.h  : Perforamce evaluation.
+    - qemu/target-i386/sgx-perf.h  : Performance evaluation.
     - qemu/target-i386/sgx_helper.c: Implement sgx instructions.
 
 - SGX Library
     - libsgx/sgx-entry.c : Define enclave binary entry point.
-    - libsgx/musl-libc/  : Cusomized libc library (based on musl libc).
-    - libsgx/polarssl/   : Cusomized ssl library (based on polarssl).
+    - libsgx/musl-libc/  : Customized libc library (based on musl libc).
+    - libsgx/polarssl/   : Customized ssl library (based on polarssl).
 
 - User side
     - user/sgx-kern.c         : Emulates kernel-level functions.
