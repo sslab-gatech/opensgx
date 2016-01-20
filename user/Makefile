@@ -16,7 +16,7 @@ OPENSSL_LIBS = $(LIBSGXDIR)/sgx-entry.o $(LIBSGXDIR)/libssl.a \
                $(LIBSGXDIR)/libc-sgx.a
 
 # Host code/tool
-SGX_HOST_RUNTIME = sgx-runtime.o sgx-test-runtime.o
+SGX_HOST_RUNTIME = sgx-runtime.o sgx-host.o
 SGX_HOST_OBJS = sgx-user.o sgx-kern.o sgx-kern-epc.o sgx-utils.o sgx-trampoline.o \
                 sgx-crypto.o sgx-loader.o
 POLARSSL_LIB = libpolarssl.a
@@ -34,11 +34,14 @@ BINS := $(patsubst %.c,%,$(wildcard test/*.c)) \
         $(patsubst %.c,%,$(wildcard test/openssl/*.c)) \
         $(patsubst %.c,%,$(wildcard test/tor/sgx-*.c)) \
         $(patsubst %.c,%,$(wildcard non_enclave/*.c))
-ALL  := sgx-tool sgx-runtime $(BINS) $(POLARSSL_LIB)
+ALL  := sgx-tool sgx-runtime $(BINS) $(POLARSSL_LIB) sgx-host
 
 all: $(ALL)
 
 sgx-runtime: sgx-runtime.o $(SGX_HOST_OBJS) $(POLARSSL_LIB)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDLIBS)
+
+sgx-host: sgx-host.o $(SGX_HOST_OBJS) $(POLARSSL_LIB)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDLIBS)
 
 libpolarssl.a : $(POLARSSL_OBJS)

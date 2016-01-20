@@ -180,7 +180,7 @@ ENTRY(enclave_start)
                                 /* for fp restore, but we're using   */
                                 /* OpenSGX eexit semantics for now   */
     .byte 0x0F                  /* ENCLU                             */
-        .byte 0x01
-        .byte 0xd7
+    .byte 0x01
+    .byte 0xd7
     retq
 END(enclave_start)
