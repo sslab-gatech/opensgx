@@ -1,0 +1,42 @@
+# Build and run a simple Lua application with OpenSGX
+#
+# John D. Ramsdell --- December 2015
+#
+# The application is hello world in Lua (hello.lua).
+# Requires a built lua-sgx library in LUBLUASGXDIR.
+# Run the program with "make run".
+
+OPENSGXDIR = @LIBSGXDIR@/..
+LIBSGXDIR = @LIBSGXDIR@
+
+CFLAGS = -g -Wall -pedantic -Wno-unused-function -std=gnu11	\
+         -fno-stack-protector -static -fvisibility=hidden	\
+         -I$(LIBSGXDIR)/musl-libc/include -I$(LIBSGXDIR)/include
+
+LDFLAGS = -static -nostdlib -nostartfiles				\
+-Wl,-T,$(LIBSGXDIR)/../user/sgx.lds -L$(LIBSGXDIR)
+
+LDLIBS = $(LIBSGXDIR)/sgx-entry.o $(LIBSGXDIR)/libsgx.a	\
+         $(LIBSGXDIR)/libc-sgx.a $(LIBSGXDIR)/libpolarssl-sgx.a
+
+all:	hello.conf
+
+hello.conf: hello.sgx sign.key
+	$(OPENSGXDIR)/opensgx --sign hello.sgx --key sign.key
+
+sign.key:
+	$(OPENSGXDIR)/opensgx --key
+
+hello.sgx:	hello.o $(LDLIBS)
+	$(CC) $(LDFLAGS) $< -o $@ $(LDLIBS)
+
+hello.o: hello.c
+	$(CC) -c $(CFLAGS) -o $@ $<
+
+run:	all
+	A=`pwd`; cd $(OPENSGXDIR); ./opensgx $$A/hello.sgx $$A/hello.conf
+
+clean:
+	-rm hello.o hello.sgx hello.conf sign.key
+
+.PHONY:	all run clean

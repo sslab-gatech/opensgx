@@ -1,0 +1,12 @@
+This sample shows how to use autotools with OpenSGX.
+
+John D. Ramsdell -- The MITRE Corporation -- December 2015
+suggests the initial version of this sample.
+
+Jaebaek Seo -- KAIST -- Jan 2016
+simplified the initial version.
+
+    $ autoreconf
+    $ ./configure --with-libsgxdir=$HOME/opensgx/libsgx
+    $ cd run
+    $ make run
