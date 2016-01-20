@@ -185,6 +185,7 @@ We specially appreciate those who actively make contributions to the project:
 - Jon Gjengset
 - Jethro Beekman
 - Patrick Bridges
+- John D. Ramsdell
 
 Contact
 -------
