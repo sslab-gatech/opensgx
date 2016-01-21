@@ -1,9 +1,5 @@
-# Build and run a simple application with OpenSGX
+# Jaebaek Seo --- Jan 2015
 #
-# John D. Ramsdell --- December 2015
-# Jaebaek Seo --- Jan 2016
-#
-# The application is hello world.
 # Run the program with "make run".
 
 OPENSGXDIR = @LIBSGXDIR@/..
@@ -19,24 +15,24 @@ LDFLAGS = -static -nostdlib -nostartfiles				\
 LDLIBS = $(LIBSGXDIR)/sgx-entry.o $(LIBSGXDIR)/libsgx.a	\
          $(LIBSGXDIR)/libc-sgx.a $(LIBSGXDIR)/libpolarssl-sgx.a
 
-all:	hello.conf
+all:	malloc_test.conf
 
-hello.conf: hello.sgx sign.key
-	$(OPENSGXDIR)/opensgx --sign hello.sgx --key sign.key
+malloc_test.conf: malloc_test.sgx sign.key
+	$(OPENSGXDIR)/opensgx --sign malloc_test.sgx --key sign.key
 
 sign.key:
 	$(OPENSGXDIR)/opensgx --key
 
-hello.sgx:	hello.o $(LDLIBS)
+malloc_test.sgx:	malloc_test.o $(LDLIBS)
 	$(CC) $(LDFLAGS) $< -o $@ $(LDLIBS)
 
-hello.o: hello.c
+malloc_test.o: malloc_test.c
 	$(CC) -c $(CFLAGS) -o $@ $<
 
 run:	all
-	A=`pwd`; cd $(OPENSGXDIR); ./opensgx $$A/hello.sgx $$A/hello.conf
+	A=`pwd`; cd $(OPENSGXDIR); ./opensgx $$A/malloc_test.sgx $$A/malloc_test.conf
 
 clean:
-	-rm hello.o hello.sgx hello.conf sign.key
+	rm -f malloc_test.o malloc_test.sgx malloc_test.conf sign.key
 
 .PHONY:	all run clean
