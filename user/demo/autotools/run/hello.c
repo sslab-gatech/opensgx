@@ -24,8 +24,7 @@
 
 void enclave_main()
 {
-    char *hello = "hello sgx!\n";
-    puts(hello);
+    char *hello = "hello sgx!";
+    printf("This is a very big number: %lx\nThis is a string:%s\nThis is an address of the pointer:%p\n", 0x123456789101112, hello, hello);
     sgx_exit(NULL);
 }
-

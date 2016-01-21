@@ -10,3 +10,5 @@ simplified the initial version.
     $ ./configure --with-libsgxdir=$HOME/opensgx/libsgx
     $ cd run
     $ make run
+
+Note that $HOME must be an absolute path.
