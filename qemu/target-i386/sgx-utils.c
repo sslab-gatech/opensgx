@@ -36,7 +36,9 @@ void load_rsa_key_from_str(uint8_t *key, char *bytes, size_t size)
 {
     int i;
     for (i = 0; i < size; i++) {
-        sscanf(bytes + i*2, "%02X", (unsigned int *)&key[i]);
+        unsigned int value;
+        sscanf(bytes + i*2, "%02X", &value);
+        key[i] = (uint8_t)value;
     }
 
     if (sgx_dbg_rsa) {
