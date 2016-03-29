@@ -160,8 +160,6 @@ void aes_cmac128_update(aes_cmac128_context *ctx, const uint8_t *_msg, size_t _m
  */
 void aes_cmac128_final(aes_cmac128_context *ctx, uint8_t T[16])
 {
-    unsigned char iv[16] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     uint8_t tmp_block[16];
     uint8_t Y[16];
 
