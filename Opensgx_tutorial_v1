@@ -129,7 +129,7 @@ $ ./opensgx –c user/demo/hello.c
 (Then, hello.sgx is created in user/demo directory)
 
 Generate hello.conf (Sign and calculate identity of an OpenSGX application)
-$ ./opensgx –s use user/demo/hello.sgx --key sign.key
+$ ./opensgx –s user/demo/hello.sgx --key sign.key
 (Then, hello.conf is created in user/demo directory)
 
 Run an OpenSGX program
