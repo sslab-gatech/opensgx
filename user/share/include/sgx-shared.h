@@ -66,6 +66,9 @@ typedef uint8_t rsa_sig_t[KEY_LENGTH];
 #define HEAP_ADDR       0x80900000
 #define SGXLIB_MAX_ARG  512
 
+//about a syscall
+#define MAX_SYSCALL_ARG 6
+
 typedef enum {
     FUNC_UNSET,
     FUNC_PUTS,
@@ -114,6 +117,7 @@ typedef struct sgx_stub_info {
     int  in_arg2;
     uint32_t in_arg3;
     struct tm in_tm;
+    long sys_ret;
 
    // out : from enclave to non-enclave
    fcode_t fcode;
@@ -123,6 +127,7 @@ typedef struct sgx_stub_info {
    int  out_arg2;
    int  out_arg3;
    time_t out_arg4;
+   long sys_args[MAX_SYSCALL_ARG + 1]; // +1 for n_of_args
    char out_data1[SGXLIB_MAX_ARG];
    char out_data2[SGXLIB_MAX_ARG];
    char out_data3[SGXLIB_MAX_ARG];
