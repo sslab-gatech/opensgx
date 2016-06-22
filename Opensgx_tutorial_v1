@@ -81,7 +81,7 @@ $ sgx-tool -k 3072     ( For enclave key pair )
 $ sgx-tool -k 128      ( For device key pair )
 ----------------------------------------------------------------------------------------
 
- The size of EPC and EPCM is also configurable. In the qemu/target-i386/ directory, there is a “sgx.h” header files. In line 26, NUM_EPC variable is defined (by default, 1500). It is the number of EPC pages which an enclave initially contains. If you want to change the size of an enclave, you can change this value and recompile qemu.
+ The size of EPC and EPCM is also configurable. In the qemu/target-i386/ directory, there is a “sgx.h” header files. In line 26, NUM_EPC variable is defined (by default, 2000). It is the number of EPC pages which an enclave initially contains. If you want to change the size of an enclave, you can change this value and recompile qemu.
 Configuring data structures
  There is two core data structures to verify the enclave identity and enclave programmer’s identity. These are SIGSTRUCT and EINITTOKEN. SIGSTRUCT contains information about the enclave from the enclave signer (OpenSGX programmer) and also has a hash value of enclave. It is used to verify the identity of enclave and signer while launching an enclave. EINITTOKEN is used while EINIT instruction to verify that the target enclave is permitted to launch. It contains a cryptographic MAC calculated by launch key (processor key) to check whether an enclave is actually running on the SGX-enabled platform or not. Here is the detail procedure of generating SIGSTRUCT and EINITTOKEN data structures. 
 
