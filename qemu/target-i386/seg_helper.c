@@ -946,11 +946,6 @@ void helper_syscall(CPUX86State *env, int next_eip_addend)
 {
     CPUState *cs = CPU(x86_env_get_cpu(env));
 
-    if(env->cregs.CR_ENCLAVE_MODE) {
-        fprintf(stderr, "SYSCALL INSIDE THE ENCLAVE!!\n");
-        raise_exception_err(env, EXCP06_ILLOP, 0);
-    }
-
     cs->exception_index = EXCP_SYSCALL;
     env->exception_next_eip = env->eip + next_eip_addend;
     cpu_loop_exit(cs);

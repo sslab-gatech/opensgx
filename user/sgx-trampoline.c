@@ -50,6 +50,8 @@ const char *fcode_to_str(fcode_t fcode)
     case FUNC_CONNECT     : return "CONNECT";
     case FUNC_SEND        : return "SEND";
     case FUNC_RECV        : return "RECV";
+
+    // only for testing purpose
     case FUNC_SYSCALL     : return "SYSCALL";
     default:
         {
@@ -112,97 +114,13 @@ int sgx_puts_tramp(char *data)
     return puts(data);
 }
 
-#define __SYSCALL_NARGS_X(a,b,c,d,e,f,g,h,n,...) n
-#define __SYSCALL_NARGS(...) __SYSCALL_NARGS_X(__VA_ARGS__,7,6,5,4,3,2,1,0,)
-#define __SYSCALL_CONCAT_X(a,b) a##b
-#define __SYSCALL_CONCAT(a,b) __SYSCALL_CONCAT_X(a,b)
-#define __SYSCALL_DISP(b,...) __SYSCALL_CONCAT(b,__SYSCALL_NARGS(__VA_ARGS__))(__VA_ARGS__)
-
-#define __syscall(...) __SYSCALL_DISP(__syscall,__VA_ARGS__)
-
-static __inline long __syscall0(long n)
+/*
+//TODO: could implement general syscall stub
+// but we don't need it now. igrnore it
+void sgx_syscall()
 {
-	unsigned long ret;
-	__asm__ __volatile__ ("syscall" : "=a"(ret) : "a"(n) : "rcx", "r11", "memory");
-	return ret;
 }
-
-static __inline long __syscall1(long n, long a1)
-{
-	unsigned long ret;
-	__asm__ __volatile__ ("syscall" : "=a"(ret) : "a"(n), "D"(a1) : "rcx", "r11", "memory");
-	return ret;
-}
-
-static __inline long __syscall2(long n, long a1, long a2)
-{
-	unsigned long ret;
-	__asm__ __volatile__ ("syscall" : "=a"(ret) : "a"(n), "D"(a1), "S"(a2)
-						  : "rcx", "r11", "memory");
-	return ret;
-}
-
-static __inline long __syscall3(long n, long a1, long a2, long a3)
-{
-	unsigned long ret;
-	__asm__ __volatile__ ("syscall" : "=a"(ret) : "a"(n), "D"(a1), "S"(a2),
-						  "d"(a3) : "rcx", "r11", "memory");
-	return ret;
-}
-
-
-static __inline long __syscall4(long n, long a1, long a2, long a3, long a4)
-{
-	unsigned long ret;
-	register long r10 __asm__("r10") = a4;
-	__asm__ __volatile__ ("syscall" : "=a"(ret) : "a"(n), "D"(a1), "S"(a2),
-						  "d"(a3), "r"(r10): "rcx", "r11", "memory");
-	return ret;
-}
-
-static __inline long __syscall5(long n, long a1, long a2, long a3, long a4, long a5)
-{
-	unsigned long ret;
-	register long r10 __asm__("r10") = a4;
-	register long r8 __asm__("r8") = a5;
-	__asm__ __volatile__ ("syscall" : "=a"(ret) : "a"(n), "D"(a1), "S"(a2),
-						  "d"(a3), "r"(r10), "r"(r8) : "rcx", "r11", "memory");
-	return ret;
-}
-
-static __inline long __syscall6(long n, long a1, long a2, long a3, long a4, long a5, long a6)
-{
-	unsigned long ret;
-	register long r10 __asm__("r10") = a4;
-	register long r8 __asm__("r8") = a5;
-	register long r9 __asm__("r9") = a6;
-	__asm__ __volatile__ ("syscall" : "=a"(ret) : "a"(n), "D"(a1), "S"(a2),
-						  "d"(a3), "r"(r10), "r"(r8), "r"(r9) : "rcx", "r11", "memory");
-	return ret;
-}
-
-static
-long sgx_syscall(long *sys_args)
-{
-    int n_of_args = sys_args[0];
-    int sys_ret = 0 ;
-    switch(n_of_args){
-        case 0: sys_ret = __syscall(n_of_args); break;
-        case 1: sys_ret = __syscall(n_of_args, sys_args[1]); break;
-        case 2: sys_ret = __syscall(n_of_args, sys_args[1], sys_args[2]); break;
-        case 3: sys_ret = __syscall(n_of_args, sys_args[1], sys_args[2], sys_args[3]); break;
-        case 4: sys_ret = __syscall(n_of_args, sys_args[1], sys_args[2], sys_args[3],
-                                               sys_args[4]); break;
-        case 5: sys_ret = __syscall(n_of_args, sys_args[1], sys_args[2], sys_args[3],
-                                               sys_args[4], sys_args[5]); break;
-        case 6: sys_ret = __syscall(n_of_args, sys_args[1], sys_args[2], sys_args[3],
-                                               sys_args[4], sys_args[5], sys_args[6]); break;
-        default: 
-
-        return sys_ret;
-    }
-
-}
+*/
 
 static
 int sgx_write_tramp(int fd, const void *buf, size_t count)
@@ -314,9 +232,6 @@ void sgx_trampoline()
     unsigned long epc_heap_beg = 0;
     unsigned long epc_heap_end = 0;
     unsigned long pending_page = 0;
-    int n = 0;
-    va_list ap;
-    int n_of_args = 0;
 
     sgx_msg(user, "Trampoline Entered");
     sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
@@ -392,9 +307,11 @@ void sgx_trampoline()
     case FUNC_RECV:
         stub->in_arg1 = sgx_recv_tramp(stub->out_arg1, stub->in_data1, (size_t)stub->out_arg2, stub->out_arg3);
         break;
+/*
     case FUNC_SYSCALL:
-        stub->sys_ret = sgx_syscall(stub->sys_args);
-        break;
+        sgx_syscall();
+    break;
+*/
     default:
         sgx_msg(warn, "Incorrect function code");
         return;

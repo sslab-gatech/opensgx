@@ -108,6 +108,9 @@ $(foreach s,$(wildcard src/*/$(ARCH)*/*.s),$(eval $(call mkasmdep,$(s))))
 %.o: $(ARCH)$(ASMSUBARCH)/%.sub
 	$(CC) $(CFLAGS_ALL_STATIC) -c -o $@ $(dir $<)$(shell cat $<)
 
+%.o: $(ARCH)/%.s
+	$(CC) $(CFLAGS_ALL_STATIC) -c -o $@ $<
+
 %.o: %.c $(GENH) $(IMPH)
 	$(CC) $(CFLAGS_ALL_STATIC) -c -o $@ $<
 
