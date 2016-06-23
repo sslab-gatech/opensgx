@@ -227,3 +227,19 @@ NDSS 2016
 }
 ```
 
+- Papers that use OpenSGX: 
+```
+A First Step Towards Leveraging Commodity Trusted Execution Environments for Network Applications
+Seongmin Kim, Youjung Shin, Jaehyung Ha, Taesoo Kim, Dongsu Han
+ACM HotNets 2015
+
+@inproceedings{kim:hotnets2015,
+	title        = {{A First Step Towards Leveraging Commodity Trusted Execution Environments for Network Applications}},
+	author       = {Seongmin Kim and Youjung Shin and Jaehyung Ha and Taesoo Kim and Dongsu Han},
+	booktitle    = {Proceedings of the 14th ACM Workshop on Hot Topics in Networks (HotNets)},
+	month        = nov,
+	year         = 2015,
+	address      = {Philadelphia, PA},
+}
+```
+
