@@ -36,6 +36,8 @@ extern void sgx_resume(tcs_t *tcs, void (*aep)());
 extern int sgx_host_read(void *buf, int len);
 extern int sgx_host_write(void *buf, int len);
 
+extern void collecting_enclu_stat(void);
+
 /* Macros to define user-side enclave calls with different argument
  * numbers */
 #define ENCCALL1(name, type1)                                   \

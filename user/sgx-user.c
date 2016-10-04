@@ -32,6 +32,8 @@
 #include <malloc.h>
 
 static uint64_t _tcs_app;
+int cur_keid;
+keid_t cur_stat;
 
 // (ref. r2:5.2)
 // out_regs store the output value returned from qemu */
@@ -335,16 +337,25 @@ tcs_t *init_enclave(void *base, unsigned int offset, unsigned int n_of_pages, ch
     if (sys_stat_enclave(keid, &stat) < 0)
         err(1, "failed to stat enclave");
 
-    // stats report
-    print_eid_stat(stat);
-
     // please check STUB_ADDR is mmaped in the main before enable below
     sgx_stub_info *stub = (sgx_stub_info *)STUB_ADDR;
     stub->tcs = stat.tcs;
 
     free(tcs);
 
+    // stats report
+    memcpy(&cur_stat, &stat, sizeof(keid_t));
+    cur_keid = keid;
+
     return stat.tcs;
+}
+
+void collecting_enclu_stat(void)
+{
+    if (sys_stat_enclave(cur_keid, &cur_stat) < 0)
+	err(1, "failed to stat enclave");
+
+    print_eid_stat(cur_stat);
 }
 
 int sgx_host_read(void *buf, int len)

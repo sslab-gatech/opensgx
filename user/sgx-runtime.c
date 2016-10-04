@@ -93,5 +93,8 @@ int main(int argc, char **argv)
     else
         enclave2_call(tcs, aep, argc, argv);
 
+    // print report
+    collecting_enclu_stat();
+
     return 0;
 }
