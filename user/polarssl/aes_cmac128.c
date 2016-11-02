@@ -54,7 +54,6 @@ static inline void aes_cmac_128_xor(const uint8_t in1[16], const uint8_t in2[16]
 void aes_cmac128_starts(aes_cmac128_context *ctx, const uint8_t K[16])
 {
     uint8_t L[16];
-    unsigned char iv[16] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
     /* Zero struct of aes_context */
     ZERO_STRUCTP(ctx);
@@ -62,7 +61,7 @@ void aes_cmac128_starts(aes_cmac128_context *ctx, const uint8_t K[16])
     aes_setkey_enc(&ctx->aes_key, K, 128);
 
     /* step 1 - generate subkeys k1 and k2 */
-    aes_crypt_cbc(&ctx->aes_key, AES_ENCRYPT, 16, iv, const_Zero, L);
+    aes_crypt_ecb(&ctx->aes_key, AES_ENCRYPT, const_Zero, L);
 
     if (_MSB(L) == 0) {
         aes_cmac_128_left_shift_1(L, ctx->K1);
@@ -92,7 +91,6 @@ void aes_cmac128_starts(aes_cmac128_context *ctx, const uint8_t K[16])
  */
 void aes_cmac128_update(aes_cmac128_context *ctx, const uint8_t *_msg, size_t _msg_len)
 {
-    unsigned char iv[16] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     uint8_t tmp_block[16];
     uint8_t Y[16];
     const uint8_t *msg = _msg;
@@ -135,7 +133,7 @@ void aes_cmac128_update(aes_cmac128_context *ctx, const uint8_t *_msg, size_t _m
      * now checksum everything but the last block
      */
     aes_cmac_128_xor(ctx->X, tmp_block, Y);
-    aes_crypt_cbc(&ctx->aes_key, AES_ENCRYPT, 16, iv, Y, ctx->X);
+    aes_crypt_ecb(&ctx->aes_key, AES_ENCRYPT, Y, ctx->X);
 
     while (msg_len > 16) {
         memcpy(tmp_block, msg, 16);
@@ -143,7 +141,7 @@ void aes_cmac128_update(aes_cmac128_context *ctx, const uint8_t *_msg, size_t _m
         msg_len -= 16;
 
         aes_cmac_128_xor(ctx->X, tmp_block, Y);
-        aes_crypt_cbc(&ctx->aes_key, AES_ENCRYPT, 16, iv, Y, ctx->X);
+        aes_crypt_ecb(&ctx->aes_key, AES_ENCRYPT, Y, ctx->X);
     }
 
     /*
@@ -162,8 +160,6 @@ void aes_cmac128_update(aes_cmac128_context *ctx, const uint8_t *_msg, size_t _m
  */
 void aes_cmac128_final(aes_cmac128_context *ctx, uint8_t T[16])
 {
-    unsigned char iv[16] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     uint8_t tmp_block[16];
     uint8_t Y[16];
 
@@ -175,7 +171,7 @@ void aes_cmac128_final(aes_cmac128_context *ctx, uint8_t T[16])
     }
 
     aes_cmac_128_xor(tmp_block, ctx->X, Y);
-    aes_crypt_cbc(&ctx->aes_key, AES_ENCRYPT, 16, iv, Y, T);
+    aes_crypt_ecb(&ctx->aes_key, AES_ENCRYPT, Y, T);
 
     ZERO_STRUCT(tmp_block);
     ZERO_STRUCT(Y);
