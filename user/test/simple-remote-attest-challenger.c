@@ -33,7 +33,7 @@ void enclave_main()
 
     ret = sgx_remote_attest_challenger(target_ip, target_port, challenge);
     if(ret == 1) {
-        puts("Remote Attestaion Success!");
+        puts("Remote Attestation Success!");
     } else {
         puts("Remote Attestation Fail!");
     }
