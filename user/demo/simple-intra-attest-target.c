@@ -34,7 +34,7 @@ void enclave_main()
 
     ret = sgx_intra_attest_target(challenger_port);
     if(ret == 1) {
-        puts("Intra Attestaion Success!");
+        puts("Intra Attestation Success!");
     } else {
         puts("Intra Attestation Fail!");
     }

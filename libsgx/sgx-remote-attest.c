@@ -187,7 +187,7 @@ int sgx_remote_attest_target(int challenger_port, int quote_port, char *conf)
     }
     puts("MAC match, PASS!");
 
-    //Send intra attestaion result to Quoting enclave
+    //Send intra attestation result to Quoting enclave
     puts("Sending result message to Quoting enclave ...");
     resultmsg = "Good";
     if(sgx_write_sock(quote_fd, resultmsg, strlen(resultmsg)) < 0) {

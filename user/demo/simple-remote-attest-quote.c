@@ -37,7 +37,7 @@ void enclave_main()
 
     ret = sgx_remote_attest_quote(target_port);
     if(ret == 1) {
-        puts("Remote Attestaion Success!");
+        puts("Remote Attestation Success!");
     } else {
         puts("Remote Attestation Fail!");
     }
